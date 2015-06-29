@@ -1,0 +1,9 @@
+url = 'https://nympha15.zcu.cz:11443/-/'
+authtype = 'basic'
+ignoressl = True
+user = 'roccitest'
+passwd = 'roccitestroccitestroccitestroccitest'
+mimetype = 'text/plain'
+curlverbose = False
+#outputformat = 'plain'
+outputformat = 'json'
