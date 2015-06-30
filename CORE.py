@@ -9,27 +9,13 @@ import my_config
 results = []
 
 def DISCOVERY001():
-    body, header = occi_curl()
+    body, h, http_status, content_type = occi_curl()
 
-    h = {}
     err_msg = []
     check01 = False
     check02a = False
     check02b = False
     check03 = False
-
-    ## 'Server: Apache/2.2.22 (Debian)\r\n'
-    for item in header:
-        if re.match(r'.*:.*', item):
-            key=re.sub(r':.*', r'', item.rstrip())
-            value=re.sub(r'([^:]*):\s*(.*)', r'\2', item.rstrip())
-
-            h[key] = value
-        else:
-            if re.match(r'^HTTP', item):
-                http_status = item.rstrip()
-
-    content_type = re.split(';', h['Content-Type'])[0]
 
     if content_type in ['text/occi', 'text/plain', 'application/occi+json']:
         check01 = True

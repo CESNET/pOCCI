@@ -3,6 +3,7 @@ import my_config
 
 import pycurl
 from StringIO import StringIO
+import re
 
 # Helper callback function
 header = []
@@ -46,7 +47,20 @@ def occi_curl(url = my_config.url, authtype = my_config.authtype, ignoressl = my
     curl.perform()
     curl.close()
 
-    return [buffer.getvalue().splitlines(), header]
+    ## 'Server: Apache/2.2.22 (Debian)\r\n'
+    h = {}
+    for item in header:
+        if re.match(r'.*:.*', item):
+            key=re.sub(r':.*', r'', item.rstrip())
+            value=re.sub(r'([^:]*):\s*(.*)', r'\2', item.rstrip())
+
+            h[key] = value
+        else:
+            if re.match(r'^HTTP', item):
+                http_status = item.rstrip()
+    content_type = re.split(';', h['Content-Type'])[0]
+
+    return [buffer.getvalue().splitlines(), header, http_status, content_type]
 
 
 #print occi_curl()[1]
