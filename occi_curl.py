@@ -10,7 +10,7 @@ def get_header(buff):
 	global header
 	header.append(buff)
 
-def occi_curl(url = my_config.url, authtype = my_config.authtype, ignoressl = my_config.ignoressl, user = my_config.user, passwd = my_config.passwd, mimetype =my_config.mimetype, curlverbose = my_config.curlverbose):
+def occi_curl(url = my_config.url, authtype = my_config.authtype, ignoressl = my_config.ignoressl, user = my_config.user, passwd = my_config.passwd, mimetype =my_config.mimetype, curlverbose = my_config.curlverbose, headers = {}):
     buffer = StringIO()
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, str(url))
@@ -31,6 +31,13 @@ def occi_curl(url = my_config.url, authtype = my_config.authtype, ignoressl = my
     
     # Verbose mode
     curl.setopt(pycurl.VERBOSE, curlverbose)
+
+    # Set requested HTTP headers
+    request_headers = []
+    if headers:
+        for key in headers:
+            request_headers.append('%s: %s' % (key, headers[key]))
+        curl.setopt(pycurl.HTTPHEADER, request_headers)
 
     # HTTP header response
     curl.setopt(pycurl.HEADERFUNCTION, get_header)
