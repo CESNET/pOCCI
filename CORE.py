@@ -18,8 +18,13 @@ required_categories = [
 ]
 
 
-def get_categories():
-    body, response_headers, http_status, content_type = occi_curl()
+# parse and check the body, and get categories
+def parse_body(body):
+    err_msg = []
+    categories = []
+    category_ids = {}
+    check_headers = True
+    check_unique = True
 
     for line in body:
         item = {}
@@ -37,7 +42,35 @@ def get_categories():
 
             categories.append(item)
 
+            # check uniqueness
+            key = item['category'] + item['scheme']
+            if key in category_ids.keys():
+                check_unique = False
+                duplicate_item = item
+            else:
+                category_ids[key] = True
+        else:
+            check_headers = False
+
+    if not check_headers:
+        err_msg.append('Only "Category" expected response headers')
+
+    if not check_unique:
+        err_msg.append('Category not unique (term "%s", scheme "%s")' % (duplicate_item['category'], duplicate_item['scheme']))
+
+    return [check_headers and check_unique, categories, err_msg]
+
+
+def get_categories():
+    global categories
+
+    body, response_headers, http_status, content_type = occi_curl()
+
+    # TODO: ignoring possible errors
+    check_parse, categories, err_msg = parse_body(body)
+
     return [body, response_headers, http_status, content_type]
+
 
 def check_content_type(content_type):
     if content_type in ['text/occi', 'text/plain', 'application/occi+json']:
@@ -116,10 +149,22 @@ def DISCOVERY002():
     check02b, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
 
+    check_parse, filtered_categories, tmp_err_msg = parse_body(body)
+    err_msg += tmp_err_msg
+
+    category = categories[0]
+    check_filter = False
+    for item in filtered_categories:
+        if category['category'] == item['category'] and category['scheme'] == item['scheme'] and category['class'] == item['class']:
+            check_filter = True
+            break
+    if not check_filter:
+        err_msg.append('Category "%s" (schema "%s") not in filtered result' % (category['category'], category['scheme']))
+
     for line in body:
         print line
 
-    return [check_pretest and check01 and check02a and check02b, err_msg]
+    return [check_pretest and check01 and check02a and check02b and check_parse and check_filter, err_msg]
 
 
 start_time = time.time()
