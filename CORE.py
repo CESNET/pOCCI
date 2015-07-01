@@ -8,34 +8,40 @@ import my_config
 
 results = []
 
-category = []
+categories = []
+
+#'Category: offline;scheme="http://schemas.ogf.org/occi/infrastructure/storagelink/action#";class="action";title="deactivate storagelink"'
+required_categories = [
+    'http://schemas.ogf.org/occi/core#entity',
+    'http://schemas.ogf.org/occi/core#resource',
+    'http://schemas.ogf.org/occi/core#link'
+]
 
 
 def get_categories():
-    body, h, http_status, content_type = occi_curl()
+    body, response_headers, http_status, content_type = occi_curl()
 
     for line in body:
         item = {}
         chunks = re.split(';', line)
         if re.match(r'^Category:', chunks[0]):
             value = re.sub(r'^Category:\s+', '', chunks[0])
-            item['id'] = value
+            item['category'] = value
 
             # skip the first chunk (category)
             for chunk in chunks[1:]:
                 keyvalue = re.split(r'\s*=\s*', chunk, 1)
-                print keyvalue
                 key = keyvalue[0]
                 value = keyvalue[1].strip('"')
                 item[key] = value
 
-            category.append(item)
+            categories.append(item)
 
-    return [body,  h, http_status, content_type]
+    return [body, response_headers, http_status, content_type]
 
 
 def DISCOVERY001():
-    body, h, http_status, content_type = get_categories()
+    body, response_headers, http_status, content_type = get_categories()
 
     err_msg = []
     check01 = False
@@ -51,17 +57,15 @@ def DISCOVERY001():
     if re.match(r'^HTTP/.* 200 OK', http_status):
         check02a = True
     else:
-        err_msg.append('HTTP status not 200 OK')
+        err_msg.append('HTTP status not 200 OK (%s)' % http_status)
 
     if content_type == my_config.mimetype:
         check02b = True
     else:
         err_msg.append('Result mime type differs')
 
-    #'Category: offline;scheme="http://schemas.ogf.org/occi/infrastructure/storagelink/action#";class="action";title="deactivate storagelink"'
-    categories = ['http://schemas.ogf.org/occi/core#entity', 'http://schemas.ogf.org/occi/core#resource', 'http://schemas.ogf.org/occi/core#link']
     count = 0
-    for category in categories:
+    for category in required_categories:
         for line in body:
             if re.search(r"%s" % category, line):
                 count += 1
@@ -73,12 +77,47 @@ def DISCOVERY001():
 
     return [check01 and check02a and check02b and check03, err_msg]
 
+
+def DISCOVERY002():
+    check_pretest = True
+    check = False
+
+    if not categories:
+        body, response_headers, http_status, content_type = get_categories()
+        if not re.match(r'^HTTP/.* 200 OK', http_status):
+            check_pretest = False
+            err_msg.append('HTTP status from getting categories not 200 OK (%s)' % http_status)
+
+    cat_in = []
+    cat_in.append('Content-Type: text/occi')
+    cat_in.append('Category: %s; scheme="%s"; class="%s"' % (categories[0]['category'], categories[0]['scheme'], categories[0]['class']))
+
+    #print cat_in
+
+    body, response_headers, http_status, content_type = occi_curl(headers = cat_in)
+
+    if re.match(r'^HTTP/.* 200 OK', http_status):
+        check = True
+    else:
+        err_msg.append('HTTP status on filter not 200 OK (%s)' % http_status)
+
+    for line in body:
+        print line
+
+    return [check_pretest and check, err_msg]
+
+
 start_time = time.time()
 result, err_msg = DISCOVERY001()
 running_time = time.time() - start_time
 results.append(occi_test('OCCI/CORE/DISCOVERY/001', result, err_msg, running_time))
 
+start_time = time.time()
+result, err_msg = DISCOVERY002()
+running_time = time.time() - start_time
+results.append(occi_test('OCCI/CORE/DISCOVERY/002', result, err_msg, running_time))
 results = occi_format(results)
+
 occi_print(results)
 
 if result:

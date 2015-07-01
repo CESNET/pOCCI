@@ -1,4 +1,4 @@
-url = 'https://nympha15.zcu.cz:11443/-/'
+url = 'https://nympha15.zcu.cz:11443'
 authtype = 'basic'
 ignoressl = True
 user = 'roccitest'

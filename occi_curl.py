@@ -11,10 +11,10 @@ def get_header(buff):
 	global header
 	header.append(buff)
 
-def occi_curl(url = my_config.url, authtype = my_config.authtype, ignoressl = my_config.ignoressl, user = my_config.user, passwd = my_config.passwd, mimetype =my_config.mimetype, curlverbose = my_config.curlverbose, headers = {}):
+def occi_curl(base_url = my_config.url, url = '/-/', authtype = my_config.authtype, ignoressl = my_config.ignoressl, user = my_config.user, passwd = my_config.passwd, mimetype =my_config.mimetype, curlverbose = my_config.curlverbose, headers = []):
     buffer = StringIO()
     curl = pycurl.Curl()
-    curl.setopt(pycurl.URL, str(url))
+    curl.setopt(pycurl.URL, str(base_url + url))
     curl.setopt(pycurl.WRITEDATA, buffer)
     
     # Disable check of SSL certificate
@@ -34,11 +34,8 @@ def occi_curl(url = my_config.url, authtype = my_config.authtype, ignoressl = my
     curl.setopt(pycurl.VERBOSE, curlverbose)
 
     # Set requested HTTP headers
-    request_headers = []
     if headers:
-        for key in headers:
-            request_headers.append('%s: %s' % (key, headers[key]))
-        curl.setopt(pycurl.HTTPHEADER, request_headers)
+        curl.setopt(pycurl.HTTPHEADER, headers)
 
     # HTTP header response
     curl.setopt(pycurl.HEADERFUNCTION, get_header)
