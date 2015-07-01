@@ -88,7 +88,8 @@ def DISCOVERY001():
 
 def DISCOVERY002():
     check_pretest = True
-    check02 = False
+    check02a = False
+    check02b = False
     err_msg = []
 
     if not categories:
@@ -106,19 +107,19 @@ def DISCOVERY002():
     body, response_headers, http_status, content_type = occi_curl(headers = cat_in)
 
     check01, err_msg = check_content_type(content_type)
+    
+    if re.match(r'^HTTP/.* 200 OK', http_status):
+        check02a = True
+    else:
+        err_msg.append('HTTP status on filter not 200 OK (%s)' % http_status)
 
     check02b, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
 
-    if re.match(r'^HTTP/.* 200 OK', http_status):
-        check02 = True
-    else:
-        err_msg.append('HTTP status on filter not 200 OK (%s)' % http_status)
-
     for line in body:
         print line
 
-    return [check_pretest and check01 and check02 and check02b, err_msg]
+    return [check_pretest and check01 and check02a and check02b, err_msg]
 
 
 start_time = time.time()
