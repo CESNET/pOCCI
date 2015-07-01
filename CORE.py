@@ -135,8 +135,6 @@ def DISCOVERY002():
     cat_in.append('Content-Type: text/occi')
     cat_in.append('Category: %s; scheme="%s"; class="%s"' % (categories[0]['category'], categories[0]['scheme'], categories[0]['class']))
 
-    #print cat_in
-
     body, response_headers, http_status, content_type = occi_curl(headers = cat_in)
 
     check01, err_msg = check_content_type(content_type)
@@ -160,9 +158,6 @@ def DISCOVERY002():
             break
     if not check_filter:
         err_msg.append('Category "%s" (schema "%s") not in filtered result' % (category['category'], category['scheme']))
-
-    for line in body:
-        print line
 
     return [check_pretest and check01 and check02a and check02b and check_parse and check_filter, err_msg]
 
