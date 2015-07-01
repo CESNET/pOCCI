@@ -26,7 +26,7 @@ def occi_format(results):
 def occi_print(results, outputformat = my_config.outputformat):
     if outputformat == 'plain':
         for r in results['tests']:
-            print '%s  %s  %s' % (r['name'], r['status'], r['running_time'])
+            print '%s  %s' % (r['name'], r['status'])
             if 'reason' in r:
                 print >> sys.stderr, r['reason']
     elif outputformat == 'json':

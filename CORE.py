@@ -39,6 +39,11 @@ def get_categories():
 
     return [body, response_headers, http_status, content_type]
 
+def check_content_type(content_type):
+    if content_type in ['text/occi', 'text/plain', 'application/occi+json']:
+        return [True, []]
+    else:
+        return [False, ['Wrong Content-Type in response']]
 
 def DISCOVERY001():
     body, response_headers, http_status, content_type = get_categories()
@@ -49,10 +54,7 @@ def DISCOVERY001():
     check02b = False
     check03 = False
 
-    if content_type in ['text/occi', 'text/plain', 'application/occi+json']:
-        check01 = True
-    else:
-        err_msg.append('Wrong Content-Type')
+    check01, err_msg = check_content_type(content_type)
 
     if re.match(r'^HTTP/.* 200 OK', http_status):
         check02a = True
@@ -80,7 +82,8 @@ def DISCOVERY001():
 
 def DISCOVERY002():
     check_pretest = True
-    check = False
+    check02 = False
+    err_msg = []
 
     if not categories:
         body, response_headers, http_status, content_type = get_categories()
@@ -96,15 +99,17 @@ def DISCOVERY002():
 
     body, response_headers, http_status, content_type = occi_curl(headers = cat_in)
 
+    check01, err_msg = check_content_type(content_type)
+
     if re.match(r'^HTTP/.* 200 OK', http_status):
-        check = True
+        check02 = True
     else:
         err_msg.append('HTTP status on filter not 200 OK (%s)' % http_status)
 
     for line in body:
         print line
 
-    return [check_pretest and check, err_msg]
+    return [check_pretest and check01 and check02, err_msg]
 
 
 start_time = time.time()
