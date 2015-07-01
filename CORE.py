@@ -45,6 +45,14 @@ def check_content_type(content_type):
     else:
         return [False, ['Wrong Content-Type in response']]
 
+
+def check_requested_content_type(content_type):
+    if content_type == my_config.mimetype:
+        return [True, []]
+    else:
+        return [False, ['Result mime type differs']]
+
+
 def DISCOVERY001():
     body, response_headers, http_status, content_type = get_categories()
 
@@ -61,10 +69,8 @@ def DISCOVERY001():
     else:
         err_msg.append('HTTP status not 200 OK (%s)' % http_status)
 
-    if content_type == my_config.mimetype:
-        check02b = True
-    else:
-        err_msg.append('Result mime type differs')
+    check02b, tmp_err_msg = check_requested_content_type(content_type)
+    err_msg += tmp_err_msg
 
     count = 0
     for category in required_categories:
@@ -101,6 +107,9 @@ def DISCOVERY002():
 
     check01, err_msg = check_content_type(content_type)
 
+    check02b, tmp_err_msg = check_requested_content_type(content_type)
+    err_msg += tmp_err_msg
+
     if re.match(r'^HTTP/.* 200 OK', http_status):
         check02 = True
     else:
@@ -109,7 +118,7 @@ def DISCOVERY002():
     for line in body:
         print line
 
-    return [check_pretest and check01 and check02, err_msg]
+    return [check_pretest and check01 and check02 and check02b, err_msg]
 
 
 start_time = time.time()
