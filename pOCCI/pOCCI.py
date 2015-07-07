@@ -21,6 +21,7 @@ def usage(name = __file__):
 \n\
 OPTIONS:\n\
   -h, --help ................ usage message\n\
+  -f, --format FORMAT ....... output format (plain, json)\n\
   -t, --tests <TEST1,...> ... list of tests\n\
 " % os.path.basename(name)
 
@@ -30,7 +31,7 @@ def main(argv=sys.argv[1:]):
     tests = []
 
     try:
-        opts, args = getopt.getopt(argv,"ht:",["help","tests="])
+        opts, args = getopt.getopt(argv,"hf:t:",["help", "format=", "tests="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -38,6 +39,8 @@ def main(argv=sys.argv[1:]):
         if opt in ("-h", "--help"):
             usage()
             sys.exit()
+        elif opt in ("-f", "--format"):
+            occi_config['outputformat'] = arg
         elif opt in ("-t", "--tests"):
             tests = arg.split(",")
 
