@@ -1,5 +1,4 @@
-# Load variables from my_config.py
-import my_config
+from occi_libs import occi_config
 
 import pycurl
 from StringIO import StringIO
@@ -11,7 +10,7 @@ def get_header(buff):
 	global header
 	header.append(buff)
 
-def occi_curl(base_url = my_config.url, url = '/-/', authtype = my_config.authtype, ignoressl = my_config.ignoressl, user = my_config.user, passwd = my_config.passwd, mimetype =my_config.mimetype, curlverbose = my_config.curlverbose, headers = []):
+def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config['authtype'], ignoressl = occi_config['ignoressl'], user = occi_config['user'], passwd = occi_config['passwd'], mimetype = occi_config['mimetype'], curlverbose = occi_config['curlverbose'], headers = []):
     buffer = StringIO()
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, str(base_url + url))

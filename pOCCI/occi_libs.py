@@ -1,6 +1,9 @@
+import ConfigParser
 import json
+import os
 import sys
-import my_config
+
+occi_config = {}
 
 def occi_format(results):
     count_f = 0
@@ -23,7 +26,7 @@ def occi_format(results):
     out['failed'] = count_f
     return out
 
-def occi_print(results, outputformat = my_config.outputformat):
+def occi_print(results, outputformat):
     if outputformat == 'plain':
         for r in results['tests']:
             print '%s  %s' % (r['name'], r['status'])
@@ -49,3 +52,16 @@ def occi_test(name, status, err_msg, running_time = None):
 
 def result2str(result):
     return 'OK' if result else 'FAIL'
+
+
+def occi_init():
+    global occi_config
+
+    config = ConfigParser.ConfigParser()
+    config.read(['/etc/pOCCI.cfg', os.path.expanduser('~/.pOCCI.cfg')])
+    if not config.has_section('main'):
+        return False
+    for key, value in config.items('main'):
+        #print 'config: %s = %s (%s)' % (key, value, type(eval(value)))
+        occi_config[key] = eval(value)
+    return True

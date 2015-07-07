@@ -2,9 +2,15 @@
 
 import json, re
 import sys, time
-from occi_curl import occi_curl
+
 from occi_libs import *
-import my_config
+
+occi_init()
+if not occi_config:
+    print >> sys.stderr, 'No configuration found'
+    sys.exit(2)
+
+from occi_curl import occi_curl
 
 results = []
 
@@ -80,7 +86,7 @@ def check_content_type(content_type):
 
 
 def check_requested_content_type(content_type):
-    if content_type == my_config.mimetype:
+    if content_type == occi_config['mimetype']:
         return [True, []]
     else:
         return [False, ['Result mime type differs']]
@@ -173,7 +179,7 @@ running_time = time.time() - start_time
 results.append(occi_test('OCCI/CORE/DISCOVERY/002', result, err_msg, running_time))
 results = occi_format(results)
 
-occi_print(results)
+occi_print(results, occi_config['outputformat'])
 
 if result:
     sys.exit(0)

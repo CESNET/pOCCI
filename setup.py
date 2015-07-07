@@ -52,6 +52,12 @@ setup(
 
     install_requires=['pycurl'],
 
+    package_data={
+        'pOCCI': ['pOCCI.cfg'],
+    },
+
+    data_files=[('/etc/', ['pOCCI/pOCCI.cfg'])],
+
     entry_points={
         'console_scripts': [
             'pOCCI=pOCCI.CORE:main',

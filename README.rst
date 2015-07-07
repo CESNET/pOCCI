@@ -1,12 +1,23 @@
 OCCI Compliance tests
 =======================
 
-XXX TODO XXX
+Install::
 
-Set parameters in my_config.py
+ python setup.py install
 
-Install
+Set parameters in ~/.pOCCI.cfg.
 
-python setup.py install
+Example config file::
+
+ [main]
+ url = 'https://example.com:11443'
+ authtype = 'basic'
+ ignoressl = True
+ user = 'rocci'
+ passwd = 'good-password'
+ mimetype = 'text/plain'
+ curlverbose = False
+ #outputformat = 'plain'
+ outputformat = 'json'
 
 Run pOCCI
