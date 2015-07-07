@@ -60,7 +60,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'pOCCI=pOCCI.CORE:main',
+            'pOCCI=pOCCI.pOCCI:main',
         ],
     },
 )

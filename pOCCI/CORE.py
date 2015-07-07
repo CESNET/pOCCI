@@ -1,18 +1,8 @@
-#!/usr/bin/python
-
 import json, re
 import sys, time
 
 from occi_libs import *
-
-occi_init()
-if not occi_config:
-    print >> sys.stderr, 'No configuration found'
-    sys.exit(2)
-
 from occi_curl import occi_curl
-
-results = []
 
 categories = []
 
@@ -166,23 +156,3 @@ def DISCOVERY002():
         err_msg.append('Category "%s" (schema "%s") not in filtered result' % (category['category'], category['scheme']))
 
     return [check_pretest and check01 and check02a and check02b and check_parse and check_filter, err_msg]
-
-
-start_time = time.time()
-result, err_msg = DISCOVERY001()
-running_time = time.time() - start_time
-results.append(occi_test('OCCI/CORE/DISCOVERY/001', result, err_msg, running_time))
-
-start_time = time.time()
-result, err_msg = DISCOVERY002()
-running_time = time.time() - start_time
-results.append(occi_test('OCCI/CORE/DISCOVERY/002', result, err_msg, running_time))
-results = occi_format(results)
-
-occi_print(results, occi_config['outputformat'])
-
-if result:
-    sys.exit(0)
-else:
-    sys.exit(1)
-
