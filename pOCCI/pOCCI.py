@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
+import getopt
 import json, re
 import sys, time
+import os
 
 from occi_libs import *
-
 
 occi_init()
 if not occi_config:
@@ -14,19 +15,28 @@ if not occi_config:
 from CORE import *
 from occi_curl import occi_curl
 
-import getopt
+
+def usage(name = __file__):
+    print "%s [OPTIONS]\n\
+\n\
+OPTIONS:\n\
+  -h, --help ................ usage message\n\
+  -t, --tests <TEST1,...> ... list of tests\n\
+" % os.path.basename(name)
+
 
 def main(argv=sys.argv[1:]):
     results = []
     tests = []
+
     try:
         opts, args = getopt.getopt(argv,"ht:",["help","tests="])
     except getopt.GetoptError:
-        print 'pOCCI.py -h -t <TEST1,TEST2>'
+        usage()
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print 'pOCCI.py -h -t <TEST1,TEST2>'
+            usage()
             sys.exit()
         elif opt in ("-t", "--tests"):
             tests = arg.split(",")
