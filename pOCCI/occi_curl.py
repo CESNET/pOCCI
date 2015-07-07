@@ -32,6 +32,9 @@ def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config
     # Verbose mode
     curl.setopt(pycurl.VERBOSE, curlverbose)
 
+    curl.setopt(pycurl.CONNECTTIMEOUT, occi_config['connectiontimeout'])
+    curl.setopt(pycurl.TIMEOUT, occi_config['timeout'])
+
     # Set requested HTTP headers
     if headers:
         curl.setopt(pycurl.HTTPHEADER, headers)

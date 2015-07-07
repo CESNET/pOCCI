@@ -19,5 +19,7 @@ Example config file::
  curlverbose = False
  #outputformat = 'plain'
  outputformat = 'json'
+ connectiontimeout = 60
+ timeout = 120
 
 Run pOCCI
