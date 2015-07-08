@@ -81,24 +81,36 @@ def check_requested_content_type(content_type):
     else:
         return [False, ['Result mime type differs']]
 
+def pretest_http_status(http_ok_status):
+    err_msg = []
+    check_pretest = True
+    body = None
+    response_headers = None
+    http_status = None
+    content_type = None
+
+    global categories
+    if not categories:
+        body, response_headers, http_status, content_type = get_categories()
+        if not re.match(r'^HTTP/.* %i OK' % http_ok_status, http_status):
+            check_pretest = False
+            err_msg.append('HTTP status from getting categories not %i OK (%s)' % (http_ok_status, http_status))
+    return [body, response_headers, http_status, content_type, check_pretest, err_msg]
 
 def DISCOVERY001():
-    body, response_headers, http_status, content_type = get_categories()
-
     err_msg = []
+    
     check01 = False
-    check02a = False
-    check02b = False
+    check02 = False
     check03 = False
+    
+    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status(200)
+    err_msg += tmp_err_msg
 
-    check01, err_msg = check_content_type(content_type)
-
-    if re.match(r'^HTTP/.* 200 OK', http_status):
-        check02a = True
-    else:
-        err_msg.append('HTTP status not 200 OK (%s)' % http_status)
-
-    check02b, tmp_err_msg = check_requested_content_type(content_type)
+    check01, tmp_err_msg = check_content_type(content_type)
+    err_msg += tmp_err_msg
+    
+    check02, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
 
     count = 0
@@ -112,20 +124,17 @@ def DISCOVERY001():
     else:
         err_msg.append('Body doesn\'t contain appropriate categories')
 
-    return [check01 and check02a and check02b and check03, err_msg]
+    return [check_pretest and check01 and check02 and check03, err_msg]
 
 
 def DISCOVERY002():
-    check_pretest = True
+    err_msg = []
+    
     check02a = False
     check02b = False
-    err_msg = []
 
-    if not categories:
-        body, response_headers, http_status, content_type = get_categories()
-        if not re.match(r'^HTTP/.* 200 OK', http_status):
-            check_pretest = False
-            err_msg.append('HTTP status from getting categories not 200 OK (%s)' % http_status)
+    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status(200)
+    err_msg += tmp_err_msg
 
     cat_in = []
     cat_in.append('Content-Type: text/occi')
