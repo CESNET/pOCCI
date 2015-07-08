@@ -81,6 +81,14 @@ def check_requested_content_type(content_type):
     else:
         return [False, ['Result mime type differs']]
 
+
+def check_http_status(http_expected_status, http_status):
+    if not re.match(r'^HTTP/.* %i OK' % http_expected_status, http_status):
+        return [False, ['HTTP status from getting categories not %i OK (%s)' % (http_expected_status, http_status)]]
+    else:
+        return [True, []]
+
+
 def pretest_http_status(http_ok_status):
     err_msg = []
     check_pretest = True
@@ -92,10 +100,24 @@ def pretest_http_status(http_ok_status):
     global categories
     if not categories:
         body, response_headers, http_status, content_type = get_categories()
-        if not re.match(r'^HTTP/.* %i OK' % http_ok_status, http_status):
-            check_pretest = False
-            err_msg.append('HTTP status from getting categories not %i OK (%s)' % (http_ok_status, http_status))
+        check_pretest, tmp_err_msg = check_http_status(http_ok_status, http_status)
+        err_msg += tmp_err_msg
     return [body, response_headers, http_status, content_type, check_pretest, err_msg]
+
+
+def match_category(category, filter):
+    for key, value in filter.items():
+        if not (key in category and category[key] == value):
+            return False
+    return True
+
+
+def search_category(filter):
+    for cat in categories:
+        if match_category(cat, filter):
+            return cat
+    return None
+
 
 def DISCOVERY001():
     err_msg = []
@@ -165,3 +187,43 @@ def DISCOVERY002():
         err_msg.append('Category "%s" (schema "%s") not in filtered result' % (category['category'], category['scheme']))
 
     return [check_pretest and check01 and check02a and check02b and check_parse and check_filter, err_msg]
+
+
+def CREATE001():
+    err_msg = []
+    has_kind = True
+
+    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status(200)
+    err_msg += tmp_err_msg
+
+    #kind = search_category({'class': 'kind'})
+    kind = search_category({'class': 'kind', 'category': 'compute'})
+    #print kind
+
+    if not kind:
+        has_kind = False
+        err_msg.append('No OCCI Kind found')
+    for item in ['location', 'category', 'scheme']:
+        if not item in kind.keys():
+            has_kind = False
+            err_msg.append('No %s in OCCI Kind' % item)
+
+    #new_cat = '\n\r'.join([
+    #    'Category: %s; scheme="%s"; class="%s";' % (kind['category'], kind['scheme'], kind['class']),
+    #])
+    #new_cat = dict()
+    #new_cat['Category'], '%s; scheme="%s"; class="%s";' % (kind['category'], kind['scheme'], kind['class'])
+    ##new_cat['X-OOCI-Attribute'] = 'occi.core.id=1'
+
+    new_cat = 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="titulek"\n\r\
+X-OCCI-Attributr: occi.core.id=1\n\r\
+X-OCCI-Attributr: occi.core.title="titulek"\n\r\
+X-OCCI-Attributr: occi.core.summary="sumarko"\n\r\
+X-OCCI-Attributr: occi.core.architecture="arch"\n\r\
+'
+    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'], post=new_cat)
+#, headers = ['Content-Type: text/plain', 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="titulek2"']
+    check_create, tmp_err_msg = check_http_status(201, http_status)
+    err_msg += tmp_err_msg
+
+    return [has_kind and check_create, err_msg]

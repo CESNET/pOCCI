@@ -3,6 +3,7 @@ from occi_libs import occi_config
 import pycurl
 from StringIO import StringIO
 import re
+import urllib
 
 # Helper callback function
 header = []
@@ -10,7 +11,8 @@ def get_header(buff):
 	global header
 	header.append(buff)
 
-def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config['authtype'], ignoressl = occi_config['ignoressl'], user = occi_config['user'], passwd = occi_config['passwd'], mimetype = occi_config['mimetype'], curlverbose = occi_config['curlverbose'], headers = []):
+
+def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config['authtype'], ignoressl = occi_config['ignoressl'], user = occi_config['user'], passwd = occi_config['passwd'], mimetype = occi_config['mimetype'], curlverbose = occi_config['curlverbose'], headers = [], post = ''):
     buffer = StringIO()
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, str(base_url + url))
@@ -41,7 +43,16 @@ def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config
 
     # HTTP header response
     curl.setopt(pycurl.HEADERFUNCTION, get_header)
-   
+
+    if post:
+        curl.setopt(pycurl.POST, 1)
+        curl.setopt(pycurl.POSTFIELDS, post)
+        print post
+        #post_encoded = urllib.urlencode(post)
+        #print post_encoded
+        #curl.setopt(pycurl.POSTFIELDS, post_encoded)
+        ##curl.setopt(pycurl.POSTFIELDS, str(post))
+
     # DO IT!
     curl.perform()
     curl.close()
@@ -60,18 +71,3 @@ def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config
     content_type = re.split(';', h['Content-Type'])[0]
 
     return [buffer.getvalue().splitlines(), header, http_status, content_type]
-
-
-#print occi_curl()[1]
-
-# stahuje, parsujeme json, potrebujeme regexp
-
-
-#print(body)
-
-#for item in headerr:
-#	if re.match(r'Content-Type:', item): print item
-#	if re.match(r'Status:', item): print item
-#
-
-#print(headerr)
