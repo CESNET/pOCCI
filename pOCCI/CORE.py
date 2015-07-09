@@ -14,9 +14,40 @@ required_categories = [
 ]
 
 
+# occi.core.id{immutable required} occi.core.title occi.core.target occi.core.source{required}
+def parse_attributes(chunk, err_msg):
+    result = []
+
+    m = True
+    while m:
+        m = re.match(r'([^\{ ]+)(\{[^\}]*\})?\s*', chunk)
+        if not m:
+            break
+        matches = m.groups()
+        name = matches[0]
+        attrs = matches[1]
+        chunk = chunk[m.end():]
+
+        if attrs:
+            attrs = attrs[1:-1]
+            attrs = re.split(' ', attrs)
+
+        result.append({'name': name, 'attrs': attrs})
+
+    if chunk:
+        err_msg.append('Error parsing OCCI attributes')
+        return None
+
+    return result
+
+
+def parse_attributes(chunk):
+    # occi.core.id{immutable required} occi.core.title occi.core.target occi.core.source{required}
+    return re.match(r'([^\{]+)(\{[^\}]*\})?', chunk).groups()
+
+
 # parse and check the body, and get categories
-def parse_body(body):
-    err_msg = []
+def parse_body(body, err_msg):
     categories = []
     category_ids = {}
     check_headers = True
@@ -54,16 +85,17 @@ def parse_body(body):
     if not check_unique:
         err_msg.append('Category not unique (term "%s", scheme "%s")' % (duplicate_item['category'], duplicate_item['scheme']))
 
-    return [check_headers and check_unique, categories, err_msg]
+    return [check_headers and check_unique, categories]
 
 
 def get_categories():
     global categories
+    err_msg = []
 
     body, response_headers, http_status, content_type = occi_curl()
 
     # TODO: ignoring possible errors
-    check_parse, categories, err_msg = parse_body(body)
+    check_parse, categories = parse_body(body, err_msg)
 
     return [body, response_headers, http_status, content_type]
 
@@ -174,8 +206,7 @@ def DISCOVERY002():
     check02b, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
 
-    check_parse, filtered_categories, tmp_err_msg = parse_body(body)
-    err_msg += tmp_err_msg
+    check_parse, filtered_categories = parse_body(body, err_msg)
 
     category = categories[0]
     check_filter = False
@@ -216,11 +247,12 @@ def CREATE001():
     ##new_cat['X-OOCI-Attribute'] = 'occi.core.id=1'
 
     new_cat = 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="titulek"\n\r\
-X-OCCI-Attributr: occi.core.id=1\n\r\
-X-OCCI-Attributr: occi.core.title="titulek"\n\r\
-X-OCCI-Attributr: occi.core.summary="sumarko"\n\r\
-X-OCCI-Attributr: occi.core.architecture="arch"\n\r\
+X-OCCI-Attribute: occi.core.id="titulek"\n\r\
+X-OCCI-Attribute: occi.core.title="titulek"\n\r\
+X-OCCI-Attribute: occi.core.summary="sumarko"\n\r\
+X-OCCI-Attribute: occi.compute.architecture="arch"\n\r\
 '
+
     body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'], post=new_cat)
 #, headers = ['Content-Type: text/plain', 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="titulek2"']
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
