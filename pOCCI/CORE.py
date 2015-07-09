@@ -83,8 +83,8 @@ def check_requested_content_type(content_type):
 
 
 def check_http_status(http_expected_status, http_status):
-    if not re.match(r'^HTTP/.* %i OK' % http_expected_status, http_status):
-        return [False, ['HTTP status from getting categories not %i OK (%s)' % (http_expected_status, http_status)]]
+    if not re.match(r'^HTTP/.* %s' % http_expected_status, http_status):
+        return [False, ['HTTP status from getting categories not %s (%s)' % (http_expected_status, http_status)]]
     else:
         return [True, []]
 
@@ -126,7 +126,7 @@ def DISCOVERY001():
     check02 = False
     check03 = False
     
-    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status(200)
+    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status("200 OK")
     err_msg += tmp_err_msg
 
     check01, tmp_err_msg = check_content_type(content_type)
@@ -155,7 +155,7 @@ def DISCOVERY002():
     check02a = False
     check02b = False
 
-    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status(200)
+    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status("200 OK")
     err_msg += tmp_err_msg
 
     cat_in = []
@@ -193,7 +193,7 @@ def CREATE001():
     err_msg = []
     has_kind = True
 
-    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status(200)
+    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status("200 OK")
     err_msg += tmp_err_msg
 
     #kind = search_category({'class': 'kind'})
@@ -223,7 +223,7 @@ X-OCCI-Attributr: occi.core.architecture="arch"\n\r\
 '
     body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'], post=new_cat)
 #, headers = ['Content-Type: text/plain', 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="titulek2"']
-    check_create, tmp_err_msg = check_http_status(201, http_status)
+    check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 
     return [has_kind and check_create, err_msg]
