@@ -272,6 +272,7 @@ def INFRA_CREATE001():
     has_kind = True
     has_tpl = True
     has_all_attributes = True
+    check_attributes = True
     attributes = {}
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
@@ -300,8 +301,20 @@ def INFRA_CREATE001():
     # 'category': 'uuid_ttylinux_0', 'scheme': 'http://occi.myriad5.zcu.cz/occi/infrastructure/os_tpl#', 'class': 'mixin'
     request.append('Category: %s; scheme="%s"; class="%s"' % (os_tpl['category'], os_tpl['scheme'], 'mixin'))
 
-    attributes_compute = parse_attributes(kind['attributes'], err_msg)
-    attributes_os_tpl = parse_attributes(kind['attributes'], err_msg)
+    attributes_compute = []
+    if 'attributes' in kind:
+        attributes_compute = parse_attributes(kind['attributes'], err_msg)
+    if attributes_compute == None:
+        attributes_compute = []
+        check_attributes = False
+
+    attributes_os_tpl = []
+    if 'attributes' in os_tpl:
+        attributes_os_tpl = parse_attributes(os_tpl['attributes'], err_msg)
+    if attributes_os_tpl == None:
+        attributes_os_tpl = []
+        check_attributes = False
+
     attributess = attributes_compute + attributes_os_tpl
     #print attribues
     for a in attributes:
@@ -322,4 +335,4 @@ def INFRA_CREATE001():
     if not check_create:
         print body
 
-    return [has_kind and has_tpl and has_all_attributes and check_create, err_msg]
+    return [has_kind and has_tpl and check_attributes and has_all_attributes and check_create, err_msg]
