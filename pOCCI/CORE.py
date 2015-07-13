@@ -96,6 +96,12 @@ def get_categories():
     # TODO: ignoring possible errors
     check_parse, categories = parse_body(body, err_msg)
 
+    if occi_config['curlverbose']:
+        print '==== CATEGORIES ===='
+        for category in categories:
+            print category
+        print '===================='
+
     return [body, response_headers, http_status, content_type]
 
 
@@ -120,8 +126,7 @@ def check_http_status(http_expected_status, http_status):
         return [True, []]
 
 
-def pretest_http_status(http_ok_status):
-    err_msg = []
+def pretest_http_status(http_ok_status, err_msg):
     check_pretest = True
     body = None
     response_headers = None
@@ -133,7 +138,7 @@ def pretest_http_status(http_ok_status):
         body, response_headers, http_status, content_type = get_categories()
         check_pretest, tmp_err_msg = check_http_status(http_ok_status, http_status)
         err_msg += tmp_err_msg
-    return [body, response_headers, http_status, content_type, check_pretest, err_msg]
+    return [body, response_headers, http_status, content_type, check_pretest]
 
 
 def match_category(category, filter):
@@ -157,8 +162,7 @@ def CORE_DISCOVERY001():
     check02 = False
     check03 = False
     
-    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status("200 OK")
-    err_msg += tmp_err_msg
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
     check01, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
@@ -186,8 +190,10 @@ def CORE_DISCOVERY002():
     check02a = False
     check02b = False
 
-    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status("200 OK")
-    err_msg += tmp_err_msg
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+    if not categories:
+        err_msg += ['No categories returned']
+        return [False, err_msg]
 
     cat_in = []
     cat_in.append('Content-Type: text/occi')
@@ -223,8 +229,7 @@ def CORE_CREATE001():
     err_msg = []
     has_kind = True
 
-    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status("200 OK")
-    err_msg += tmp_err_msg
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
     #kind = search_category({'class': 'kind'})
     kind = search_category({'class': 'kind', 'category': 'compute'})
@@ -266,21 +271,24 @@ X-OCCI-Attribute: occi.compute.architecture="arch"\n\r\
 def INFRA_CREATE001():
     err_msg = []
     has_kind = True
+    has_tpl = True
     has_all_attributes = True
     attributes = {}
 
-    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status("200 OK")
-    err_msg += tmp_err_msg
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
-    print categories
-
-    #kind = search_category({'class': 'kind'})
     kind = search_category({'class': 'kind', 'category': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
-    print kind
+    os_tpl = search_category({'class': 'mixin', 'rel': 'http://schemas.ogf.org/occi/infrastructure#os_tpl'})
+    #print kind
+    #print os_tpl
 
     if not kind:
         has_kind = False
         err_msg.append('No OCCI Kind found')
+    if not os_tpl:
+        has_tpl = False
+        err_msg.append('No OS template found')
+    if not kind or not os_tpl:
         return [False, err_msg]
 
     for item in ['location', 'category', 'scheme']:
@@ -288,17 +296,15 @@ def INFRA_CREATE001():
             has_kind = False
             err_msg.append('No %s in OCCI Kind' % item)
 
-    headers = []
-    headers.append('Content-Type: text/plain')
-    headers.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
+    request = []
+    request.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
+    # 'category': 'uuid_ttylinux_0', 'scheme': 'http://occi.myriad5.zcu.cz/occi/infrastructure/os_tpl#', 'class': 'mixin'
+    request.append('Category: %s; scheme="%s"; class="%s"' % (os_tpl['category'], os_tpl['scheme'], 'mixin'))
 
-    # experiments
-    headers.append('Category: os_tpl; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="mixin"')
-    #headers.append('Category: ipnetwork; scheme="http://schemas.ogf.org/occi/infrastructure/network#"; class="mixin"')
-    #headers.append('Category: storagelink; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
-
-    attributes = parse_attributes(kind['attributes'], err_msg)
-    #print attributes
+    attributes_compute = parse_attributes(kind['attributes'], err_msg)
+    attributes_os_tpl = parse_attributes(kind['attributes'], err_msg)
+    attributess = attributes_compute + attributes_os_tpl
+    #print attribues
     for a in attributes:
         #print 'attribute: %s' % a
         if a['attrs'] and 'required' in a['attrs']:
@@ -306,15 +312,15 @@ def INFRA_CREATE001():
                 err_msg.append('Tests error: unknown attribute %s' % a['name'])
                 has_all_attributes = False
                 continue
-            headers.append('X-OCCI-Attribute: %s="%s"' % (a['name'], example_attributes[a['name']]))
+            request.append('X-OCCI-Attribute: %s="%s"' % (a['name'], example_attributes[a['name']]))
 
-    #print headers
+    post = '\n'.join(request)
 
-    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = headers, post=' ')
+    body, response_request, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'], post=post)
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 
     if not check_create:
         print body
 
-    return [has_kind and has_all_attributes and check_create, err_msg]
+    return [has_kind and has_tpl and has_all_attributes and check_create, err_msg]
