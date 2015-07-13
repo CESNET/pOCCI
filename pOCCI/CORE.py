@@ -13,6 +13,10 @@ required_categories = [
     'http://schemas.ogf.org/occi/core#link'
 ]
 
+example_attributes = {
+    'occi.core.id': 1,
+}
+
 
 # occi.core.id{immutable required} occi.core.title occi.core.target occi.core.source{required}
 def parse_attributes(chunk, err_msg):
@@ -39,11 +43,6 @@ def parse_attributes(chunk, err_msg):
         return None
 
     return result
-
-
-def parse_attributes(chunk):
-    # occi.core.id{immutable required} occi.core.title occi.core.target occi.core.source{required}
-    return re.match(r'([^\{]+)(\{[^\}]*\})?', chunk).groups()
 
 
 # parse and check the body, and get categories
@@ -151,7 +150,7 @@ def search_category(filter):
     return None
 
 
-def DISCOVERY001():
+def CORE_DISCOVERY001():
     err_msg = []
     
     check01 = False
@@ -181,7 +180,7 @@ def DISCOVERY001():
     return [check_pretest and check01 and check02 and check03, err_msg]
 
 
-def DISCOVERY002():
+def CORE_DISCOVERY002():
     err_msg = []
     
     check02a = False
@@ -220,7 +219,7 @@ def DISCOVERY002():
     return [check_pretest and check01 and check02a and check02b and check_parse and check_filter, err_msg]
 
 
-def CREATE001():
+def CORE_CREATE001():
     err_msg = []
     has_kind = True
 
@@ -258,4 +257,64 @@ X-OCCI-Attribute: occi.compute.architecture="arch"\n\r\
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 
+    if not check_create:
+        print body
+
     return [has_kind and check_create, err_msg]
+
+
+def INFRA_CREATE001():
+    err_msg = []
+    has_kind = True
+    has_all_attributes = True
+    attributes = {}
+
+    body, response_headers, http_status, content_type, check_pretest, tmp_err_msg = pretest_http_status("200 OK")
+    err_msg += tmp_err_msg
+
+    print categories
+
+    #kind = search_category({'class': 'kind'})
+    kind = search_category({'class': 'kind', 'category': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
+    print kind
+
+    if not kind:
+        has_kind = False
+        err_msg.append('No OCCI Kind found')
+        return [False, err_msg]
+
+    for item in ['location', 'category', 'scheme']:
+        if not item in kind.keys():
+            has_kind = False
+            err_msg.append('No %s in OCCI Kind' % item)
+
+    headers = []
+    headers.append('Content-Type: text/plain')
+    headers.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
+
+    # experiments
+    headers.append('Category: os_tpl; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="mixin"')
+    #headers.append('Category: ipnetwork; scheme="http://schemas.ogf.org/occi/infrastructure/network#"; class="mixin"')
+    #headers.append('Category: storagelink; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
+
+    attributes = parse_attributes(kind['attributes'], err_msg)
+    #print attributes
+    for a in attributes:
+        #print 'attribute: %s' % a
+        if a['attrs'] and 'required' in a['attrs']:
+            if a['name'] not in example_attributes:
+                err_msg.append('Tests error: unknown attribute %s' % a['name'])
+                has_all_attributes = False
+                continue
+            headers.append('X-OCCI-Attribute: %s="%s"' % (a['name'], example_attributes[a['name']]))
+
+    #print headers
+
+    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = headers, post=' ')
+    check_create, tmp_err_msg = check_http_status("201 Created", http_status)
+    err_msg += tmp_err_msg
+
+    if not check_create:
+        print body
+
+    return [has_kind and has_all_attributes and check_create, err_msg]

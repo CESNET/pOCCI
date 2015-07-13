@@ -44,25 +44,31 @@ def main(argv=sys.argv[1:]):
             tests = arg.split(",")
 
     if not tests:
-        tests = ['DISCOVERY001', 'DISCOVERY002']
+        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'INFRA/CREATE/001']
 
-    if 'DISCOVERY001' in tests:
+    if 'CORE/DISCOVERY/001' in tests:
         start_time = time.time()
-        result, err_msg = DISCOVERY001()
+        result, err_msg = CORE_DISCOVERY001()
         running_time = time.time() - start_time
         results.append(occi_test('OCCI/CORE/DISCOVERY/001', result, err_msg, running_time))
 
-    if 'DISCOVERY002' in tests:
+    if 'CORE/DISCOVERY/002' in tests:
         start_time = time.time()
-        result, err_msg = DISCOVERY002()
+        result, err_msg = CORE_DISCOVERY002()
         running_time = time.time() - start_time
         results.append(occi_test('OCCI/CORE/DISCOVERY/002', result, err_msg, running_time))
 
-    if 'CREATE001' in tests:
+    if 'CORE/CREATE/001' in tests:
         start_time = time.time()
-        result, err_msg = CREATE001()
+        result, err_msg = CORE_CREATE001()
         running_time = time.time() - start_time
         results.append(occi_test('OCCI/CORE/CREATE/001', result, err_msg, running_time))
+
+    if 'INFRA/CREATE/001' in tests:
+        start_time = time.time()
+        result, err_msg = INFRA_CREATE001()
+        running_time = time.time() - start_time
+        results.append(occi_test('OCCI/INFRA/CREATE/001', result, err_msg, running_time))
 
     results = occi_format(results)
     occi_print(results, occi_config['outputformat'])
