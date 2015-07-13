@@ -7,7 +7,6 @@ import os
 
 from occi_libs import *
 
-occi_init()
 if not occi_config:
     print >> sys.stderr, 'No configuration found'
     sys.exit(2)
