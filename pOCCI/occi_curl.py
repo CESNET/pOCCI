@@ -47,11 +47,10 @@ def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config
     if post:
         curl.setopt(pycurl.POST, 1)
         curl.setopt(pycurl.POSTFIELDS, post)
-        print post
-        #post_encoded = urllib.urlencode(post)
-        #print post_encoded
-        #curl.setopt(pycurl.POSTFIELDS, post_encoded)
-        ##curl.setopt(pycurl.POSTFIELDS, str(post))
+        if curlverbose:
+            print "==== POST ==== "
+            print post
+            print "============== "
 
     # DO IT!
     curl.perform()
