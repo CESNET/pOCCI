@@ -87,13 +87,11 @@ def parse_body(body, err_msg):
     return [check_headers and check_unique, categories]
 
 
-def get_categories():
+def get_categories(err_msg):
     global categories
-    err_msg = []
 
     body, response_headers, http_status, content_type = occi_curl()
 
-    # TODO: ignoring possible errors
     check_parse, categories = parse_body(body, err_msg)
 
     if occi_config['curlverbose']:
@@ -102,7 +100,7 @@ def get_categories():
             print category
         print '===================='
 
-    return [body, response_headers, http_status, content_type]
+    return [check_parse, body, response_headers, http_status, content_type]
 
 
 def check_content_type(content_type):
@@ -128,6 +126,7 @@ def check_http_status(http_expected_status, http_status):
 
 def pretest_http_status(http_ok_status, err_msg):
     check_pretest = True
+    check_categories = True
     body = None
     response_headers = None
     http_status = None
@@ -135,10 +134,10 @@ def pretest_http_status(http_ok_status, err_msg):
 
     global categories
     if not categories:
-        body, response_headers, http_status, content_type = get_categories()
+        check_categories, body, response_headers, http_status, content_type = get_categories(err_msg)
         check_pretest, tmp_err_msg = check_http_status(http_ok_status, http_status)
         err_msg += tmp_err_msg
-    return [body, response_headers, http_status, content_type, check_pretest]
+    return [body, response_headers, http_status, content_type, check_pretest and check_categories]
 
 
 def match_category(category, filter):
