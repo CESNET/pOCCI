@@ -4,6 +4,10 @@ import os
 occi_config = {}
 
 def occi_init():
+    """Initialize pOCCI.
+
+    Reads the configuration file: /etc/pOCCI.cfg, ~/.pOCCI.cfg.
+    """
     global occi_config
 
     config = ConfigParser.ConfigParser()

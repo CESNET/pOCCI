@@ -4,6 +4,8 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
+import pOCCI
+
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
@@ -13,7 +15,7 @@ with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
 setup(
     name='pOCCI',
 
-    version='0.0.1',
+    version=pOCCI.__version__,
 
     description='OCCI Compliance Testing Tool',
     long_description=long_description,
