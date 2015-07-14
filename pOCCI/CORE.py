@@ -159,9 +159,9 @@ def check_body_resource(body):
     expected = 'X-OCCI-Location:'
     for line in body:
         if re.match(r'%s' % expected, line):
-            return [True, []]
+            return [True, line, []]
         else:
-            return [False, ['HTTP Body doesn\'t contain the OCCI Compute Resource description: "%s" expected "%s"' % (line, expected)]]
+            return [False, line, ['HTTP Body doesn\'t contain the OCCI Compute Resource description: "%s" expected "%s"' % (line, expected)]]
 
 
 def CORE_DISCOVERY001():
@@ -345,7 +345,7 @@ def INFRA_CREATE001():
     check_ct, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
 
-    check_br, tmp_err_msg = check_body_resource(body)
+    check_br, body_resource, tmp_err_msg = check_body_resource(body)
     err_msg += tmp_err_msg
 
     check_rct, tmp_err_msg = check_requested_content_type(content_type)
@@ -354,4 +354,13 @@ def INFRA_CREATE001():
     if not check_create:
         print body
 
-    return [has_kind and has_tpl and check_attributes and has_all_attributes and check_create and check_ct and check_br and check_rct, err_msg]
+    body, response_headers, http_status, content_type = occi_curl(url = '/compute')
+    check_created = False
+    for line in body:
+        if line == body_resource:
+            check_created = True
+            break
+    if not check_created:
+        err_msg.append('OCCI Compute Resource hasn\'t been successfully created')
+
+    return [has_kind and has_tpl and check_attributes and has_all_attributes and check_create and check_ct and check_br and check_rct and check_created, err_msg]
