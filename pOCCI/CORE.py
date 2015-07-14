@@ -154,6 +154,16 @@ def search_category(filter):
     return None
 
 
+def check_body_resource(body):
+    #['X-OCCI-Location: https://myriad5.zcu.cz:11443/compute/3eda9528-d40a-4a00-b4e1-d5fe51a95e4a']
+    expected = 'X-OCCI-Location:'
+    for line in body:
+        if re.match(r'%s' % expected, line):
+            return [True, []]
+        else:
+            return [False, ['HTTP Body doesn\'t contain the OCCI Compute Resource description: "%s" expected "%s"' % (line, expected)]]
+
+
 def CORE_DISCOVERY001():
     err_msg = []
     
@@ -332,7 +342,13 @@ def INFRA_CREATE001():
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 
+    check_ct, tmp_err_msg = check_content_type(content_type)
+    err_msg += tmp_err_msg
+
+    check_br, tmp_err_msg = check_body_resource(body)
+    err_msg += tmp_err_msg
+
     if not check_create:
         print body
 
-    return [has_kind and has_tpl and check_attributes and has_all_attributes and check_create, err_msg]
+    return [has_kind and has_tpl and check_attributes and has_all_attributes and check_create and check_ct and check_br, err_msg]
