@@ -22,7 +22,13 @@ def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config
     if ignoressl:
         curl.setopt(pycurl.SSL_VERIFYPEER, 0)   
         curl.setopt(pycurl.SSL_VERIFYHOST, 0)
+
+    if 'capath' in occi_config and occi_config['capath']:
+        curl.setopt(pycurl.CAPATH, occi_config['capath'])
     
+    if 'cachain' in occi_config and occi_config['cachain']:
+        curl.setopt(pycurl.CAINFO, occi_config['cachain'])
+
     # Name and password for basic auth (ONLY SUPPORTED YET)
     if authtype == "basic":
         curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
