@@ -348,7 +348,10 @@ def INFRA_CREATE001():
     check_br, tmp_err_msg = check_body_resource(body)
     err_msg += tmp_err_msg
 
+    check_rct, tmp_err_msg = check_requested_content_type(content_type)
+    err_msg += tmp_err_msg
+
     if not check_create:
         print body
 
-    return [has_kind and has_tpl and check_attributes and has_all_attributes and check_create and check_ct and check_br, err_msg]
+    return [has_kind and has_tpl and check_attributes and has_all_attributes and check_create and check_ct and check_br and check_rct, err_msg]
