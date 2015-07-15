@@ -277,28 +277,20 @@ X-OCCI-Attribute: occi.compute.architecture="arch"\n\r\
     return [has_kind and check_create, err_msg]
 
 
-def INFRA_CREATE001():
-    err_msg = []
+def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
     has_kind = True
-    has_tpl = True
     has_all_attributes = True
     check_attributes = True
-    attributes = {}
+    all_attributes = []
+    inserted_attributes = {}
 
-    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
-
-    kind = search_category({'class': 'kind', 'category': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
-    os_tpl = search_category({'class': 'mixin', 'rel': 'http://schemas.ogf.org/occi/infrastructure#os_tpl'})
+    kind = search_category({'class': 'kind', 'category': resource, 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
     #print kind
-    #print os_tpl
 
     if not kind:
         has_kind = False
         err_msg.append('No OCCI Kind found')
-    if not os_tpl:
-        has_tpl = False
-        err_msg.append('No OS template found')
-    if not kind or not os_tpl:
+    if not kind:
         return [False, err_msg]
 
     for item in ['location', 'category', 'scheme']:
@@ -306,35 +298,30 @@ def INFRA_CREATE001():
             has_kind = False
             err_msg.append('No %s in OCCI Kind' % item)
 
-    request = []
-    request.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
-    # 'category': 'uuid_ttylinux_0', 'scheme': 'http://occi.myriad5.zcu.cz/occi/infrastructure/os_tpl#', 'class': 'mixin'
-    request.append('Category: %s; scheme="%s"; class="%s"' % (os_tpl['category'], os_tpl['scheme'], 'mixin'))
-
-    attributes_compute = []
     if 'attributes' in kind:
-        attributes_compute = parse_attributes(kind['attributes'], err_msg)
-    if attributes_compute == None:
-        attributes_compute = []
+        attributes = parse_attributes(kind['attributes'], err_msg)
+    if attributes != None:
+        all_attributes += attributes
+    else:
         check_attributes = False
 
-    attributes_os_tpl = []
-    if 'attributes' in os_tpl:
-        attributes_os_tpl = parse_attributes(os_tpl['attributes'], err_msg)
-    if attributes_os_tpl == None:
-        attributes_os_tpl = []
+    if additional_attributes != None:
+        attributes = parse_attributes(additional_attributes, err_msg)
+    if attributes != None:
+        all_attributes += attributes
+    else:
         check_attributes = False
 
-    attributess = attributes_compute + attributes_os_tpl
-    #print attribues
-    for a in attributes:
+    #print 'list of attributes: %s' % attributes
+    for a in all_attributes:
         #print 'attribute: %s' % a
-        if a['attrs'] and 'required' in a['attrs']:
+        if a['attrs'] and 'required' in a['attrs'] and a['name'] not in inserted_attributes:
             if a['name'] not in example_attributes:
                 err_msg.append('Tests error: unknown attribute %s' % a['name'])
                 has_all_attributes = False
                 continue
             request.append('X-OCCI-Attribute: %s="%s"' % (a['name'], example_attributes[a['name']]))
+            inserted_attributes[a['name']] = True
 
     post = '\n'.join(request)
 
@@ -354,13 +341,40 @@ def INFRA_CREATE001():
     if not check_create:
         print body
 
-    body, response_headers, http_status, content_type = occi_curl(url = '/compute')
+    body, response_headers, http_status, content_type = occi_curl(url = kind['location'])
     check_created = False
     for line in body:
         if line == body_resource:
             check_created = True
             break
     if not check_created:
-        err_msg.append('OCCI Compute Resource hasn\'t been successfully created')
+        err_msg.append('OCCI %s Resource hasn\'t been successfully created' % resource.title())
 
-    return [has_kind and has_tpl and check_attributes and has_all_attributes and check_create and check_ct and check_br and check_rct and check_created, err_msg]
+    return [has_kind and check_attributes and has_all_attributes and check_create and check_ct and check_br and check_rct and check_created, err_msg]
+
+
+def INFRA_CREATE001():
+    err_msg = []
+    has_tpl = True
+    request = []
+
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+
+    os_tpl = search_category({'class': 'mixin', 'rel': 'http://schemas.ogf.org/occi/infrastructure#os_tpl'})
+    #print os_tpl
+    if not os_tpl:
+        has_tpl = False
+        err_msg.append('No OS template found')
+        return [False, err_msg]
+
+    request.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
+    # 'category': 'uuid_ttylinux_0', 'scheme': 'http://occi.myriad5.zcu.cz/occi/infrastructure/os_tpl#', 'class': 'mixin'
+    request.append('Category: %s; scheme="%s"; class="%s"' % (os_tpl['category'], os_tpl['scheme'], 'mixin'))
+
+    if 'attributes' in os_tpl:
+        os_tpl_attributes = os_tpl['attributes']
+    else:
+        os_tpl_attributes = None
+    return INFRA_CREATE_COMMON('compute', request, os_tpl_attributes, err_msg)
+
+
