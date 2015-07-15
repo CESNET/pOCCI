@@ -14,7 +14,9 @@ required_categories = [
 ]
 
 example_attributes = {
-    'occi.core.id': 1,
+    'occi.core.id': '"1"',
+    'occi.core.title': '"Test_title_%d"' % time.time(),
+    'occi.storage.size': "0.1",
 }
 
 
@@ -166,16 +168,16 @@ def check_body_resource(body):
 
 def CORE_DISCOVERY001():
     err_msg = []
-    
+
     check01 = False
     check02 = False
     check03 = False
-    
+
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
     check01, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
-    
+
     check02, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
 
@@ -195,7 +197,7 @@ def CORE_DISCOVERY001():
 
 def CORE_DISCOVERY002():
     err_msg = []
-    
+
     check02a = False
     check02b = False
 
@@ -211,7 +213,7 @@ def CORE_DISCOVERY002():
     body, response_headers, http_status, content_type = occi_curl(headers = cat_in)
 
     check01, err_msg = check_content_type(content_type)
-    
+
     if re.match(r'^HTTP/.* 200 OK', http_status):
         check02a = True
     else:
@@ -320,7 +322,7 @@ def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
                 err_msg.append('Tests error: unknown attribute %s' % a['name'])
                 has_all_attributes = False
                 continue
-            request.append('X-OCCI-Attribute: %s="%s"' % (a['name'], example_attributes[a['name']]))
+            request.append('X-OCCI-Attribute: %s=%s' % (a['name'], example_attributes[a['name']]))
             inserted_attributes[a['name']] = True
 
     post = '\n'.join(request)
@@ -355,6 +357,41 @@ def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
 
 def INFRA_CREATE001():
     err_msg = []
+    request = []
+
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+
+    request.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
+
+    return INFRA_CREATE_COMMON('compute', request, None, err_msg)
+
+
+def INFRA_CREATE002():
+    err_msg = []
+    request = []
+    additional_attributes = "occi.core.title{required} occi.storage.size{required}"
+
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+
+    request.append('Category: storage; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
+
+    return INFRA_CREATE_COMMON('storage', request, additional_attributes, err_msg)
+
+
+def INFRA_CREATE003():
+    err_msg = []
+    request = []
+    additional_attributes = "occi.core.title{required}"
+
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+
+    request.append('Category: network; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
+
+    return INFRA_CREATE_COMMON('network', request, additional_attributes, err_msg)
+
+
+def INFRA_CREATE004():
+    err_msg = []
     has_tpl = True
     request = []
 
@@ -376,5 +413,3 @@ def INFRA_CREATE001():
     else:
         os_tpl_attributes = None
     return INFRA_CREATE_COMMON('compute', request, os_tpl_attributes, err_msg)
-
-
