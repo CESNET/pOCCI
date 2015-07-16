@@ -167,18 +167,20 @@ def check_body_resource(body):
 
 
 def CORE_DISCOVERY001():
-    err_msg = []
+    """
+    Checks MIME type, Content-Type and required categories.
+    """
 
-    check01 = False
-    check02 = False
-    check03 = False
+    check_cat = False
+
+    err_msg = []
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
-    check01, tmp_err_msg = check_content_type(content_type)
+    check_ct, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
 
-    check02, tmp_err_msg = check_requested_content_type(content_type)
+    check_rct, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
 
     count = 0
@@ -188,18 +190,17 @@ def CORE_DISCOVERY001():
                 count += 1
                 break
     if count == 3:
-        check03 = True
+        check_cat = True
     else:
         err_msg.append('Body doesn\'t contain appropriate categories')
 
-    return [check_pretest and check01 and check02 and check03, err_msg]
+    return [check_pretest and check_ct and check_rct and check_cat, err_msg]
 
 
 def CORE_DISCOVERY002():
     err_msg = []
 
-    check02a = False
-    check02b = False
+    check_200ok = False
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
     if not categories:
@@ -212,14 +213,14 @@ def CORE_DISCOVERY002():
 
     body, response_headers, http_status, content_type = occi_curl(headers = cat_in)
 
-    check01, err_msg = check_content_type(content_type)
+    check_ct, err_msg = check_content_type(content_type)
 
     if re.match(r'^HTTP/.* 200 OK', http_status):
-        check02a = True
+        check_200ok = True
     else:
         err_msg.append('HTTP status on filter not 200 OK (%s)' % http_status)
 
-    check02b, tmp_err_msg = check_requested_content_type(content_type)
+    check_rct, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
 
     check_parse, filtered_categories = parse_body(body, err_msg)
@@ -233,7 +234,7 @@ def CORE_DISCOVERY002():
     if not check_filter:
         err_msg.append('Category "%s" (schema "%s") not in filtered result' % (category['category'], category['scheme']))
 
-    return [check_pretest and check01 and check02a and check02b and check_parse and check_filter, err_msg]
+    return [check_pretest and check_ct and check_200ok and check_rct and check_parse and check_filter, err_msg]
 
 
 def CORE_CREATE001():
