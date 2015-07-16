@@ -44,7 +44,7 @@ def main(argv=sys.argv[1:]):
             tests = arg.split(",")
 
     if not tests:
-        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'INFRA/CREATE/002', 'XINFRA/CREATE/003', 'INFRA/CREATE/004']
+        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'INFRA/CREATE/002', 'XINFRA/CREATE/003', 'INFRA/CREATE/004', 'CORE/READ/001']
 
     if 'CORE/DISCOVERY/001' in tests:
         start_time = time.time()
@@ -63,6 +63,12 @@ def main(argv=sys.argv[1:]):
         result, err_msg = CORE_READ001()
         running_time = time.time() - start_time
         results.append(occi_test('OCCI/CORE/READ/001', result, err_msg, running_time))
+
+    if 'CORE/READ/002' in tests:
+        start_time = time.time()
+        result, err_msg = CORE_READ002()
+        running_time = time.time() - start_time
+        results.append(occi_test('OCCI/CORE/READ/002', result, err_msg, running_time))
 
     if 'CORE/CREATE/001' in tests:
         start_time = time.time()

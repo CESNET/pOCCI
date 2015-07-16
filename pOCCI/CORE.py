@@ -233,38 +233,9 @@ def CORE_DISCOVERY002():
             check_filter = True
             break
     if not check_filter:
-        err_msg.append('Category "%s" (schema "%s") not in filtered result' % (category['category'], category['scheme']))
+        err_msg.append('Category "%s" (scheme "%s") not in filtered result' % (category['category'], category['scheme']))
 
     return [check_pretest and check_ct and check_200ok and check_rct and check_parse and check_filter, err_msg]
-
-
-def CORE_READ001():
-    check_url = True
-    check_200ok = False
-    err_msg = []
-
-    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
-
-    check_ct, tmp_err_msg = check_content_type(content_type)
-    err_msg += tmp_err_msg
-
-    mixin = search_category({'class': 'mixin'})
-    #kind =  search_category({'class': 'kind'})
-    for category in [mixin]:
-        body, response_headers, http_status, content_type = occi_curl(url = category['location'])
-        for line in body:
-            tmp_url = re.match(r'X-OCCI-Location: (.*)', line)
-            if not tmp_url or not bool(urlparse.urlparse(tmp_url.group(1)).netloc):
-                check_url = False
-                err_msg.append('Output is not valid')
-                break
-
-        if re.match(r'^HTTP/.* 200 OK', http_status):
-            check_200ok = True
-        else:
-            err_msg.append('Returned HTTP status is not 200 OK (%s)' % http_status)
-
-    return [check_url and check_pretest and check_ct and check_200ok, err_msg]
 
 
 def CORE_CREATE001():
@@ -308,6 +279,72 @@ X-OCCI-Attribute: occi.compute.architecture="arch"\n\r\
         print body
 
     return [has_kind and check_create, err_msg]
+
+
+def CORE_READ001():
+    check_url = True
+    check_200ok = False
+    err_msg = []
+
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+
+    check_ct, tmp_err_msg = check_content_type(content_type)
+    err_msg += tmp_err_msg
+
+    mixin = search_category({'class': 'mixin'})
+    #kind =  search_category({'class': 'kind'})
+    for category in [mixin]:
+        body, response_headers, http_status, content_type = occi_curl(url = category['location'])
+        for line in body:
+            tmp_url = re.match(r'X-OCCI-Location: (.*)', line)
+            if not tmp_url or not bool(urlparse.urlparse(tmp_url.group(1)).netloc):
+                check_url = False
+                err_msg.append('Output is not valid')
+                break
+
+        if re.match(r'^HTTP/.* 200 OK', http_status):
+            check_200ok = True
+        else:
+            err_msg.append('Returned HTTP status is not 200 OK (%s)' % http_status)
+
+    return [check_url and check_pretest and check_ct and check_200ok, err_msg]
+
+
+def CORE_READ002():
+    check_url = True
+    check_200ok = False
+    err_msg = []
+    headers = ['Content-Type: text/plain']
+
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+
+    check_ct, tmp_err_msg = check_content_type(content_type)
+    err_msg += tmp_err_msg
+
+    mixin = search_category({'class': 'mixin'})
+    #kind =  search_category({'class': 'kind'})
+    for category in [mixin]:
+        filter = search_category({'rel': '%s%s' % (category['scheme'], category['category'])})
+        headers.append('Category: %s; scheme="%s"' % (filter['category'], filter['scheme']))
+
+        body, response_headers, http_status, content_type = occi_curl(url = category['location'], headers = headers)
+        #print 'filter: %s' % str(filter)
+        for line in body:
+            tmp_url = re.match(r'X-OCCI-Location: (.*)', line)
+            if not tmp_url or not bool(urlparse.urlparse(tmp_url.group(1)).netloc):
+                check_url = False
+                err_msg.append('Output is not valid')
+                break
+
+        if re.match(r'^HTTP/.* 200 OK', http_status):
+            check_200ok = True
+        else:
+            err_msg.append('Returned HTTP status is not 200 OK (%s)' % http_status)
+
+        check_ct2, tmp_err_msg = check_content_type(content_type)
+        err_msg += tmp_err_msg
+
+    return [check_url and check_pretest and check_ct and check_ct2 and check_200ok, err_msg]
 
 
 def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
