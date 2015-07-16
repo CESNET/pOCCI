@@ -58,6 +58,12 @@ def main(argv=sys.argv[1:]):
         running_time = time.time() - start_time
         results.append(occi_test('OCCI/CORE/DISCOVERY/002', result, err_msg, running_time))
 
+    if 'CORE/READ/001' in tests:
+        start_time = time.time()
+        result, err_msg = CORE_READ001()
+        running_time = time.time() - start_time
+        results.append(occi_test('OCCI/CORE/READ/001', result, err_msg, running_time))
+
     if 'CORE/CREATE/001' in tests:
         start_time = time.time()
         result, err_msg = CORE_CREATE001()
