@@ -1,6 +1,13 @@
 pOCCI
 =====
 
+CORE
+----
+
+.. automodule:: pOCCI.CORE
+   :members:
+   :undoc-members:
+
 occi_curl
 ---------
 
