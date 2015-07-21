@@ -44,7 +44,7 @@ def main(argv=sys.argv[1:]):
             tests = arg.split(",")
 
     if not tests:
-        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'INFRA/CREATE/002', 'XINFRA/CREATE/003', 'INFRA/CREATE/004', 'CORE/READ/001']
+        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'INFRA/CREATE/001', 'INFRA/CREATE/002', 'INFRA/CREATE/003', 'INFRA/CREATE/004', 'CORE/READ/001', 'CORE/READ/002']
 
     if 'CORE/DISCOVERY/001' in tests:
         start_time = time.time()

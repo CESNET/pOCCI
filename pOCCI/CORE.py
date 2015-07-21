@@ -383,7 +383,7 @@ def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
     #print 'list of attributes: %s' % attributes
     for a in all_attributes:
         #print 'attribute: %s' % a
-        if a['attrs'] and 'required' in a['attrs'] and a['name'] not in inserted_attributes:
+        if a['attrs'] and ('required' in a['attrs'] and not 'immutable' in a['attrs']) and a['name'] not in inserted_attributes:
             if a['name'] not in example_attributes:
                 err_msg.append('Tests error: unknown attribute %s' % a['name'])
                 has_all_attributes = False
