@@ -308,41 +308,56 @@ def CORE_READ001():
     return [check_url and check_pretest and check_ct and check_200ok, err_msg]
 
 
-def CORE_READ002():
+def CORE_READ002_COMMON(category, links = []):
     check_url = True
     check_200ok = False
     err_msg = []
-    headers = ['Content-Type: text/plain']
+    headers = []
+
+    headers.append('Content-Type: text/plain')
+    headers.append('Category: %s; scheme="%s"' % (category['category'], category['scheme']))
+
+    body, response_headers, http_status, content_type = occi_curl(url = category['location'], headers = headers)
+    for line in body:
+        tmp_url = re.match(r'X-OCCI-Location: (.*)', line)
+        url = tmp_url.group(1)
+        if not tmp_url or not bool(urlparse.urlparse(url).netloc):
+            check_url = False
+            err_msg.append('Output is not valid')
+            del links[:]
+            break
+        links.append(url)
+
+    if re.match(r'^HTTP/.* 200 OK', http_status):
+        check_200ok = True
+    else:
+        err_msg.append('Returned HTTP status is not 200 OK (%s)' % http_status)
+
+    check_ct2, tmp_err_msg = check_content_type(content_type)
+    err_msg += tmp_err_msg
+
+    return [check_url and check_ct2 and check_200ok, err_msg]
+
+
+def CORE_READ002():
+    err_msg = []
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
     check_ct, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
 
+    if not check_pretest:
+        return [False, err_msg]
+
     mixin = search_category({'class': 'mixin'})
     #kind =  search_category({'class': 'kind'})
     for category in [mixin]:
         filter = search_category({'rel': '%s%s' % (category['scheme'], category['category'])})
-        headers.append('Category: %s; scheme="%s"' % (filter['category'], filter['scheme']))
-
-        body, response_headers, http_status, content_type = occi_curl(url = category['location'], headers = headers)
-        #print 'filter: %s' % str(filter)
-        for line in body:
-            tmp_url = re.match(r'X-OCCI-Location: (.*)', line)
-            if not tmp_url or not bool(urlparse.urlparse(tmp_url.group(1)).netloc):
-                check_url = False
-                err_msg.append('Output is not valid')
-                break
-
-        if re.match(r'^HTTP/.* 200 OK', http_status):
-            check_200ok = True
-        else:
-            err_msg.append('Returned HTTP status is not 200 OK (%s)' % http_status)
-
-        check_ct2, tmp_err_msg = check_content_type(content_type)
+        check_read, tmp_err_msg = CORE_READ002_COMMON(category = filter)
         err_msg += tmp_err_msg
 
-    return [check_url and check_pretest and check_ct and check_ct2 and check_200ok, err_msg]
+    return [check_ct and check_read, err_msg]
 
 
 def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
@@ -479,3 +494,52 @@ def INFRA_CREATE004():
     else:
         os_tpl_attributes = None
     return INFRA_CREATE_COMMON('compute', request, os_tpl_attributes, err_msg)
+
+
+def INFRA_CREATE005():
+    network_links = []
+    storage_links = []
+    err_msg = []
+    check = True
+
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+
+    check_ct, tmp_err_msg = check_content_type(content_type)
+    err_msg += tmp_err_msg
+
+    if not check_pretest:
+        return [False, err_msg]
+
+    storage = search_category({'category':'storage', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    network = search_category({'category':'network', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    check_read, tmp_err_msg = CORE_READ002_COMMON(category=storage, links=storage_links)
+    if not check_read:
+        check = False
+    err_msg += tmp_err_msg
+
+    check_read, tmp_err_msg = CORE_READ002_COMMON(category=network, links=network_links)
+    if not check_read:
+        check = False
+    err_msg += tmp_err_msg
+
+    print storage_links
+    print network_links
+    if not storage_links or not network_links:
+        if not storage_links:
+            err_msg.append('No storage found')
+        if not network_links:
+            err_msg.append('No network found')
+        return [False, err_msg]
+
+    compute = search_category({'category':'compute', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+
+    new_compute = 'Category: %s; scheme="%s"; class="%s"\n\r\
+Link: <%s>; rel="%s"; category="%s"\n\r\
+Link: <%s>; rel="%s"; category="%s"\n\r\
+' % (compute['category'], compute['scheme'], compute['class'], storage_links[0], storage['scheme'] + storage['category'], 'http://schemas.ogf.org/occi/infrastructure#storagelink', network_links[0], network['scheme'] + network['category'], 'http://schemas.ogf.org/occi/infrastructure#networkinterface')
+
+    body, response_headers, http_status, content_type = occi_curl(url = compute['location'], headers = ['Content-Type: text/plain'], post = new_compute)
+
+    print body
+
+    return [check, err_msg]
