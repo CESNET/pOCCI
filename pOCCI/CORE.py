@@ -135,11 +135,9 @@ def pretest_http_status(http_ok_status, err_msg):
     http_status = None
     content_type = None
 
-    global categories
-    if not categories:
-        check_categories, body, response_headers, http_status, content_type = get_categories(err_msg)
-        check_pretest, tmp_err_msg = check_http_status(http_ok_status, http_status)
-        err_msg += tmp_err_msg
+    check_categories, body, response_headers, http_status, content_type = get_categories(err_msg)
+    check_pretest, tmp_err_msg = check_http_status(http_ok_status, http_status)
+    err_msg += tmp_err_msg
     return [body, response_headers, http_status, content_type, check_pretest and check_categories]
 
 
