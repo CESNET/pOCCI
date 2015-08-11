@@ -497,6 +497,12 @@ def INFRA_CREATE004():
 
 
 def INFRA_CREATE005():
+    """
+    Unsupported test, os_tpl required.
+
+    It can be called by pOCCI -t 'INFRA/CREATE/005'
+    """
+
     network_links = []
     storage_links = []
     err_msg = []
