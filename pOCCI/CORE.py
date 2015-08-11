@@ -572,3 +572,71 @@ def CORE_CREATE006():
         print body
 
     return [check_create, err_msg]
+
+
+def INFRA_CREATE006():
+    err_msg = []
+    check = True
+    compute_links = []
+    storage_links = []
+    storagelink = None
+
+    body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+    if not check_pretest:
+        return [False, err_msg]
+
+    compute = search_category({'category':'compute', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    storage = search_category({'category':'storage', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+
+    check_read, tmp_err_msg = CORE_READ002_COMMON(category=compute, links=compute_links)
+    if not check_read:
+        check = False
+    err_msg += tmp_err_msg
+
+    check_read, tmp_err_msg = CORE_READ002_COMMON(category=storage, links=storage_links)
+    if not check_read:
+        check = False
+    err_msg += tmp_err_msg
+
+    print storage_links
+    print compute_links
+
+    if not storage_links or not compute_links:
+        if not storage_links:
+            err_msg.append('No storage found')
+        if not compute_links:
+            err_msg.append('No compute found')
+        return [False, err_msg]
+
+    storagelink = search_category({'category':'storagelink', 'scheme':'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
+    if not storagelink:
+        err_msg.append('No storagelink kind found')
+        return [False, err_msg]
+
+    print storagelink
+
+    new_storagelink = 'Category: %s; scheme="%s"; class="%s"\n\r\
+Link: <%s>; rel="%s"; category="%s"\n\r\
+Link: <%s>; rel="%s"; category="%s"\n\r\
+' % (
+    storagelink['category'], storagelink['scheme'], storagelink['class'],
+    storage_links[0], 'http://schemas.ogf.org/occi/core#link', storage['scheme'] + storage['category'],
+    compute_links[0], 'http://schemas.ogf.org/occi/core#link', compute['scheme'] + compute['category'])
+
+#    new_storagelink = 'Category: %s; scheme="%s"; class="%s"\n\r\
+#Link: <%s>; rel="%s"\n\r\
+#Link: <%s>; rel="%s"\n\r\
+#' % (
+#    storagelink['category'], storagelink['scheme'], storagelink['class'],
+#    storage_links[0], 'http://schemas.ogf.org/occi/core#link',
+#    compute_links[0], 'http://schemas.ogf.org/occi/core#link')
+
+    body, response_headers, http_status, content_type = occi_curl(url = storagelink['location'], headers = ['Content-Type: text/plain'], post = new_storagelink)
+
+    check_create, tmp_err_msg = check_http_status("201 Created", http_status)
+    err_msg += tmp_err_msg
+
+    if not check_create:
+        print body
+
+    return [check and check_create, err_msg]
