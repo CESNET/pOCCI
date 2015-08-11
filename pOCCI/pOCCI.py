@@ -79,6 +79,12 @@ def main(argv=sys.argv[1:]):
         running_time = time.time() - start_time
         results.append(occi_test('OCCI/CORE/CREATE/001', result, err_msg, running_time))
 
+    if 'CORE/CREATE/006' in tests:
+        start_time = time.time()
+        result, err_msg = CORE_CREATE006()
+        running_time = time.time() - start_time
+        results.append(occi_test('OCCI/CORE/CREATE/006', result, err_msg, running_time))
+
     if 'INFRA/CREATE/001' in tests:
         start_time = time.time()
         result, err_msg = INFRA_CREATE001()
@@ -108,12 +114,6 @@ def main(argv=sys.argv[1:]):
         result, err_msg = INFRA_CREATE005()
         running_time = time.time() - start_time
         results.append(occi_test('OCCI/INFRA/CREATE/005', result, err_msg, running_time))
-
-    if 'INFRA/CREATE/006' in tests:
-        start_time = time.time()
-        result, err_msg = INFRA_CREATE006()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/INFRA/CREATE/006', result, err_msg, running_time))
 
     results = occi_format(results)
     occi_print(results, occi_config['outputformat'])

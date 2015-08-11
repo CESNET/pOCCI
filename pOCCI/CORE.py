@@ -554,11 +554,11 @@ Link: <%s>; rel="%s"; category="%s"\n\r\
     return [check and check_create, err_msg]
 
 
-def INFRA_CREATE006():
+def CORE_CREATE006():
     """
     Unsupported test, not implemented
 
-    It can be called by pOCCI -t 'INFRA/CREATE/006'
+    It can be called by pOCCI -t 'CORE/CREATE/006'
     """
 
     err_msg = []
