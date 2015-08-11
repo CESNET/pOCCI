@@ -122,7 +122,7 @@ def check_requested_content_type(content_type):
 
 def check_http_status(http_expected_status, http_status):
     if not re.match(r'^HTTP/.* %s' % http_expected_status, http_status):
-        return [False, ['HTTP status from getting categories not %s (%s)' % (http_expected_status, http_status)]]
+        return [False, ['HTTP status is not %s (%s)' % (http_expected_status, http_status)]]
     else:
         return [True, []]
 
@@ -549,3 +549,22 @@ Link: <%s>; rel="%s"; category="%s"\n\r\
     print body
 
     return [check, err_msg]
+
+
+def INFRA_CREATE006():
+    """
+    Unsupported test, not implemented
+
+    It can be called by pOCCI -t 'INFRA/CREATE/006'
+    """
+
+    err_msg = []
+    new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; location: "/mixin/resource_tpl/extra_large/", rel: "http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
+    #new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http:/example.com/occi/something_else#mixin"; location="/my_stuff/"'
+    body, response_headers, http_status, content_type = occi_curl(url = '/-/', headers = ['Content-Type: text/plain'], post = new_mixin)
+    check_create, tmp_err_msg = check_http_status("200 OK", http_status)
+    err_msg += tmp_err_msg
+
+    print body
+
+    return [check_create, err_msg]

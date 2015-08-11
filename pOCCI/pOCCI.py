@@ -22,6 +22,7 @@ OPTIONS:\n\
   -h, --help ................ usage message\n\
   -f, --format FORMAT ....... output format (plain, json)\n\
   -t, --tests <TEST1,...> ... list of tests\n\
+  -v, --verbose ............. verbose mode\n\
 " % os.path.basename(name)
 
 
@@ -30,7 +31,7 @@ def main(argv=sys.argv[1:]):
     tests = []
 
     try:
-        opts, args = getopt.getopt(argv,"hf:t:",["help", "format=", "tests="])
+        opts, args = getopt.getopt(argv,"hf:t:v",["help", "format=", "tests=", "verbose"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -42,6 +43,8 @@ def main(argv=sys.argv[1:]):
             occi_config['outputformat'] = arg
         elif opt in ("-t", "--tests"):
             tests = arg.split(",")
+        elif opt in ("-v", "--verbose"):
+            occi_config['curlverbose'] = True
 
     if not tests:
         tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'INFRA/CREATE/001', 'INFRA/CREATE/002', 'INFRA/CREATE/003', 'INFRA/CREATE/004', 'CORE/READ/001', 'CORE/READ/002']
@@ -105,6 +108,12 @@ def main(argv=sys.argv[1:]):
         result, err_msg = INFRA_CREATE005()
         running_time = time.time() - start_time
         results.append(occi_test('OCCI/INFRA/CREATE/005', result, err_msg, running_time))
+
+    if 'INFRA/CREATE/006' in tests:
+        start_time = time.time()
+        result, err_msg = INFRA_CREATE006()
+        running_time = time.time() - start_time
+        results.append(occi_test('OCCI/INFRA/CREATE/006', result, err_msg, running_time))
 
     results = occi_format(results)
     occi_print(results, occi_config['outputformat'])
