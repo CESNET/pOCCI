@@ -545,10 +545,13 @@ Link: <%s>; rel="%s"; category="%s"\n\r\
 ' % (compute['category'], compute['scheme'], compute['class'], storage_links[0], storage['scheme'] + storage['category'], 'http://schemas.ogf.org/occi/infrastructure#storagelink', network_links[0], network['scheme'] + network['category'], 'http://schemas.ogf.org/occi/infrastructure#networkinterface')
 
     body, response_headers, http_status, content_type = occi_curl(url = compute['location'], headers = ['Content-Type: text/plain'], post = new_compute)
+    check_create, tmp_err_msg = check_http_status("201 Created", http_status)
+    err_msg += tmp_err_msg
 
-    print body
+    if not check_create:
+        print body
 
-    return [check, err_msg]
+    return [check and check_create, err_msg]
 
 
 def INFRA_CREATE006():
@@ -565,6 +568,7 @@ def INFRA_CREATE006():
     check_create, tmp_err_msg = check_http_status("200 OK", http_status)
     err_msg += tmp_err_msg
 
-    print body
+    if not check_create:
+        print body
 
     return [check_create, err_msg]
