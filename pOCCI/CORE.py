@@ -597,16 +597,17 @@ Link: <%s>; rel="%s"; category="%s"\n\r\
     return [check and check_create, err_msg]
 
 
-def INFRA_CREATE006():
+def INFRA_CREATE_LINK(resource_name, resource_type):
     """
     Opennebula requires running compute instance.
     """
+
     err_msg = []
     check = True
     check_link = False
     compute_links = []
-    storage_links = []
-    storagelink = None
+    resource_links = []
+    resourcelink = None
     attributes = {}
     attribute_definitions = []
 
@@ -615,51 +616,51 @@ def INFRA_CREATE006():
         return [False, err_msg]
 
     compute = search_category({'category':'compute', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
-    storage = search_category({'category':'storage', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    resource = search_category({'category':resource_name, 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
 
     check_read, tmp_err_msg = CORE_READ002_COMMON(category=compute, links=compute_links)
     if not check_read:
         check = False
     err_msg += tmp_err_msg
 
-    check_read, tmp_err_msg = CORE_READ002_COMMON(category=storage, links=storage_links)
+    check_read, tmp_err_msg = CORE_READ002_COMMON(category=resource, links=resource_links)
     if not check_read:
         check = False
     err_msg += tmp_err_msg
 
-    #print storage_links
+    #print resource_links
     #print compute_links
 
-    if not storage_links or not compute_links:
-        if not storage_links:
-            err_msg.append('No storage found')
+    if not resource_links or not compute_links:
+        if not resource_links:
+            err_msg.append('No %s found' % resource_name)
         if not compute_links:
             err_msg.append('No compute found')
         return [False, err_msg]
 
-    storagelink = search_category({'category':'storagelink', 'scheme':'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
-    if not storagelink:
-        err_msg.append('No storagelink kind found')
+    resourcelink = search_category({'category':'%s%s' % (resource_name, resource_type), 'scheme':'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
+    if not resourcelink:
+        err_msg.append('No %slink kind found' % resource_name)
         return [False, err_msg]
-    #print storagelink
+    #print resourcelink
 
-    if 'attributes' in storagelink:
-        attribute_definitions = parse_attributes(storagelink['attributes'], err_msg)
+    if 'attributes' in resourcelink:
+        attribute_definitions = parse_attributes(resourcelink['attributes'], err_msg)
     if not attribute_definitions:
         check = False
 
-    attributes['occi.core.id'] = '"%s"' % gen_id('Storagelink')
+    attributes['occi.core.id'] = '"%s"' % gen_id('%s%s' % (resource_name.capitalize(), resource_type))
     attributes['occi.core.source'] = '"%s"' % compute_links[0]
-    attributes['occi.core.target'] = '"%s"' % storage_links[0]
+    attributes['occi.core.target'] = '"%s"' % resource_links[0]
     if not get_attributes(attribute_definitions, attributes, err_msg):
         check = False
     #print attributes
 
-    new_storagelink = 'Category: %s; scheme="%s"; class="%s"\n\r' % ( storagelink['category'], storagelink['scheme'], storagelink['class'])
+    new_resourcelink = 'Category: %s; scheme="%s"; class="%s"\n\r' % ( resourcelink['category'], resourcelink['scheme'], resourcelink['class'])
     for key in attributes.keys():
-        new_storagelink += 'X-OCCI-Attribute: %s=%s\n\r' % (key, attributes[key])
+        new_resourcelink += 'X-OCCI-Attribute: %s=%s\n\r' % (key, attributes[key])
 
-    body, response_headers, http_status, content_type = occi_curl(url = storagelink['location'], headers = ['Content-Type: text/plain'], post = new_storagelink)
+    body, response_headers, http_status, content_type = occi_curl(url = resourcelink['location'], headers = ['Content-Type: text/plain'], post = new_resourcelink)
 
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
@@ -667,16 +668,32 @@ def INFRA_CREATE006():
     if not check_create:
         print body
 
-    storage_link = urlparse.urlparse(storage_links[0]).path
+    resource_link = urlparse.urlparse(resource_links[0]).path
 
     body, response_headers, http_status, content_type = occi_curl(base_url = compute_links[0], url = '', headers = ['Content-Type: text/plain'])
     for line in body:
-        if re.match(r'^Link: <.*%s>' % storage_link, line):
+        if re.match(r'^Link: <.*%s>' % resource_link, line):
             check_link = True
             break
 
     if not check_link:
-        err_msg += ["OCCI Compute Resource is NOT linked with OCCI Storage Resource!"]
+        err_msg += ["OCCI Compute Resource is NOT linked with OCCI %s Resource!" % (resource_name.capitalize())]
         print body
 
     return [check and check_create and check_link, err_msg]
+
+
+def INFRA_CREATE006():
+    """
+    Opennebula requires running compute instance.
+    """
+
+    return INFRA_CREATE_LINK('storage', 'link')
+
+
+def INFRA_CREATE007():
+    """
+    Opennebula requires running compute instance.
+    """
+
+    return INFRA_CREATE_LINK('network', 'interface')

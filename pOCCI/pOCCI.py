@@ -47,7 +47,7 @@ def main(argv=sys.argv[1:]):
             occi_config['curlverbose'] = True
 
     if not tests:
-        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'INFRA/CREATE/001', 'INFRA/CREATE/002', 'INFRA/CREATE/003', 'INFRA/CREATE/004', 'INFRA/CREATE/006', 'CORE/READ/001', 'CORE/READ/002']
+        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'CORE/READ/001', 'CORE/READ/002', 'INFRA/CREATE/001', 'INFRA/CREATE/002', 'INFRA/CREATE/003', 'INFRA/CREATE/004', 'INFRA/CREATE/006', 'INFRA/CREATE/007']
 
     if 'CORE/DISCOVERY/001' in tests:
         start_time = time.time()
@@ -120,6 +120,12 @@ def main(argv=sys.argv[1:]):
         result, err_msg = INFRA_CREATE006()
         running_time = time.time() - start_time
         results.append(occi_test('OCCI/INFRA/CREATE/006', result, err_msg, running_time))
+
+    if 'INFRA/CREATE/007' in tests:
+        start_time = time.time()
+        result, err_msg = INFRA_CREATE007()
+        running_time = time.time() - start_time
+        results.append(occi_test('OCCI/INFRA/CREATE/007', result, err_msg, running_time))
 
     results = occi_format(results)
     occi_print(results, occi_config['outputformat'])
