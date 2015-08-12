@@ -165,6 +165,10 @@ def check_body_resource(body):
             return [False, line, ['HTTP Body doesn\'t contain the OCCI Compute Resource description: "%s" expected "%s"' % (line, expected)]]
 
 
+def gen_id(prefix):
+    return '%s_%d' % (prefix, time.time())
+
+
 def CORE_DISCOVERY001():
     """
     Checks MIME type, Content-Type and required categories.
@@ -259,7 +263,7 @@ def CORE_CREATE001():
     #])
     #new_cat = dict()
     #new_cat['Category'], '%s; scheme="%s"; class="%s";' % (kind['category'], kind['scheme'], kind['class'])
-    ##new_cat['X-OOCI-Attribute'] = 'occi.core.id=1'
+    ##new_cat['X-OCCI-Attribute'] = 'occi.core.id=1'
 
     new_cat = 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="titulek"\n\r\
 X-OCCI-Attribute: occi.core.id="titulek"\n\r\
@@ -358,6 +362,25 @@ def CORE_READ002():
         err_msg += tmp_err_msg
 
     return [check_ct and check_read, err_msg]
+
+
+# attribute_definitions = []
+# attributes = {}
+# err_msg = []
+def get_attributes(attribute_definitions, attributes, err_msg):
+    has_all_attributes = True
+
+    #print 'list of attributes: %s' % attributes
+    for ad in attribute_definitions:
+        #print 'attribute: %s' % ad
+        if ad['attrs'] and ('required' in ad['attrs'] and not 'immutable' in ad['attrs']) and not ad['name'] in attributes:
+            if ad['name'] not in example_attributes:
+                err_msg.append('Tests error: unknown attribute %s' % ad['name'])
+                has_all_attributes = False
+                continue
+            attributes[ad['name']] = example_attributes[ad['name']]
+
+    return has_all_attributes
 
 
 def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
@@ -575,11 +598,16 @@ def CORE_CREATE006():
 
 
 def INFRA_CREATE006():
+    """
+    Opennebula requires running compute instance.
+    """
     err_msg = []
     check = True
     compute_links = []
     storage_links = []
     storagelink = None
+    attributes = {}
+    attribute_definitions = []
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
     if not check_pretest:
@@ -598,8 +626,8 @@ def INFRA_CREATE006():
         check = False
     err_msg += tmp_err_msg
 
-    print storage_links
-    print compute_links
+    #print storage_links
+    #print compute_links
 
     if not storage_links or not compute_links:
         if not storage_links:
@@ -612,24 +640,23 @@ def INFRA_CREATE006():
     if not storagelink:
         err_msg.append('No storagelink kind found')
         return [False, err_msg]
+    #print storagelink
 
-    print storagelink
+    if 'attributes' in storagelink:
+        attribute_definitions = parse_attributes(storagelink['attributes'], err_msg)
+    if not attribute_definitions:
+        check = False
 
-    new_storagelink = 'Category: %s; scheme="%s"; class="%s"\n\r\
-Link: <%s>; rel="%s"; category="%s"\n\r\
-Link: <%s>; rel="%s"; category="%s"\n\r\
-' % (
-    storagelink['category'], storagelink['scheme'], storagelink['class'],
-    storage_links[0], 'http://schemas.ogf.org/occi/core#link', storage['scheme'] + storage['category'],
-    compute_links[0], 'http://schemas.ogf.org/occi/core#link', compute['scheme'] + compute['category'])
+    attributes['occi.core.id'] = '"%s"' % gen_id('Storagelink')
+    attributes['occi.core.source'] = '"%s"' % compute_links[0]
+    attributes['occi.core.target'] = '"%s"' % storage_links[0]
+    if not get_attributes(attribute_definitions, attributes, err_msg):
+        check = False
+    #print attributes
 
-#    new_storagelink = 'Category: %s; scheme="%s"; class="%s"\n\r\
-#Link: <%s>; rel="%s"\n\r\
-#Link: <%s>; rel="%s"\n\r\
-#' % (
-#    storagelink['category'], storagelink['scheme'], storagelink['class'],
-#    storage_links[0], 'http://schemas.ogf.org/occi/core#link',
-#    compute_links[0], 'http://schemas.ogf.org/occi/core#link')
+    new_storagelink = 'Category: %s; scheme="%s"; class="%s"\n\r' % ( storagelink['category'], storagelink['scheme'], storagelink['class'])
+    for key in attributes.keys():
+        new_storagelink += 'X-OCCI-Attribute: %s=%s\n\r' % (key, attributes[key])
 
     body, response_headers, http_status, content_type = occi_curl(url = storagelink['location'], headers = ['Content-Type: text/plain'], post = new_storagelink)
 

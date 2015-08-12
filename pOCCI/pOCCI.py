@@ -47,7 +47,7 @@ def main(argv=sys.argv[1:]):
             occi_config['curlverbose'] = True
 
     if not tests:
-        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'INFRA/CREATE/001', 'INFRA/CREATE/002', 'INFRA/CREATE/003', 'INFRA/CREATE/004', 'CORE/READ/001', 'CORE/READ/002']
+        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'INFRA/CREATE/001', 'INFRA/CREATE/002', 'INFRA/CREATE/003', 'INFRA/CREATE/004', 'INFRA/CREATE/006', 'CORE/READ/001', 'CORE/READ/002']
 
     if 'CORE/DISCOVERY/001' in tests:
         start_time = time.time()
