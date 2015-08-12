@@ -15,6 +15,31 @@ from CORE import *
 from occi_curl import occi_curl
 
 
+tests_definitions = {
+    'OCCI/CORE/DISCOVERY/001': CORE_DISCOVERY001,
+    'OCCI/CORE/DISCOVERY/002': CORE_DISCOVERY002,
+    'OCCI/CORE/READ/001': CORE_READ001,
+    'OCCI/CORE/READ/002': CORE_READ002,
+    'OCCI/CORE/CREATE/001': CORE_CREATE001,
+    'OCCI/CORE/CREATE/006': CORE_CREATE006,
+
+    'OCCI/INFRA/CREATE/001': INFRA_CREATE001,
+    'OCCI/INFRA/CREATE/002': INFRA_CREATE002,
+    'OCCI/INFRA/CREATE/003': INFRA_CREATE003,
+    'OCCI/INFRA/CREATE/004': INFRA_CREATE004,
+    'OCCI/INFRA/CREATE/005': INFRA_CREATE005,
+    'OCCI/INFRA/CREATE/006': INFRA_CREATE006,
+    'OCCI/INFRA/CREATE/007': INFRA_CREATE007,
+}
+
+
+tests_skipped = set([
+    'OCCI/CORE/CREATE/001',
+    'OCCI/CORE/CREATE/006',
+    'OCCI/INFRA/CREATE/005',
+])
+
+
 def usage(name = __file__):
     print "%s [OPTIONS]\n\
 \n\
@@ -47,85 +72,16 @@ def main(argv=sys.argv[1:]):
             occi_config['curlverbose'] = True
 
     if not tests:
-        tests = ['CORE/DISCOVERY/001', 'CORE/DISCOVERY/002', 'CORE/READ/001', 'CORE/READ/002', 'INFRA/CREATE/001', 'INFRA/CREATE/002', 'INFRA/CREATE/003', 'INFRA/CREATE/004', 'INFRA/CREATE/006', 'INFRA/CREATE/007']
+        tests = sorted(list(set(tests_definitions.keys()) - tests_skipped))
 
-    if 'CORE/DISCOVERY/001' in tests:
-        start_time = time.time()
-        result, err_msg = CORE_DISCOVERY001()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/CORE/DISCOVERY/001', result, err_msg, running_time))
-
-    if 'CORE/DISCOVERY/002' in tests:
-        start_time = time.time()
-        result, err_msg = CORE_DISCOVERY002()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/CORE/DISCOVERY/002', result, err_msg, running_time))
-
-    if 'CORE/READ/001' in tests:
-        start_time = time.time()
-        result, err_msg = CORE_READ001()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/CORE/READ/001', result, err_msg, running_time))
-
-    if 'CORE/READ/002' in tests:
-        start_time = time.time()
-        result, err_msg = CORE_READ002()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/CORE/READ/002', result, err_msg, running_time))
-
-    if 'CORE/CREATE/001' in tests:
-        start_time = time.time()
-        result, err_msg = CORE_CREATE001()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/CORE/CREATE/001', result, err_msg, running_time))
-
-    if 'CORE/CREATE/006' in tests:
-        start_time = time.time()
-        result, err_msg = CORE_CREATE006()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/CORE/CREATE/006', result, err_msg, running_time))
-
-    if 'INFRA/CREATE/001' in tests:
-        start_time = time.time()
-        result, err_msg = INFRA_CREATE001()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/INFRA/CREATE/001', result, err_msg, running_time))
-
-    if 'INFRA/CREATE/002' in tests:
-        start_time = time.time()
-        result, err_msg = INFRA_CREATE002()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/INFRA/CREATE/002', result, err_msg, running_time))
-
-    if 'INFRA/CREATE/003' in tests:
-        start_time = time.time()
-        result, err_msg = INFRA_CREATE003()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/INFRA/CREATE/003', result, err_msg, running_time))
-
-    if 'INFRA/CREATE/004' in tests:
-        start_time = time.time()
-        result, err_msg = INFRA_CREATE004()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/INFRA/CREATE/004', result, err_msg, running_time))
-
-    if 'INFRA/CREATE/005' in tests:
-        start_time = time.time()
-        result, err_msg = INFRA_CREATE005()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/INFRA/CREATE/005', result, err_msg, running_time))
-
-    if 'INFRA/CREATE/006' in tests:
-        start_time = time.time()
-        result, err_msg = INFRA_CREATE006()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/INFRA/CREATE/006', result, err_msg, running_time))
-
-    if 'INFRA/CREATE/007' in tests:
-        start_time = time.time()
-        result, err_msg = INFRA_CREATE007()
-        running_time = time.time() - start_time
-        results.append(occi_test('OCCI/INFRA/CREATE/007', result, err_msg, running_time))
+    for test in tests:
+        if not re.match(r'OCCI/', test):
+            test = 'OCCI/' + test
+        if test in tests_definitions.keys():
+            start_time = time.time()
+            result, err_msg = tests_definitions[test]()
+            running_time = time.time() - start_time
+            results.append(occi_test(test, result, err_msg, running_time))
 
     results = occi_format(results)
     occi_print(results, occi_config['outputformat'])
