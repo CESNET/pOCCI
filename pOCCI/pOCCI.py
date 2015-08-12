@@ -46,6 +46,7 @@ def usage(name = __file__):
 OPTIONS:\n\
   -h, --help ................ usage message\n\
   -f, --format FORMAT ....... output format (plain, json)\n\
+  -l, --list ................ list all test\n\
   -t, --tests <TEST1,...> ... list of tests\n\
   -v, --verbose ............. verbose mode\n\
 " % os.path.basename(name)
@@ -56,7 +57,7 @@ def main(argv=sys.argv[1:]):
     tests = []
 
     try:
-        opts, args = getopt.getopt(argv,"hf:t:v",["help", "format=", "tests=", "verbose"])
+        opts, args = getopt.getopt(argv,"hf:lt:v",["help", "format=", "list", "tests=", "verbose"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -66,6 +67,9 @@ def main(argv=sys.argv[1:]):
             sys.exit()
         elif opt in ("-f", "--format"):
             occi_config['outputformat'] = arg
+        elif opt in ("-l", "--list"):
+            print '\n'.join(sorted(tests_definitions.keys()));
+            sys.exit();
         elif opt in ("-t", "--tests"):
             tests = arg.split(",")
         elif opt in ("-v", "--verbose"):
