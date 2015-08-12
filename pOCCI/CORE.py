@@ -283,6 +283,26 @@ X-OCCI-Attribute: occi.compute.architecture="arch"\n\r\
     return [has_kind and check_create, err_msg]
 
 
+def CORE_CREATE006():
+    """
+    Unsupported test, not implemented
+
+    It can be called by pOCCI -t 'CORE/CREATE/006'
+    """
+
+    err_msg = []
+    new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; location: "/mixin/resource_tpl/extra_large/", rel: "http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
+    #new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http:/example.com/occi/something_else#mixin"; location="/my_stuff/"'
+    body, response_headers, http_status, content_type = occi_curl(url = '/-/', headers = ['Content-Type: text/plain'], post = new_mixin)
+    check_create, tmp_err_msg = check_http_status("200 OK", http_status)
+    err_msg += tmp_err_msg
+
+    if not check_create:
+        print body
+
+    return [check_create, err_msg]
+
+
 def CORE_READ001():
     check_url = True
     check_200ok = False
@@ -577,32 +597,13 @@ Link: <%s>; rel="%s"; category="%s"\n\r\
     return [check and check_create, err_msg]
 
 
-def CORE_CREATE006():
-    """
-    Unsupported test, not implemented
-
-    It can be called by pOCCI -t 'CORE/CREATE/006'
-    """
-
-    err_msg = []
-    new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; location: "/mixin/resource_tpl/extra_large/", rel: "http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
-    #new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http:/example.com/occi/something_else#mixin"; location="/my_stuff/"'
-    body, response_headers, http_status, content_type = occi_curl(url = '/-/', headers = ['Content-Type: text/plain'], post = new_mixin)
-    check_create, tmp_err_msg = check_http_status("200 OK", http_status)
-    err_msg += tmp_err_msg
-
-    if not check_create:
-        print body
-
-    return [check_create, err_msg]
-
-
 def INFRA_CREATE006():
     """
     Opennebula requires running compute instance.
     """
     err_msg = []
     check = True
+    check_link = False
     compute_links = []
     storage_links = []
     storagelink = None
@@ -666,4 +667,16 @@ def INFRA_CREATE006():
     if not check_create:
         print body
 
-    return [check and check_create, err_msg]
+    storage_link = urlparse.urlparse(storage_links[0]).path
+
+    body, response_headers, http_status, content_type = occi_curl(base_url = compute_links[0], url = '', headers = ['Content-Type: text/plain'])
+    for line in body:
+        if re.match(r'^Link: <.*%s>' % storage_link, line):
+            check_link = True
+            break
+
+    if not check_link:
+        err_msg += ["OCCI Compute Resource is NOT linked with OCCI Storage Resource!"]
+        print body
+
+    return [check and check_create and check_link, err_msg]
