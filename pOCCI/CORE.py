@@ -303,7 +303,7 @@ def CORE_CREATE006():
     return [check_create, err_msg]
 
 
-def CORE_READ_URL():
+def CORE_READ_URL(filter):
     check_url = True
     check_200ok = False
     err_msg = []
@@ -314,7 +314,7 @@ def CORE_READ_URL():
     check_ct, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
 
-    mixin = search_category({'class': 'mixin'})
+    mixin = search_category(filter)
     #kind =  search_category({'class': 'kind'})
     for category in [mixin]:
         body, response_headers, http_status, content_type = occi_curl(url = category['location'])
@@ -335,7 +335,7 @@ def CORE_READ_URL():
 
 
 def CORE_READ001():
-    check, err_msg, url = CORE_READ_URL()
+    check, err_msg, url = CORE_READ_URL({'class': 'mixin'})
     return [check, err_msg]
 
 
@@ -413,7 +413,7 @@ def get_attributes(attribute_definitions, attributes, err_msg):
 def CORE_DELETE001():
     err_msg = []
 
-    check, err_msg, tmp_url = CORE_READ_URL()
+    check, err_msg, tmp_url = CORE_READ_URL({'category': 'compute', 'class': 'kind'})
 
     if not tmp_url:
         err_msg += ["OCCI entity URL not found!"]
@@ -430,15 +430,14 @@ def CORE_DELETE001():
     err_msg += tmp_err_msg
 
     # It takes some time to delete machine, second delete action force it
+    # Not testing result of the operation (various backends have different behaviour)
     body, response_headers, http_status, content_type = occi_curl(url = url, custom_request = 'DELETE')
-    check_delete2, tmp_err_msg = check_http_status("200 OK", http_status)
-    err_msg += tmp_err_msg
 
     body, response_headers, http_status, content_type = occi_curl(url = url)
     check_exist2, tmp_err_msg = check_http_status("404 Not Found", http_status)
     err_msg += tmp_err_msg
 
-    return [check_exist1 and check_exist2 and check_delete1 and check_delete2, err_msg]
+    return [check_exist1 and check_exist2 and check_delete1, err_msg]
 
 
 def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
