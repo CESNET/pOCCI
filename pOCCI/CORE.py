@@ -303,10 +303,11 @@ def CORE_CREATE006():
     return [check_create, err_msg]
 
 
-def CORE_READ001():
+def CORE_READ_URL():
     check_url = True
     check_200ok = False
     err_msg = []
+    url = None
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
@@ -319,7 +320,8 @@ def CORE_READ001():
         body, response_headers, http_status, content_type = occi_curl(url = category['location'])
         for line in body:
             tmp_url = re.match(r'X-OCCI-Location: (.*)', line)
-            if not tmp_url or not bool(urlparse.urlparse(tmp_url.group(1)).netloc):
+            url = tmp_url.group(1)
+            if not url or not tmp_url or not bool(urlparse.urlparse(url).netloc):
                 check_url = False
                 err_msg.append('Output is not valid')
                 break
@@ -329,7 +331,12 @@ def CORE_READ001():
         else:
             err_msg.append('Returned HTTP status is not 200 OK (%s)' % http_status)
 
-    return [check_url and check_pretest and check_ct and check_200ok, err_msg]
+    return [check_url and check_pretest and check_ct and check_200ok, err_msg, url]
+
+
+def CORE_READ001():
+    check, err_msg, url = CORE_READ_URL()
+    return [check, err_msg]
 
 
 def CORE_READ002_COMMON(category, links = []):
@@ -401,6 +408,37 @@ def get_attributes(attribute_definitions, attributes, err_msg):
             attributes[ad['name']] = example_attributes[ad['name']]
 
     return has_all_attributes
+
+
+def CORE_DELETE001():
+    err_msg = []
+
+    check, err_msg, tmp_url = CORE_READ_URL()
+
+    if not tmp_url:
+        err_msg += ["OCCI entity URL not found!"]
+        return [False, err_msg]
+
+    url = urlparse.urlparse(tmp_url).path
+
+    body, response_headers, http_status, content_type = occi_curl(url = url)
+    check_exist1, tmp_err_msg = check_http_status("200 OK", http_status)
+    err_msg += tmp_err_msg
+
+    body, response_headers, http_status, content_type = occi_curl(url = url, custom_request = 'DELETE')
+    check_delete1, tmp_err_msg = check_http_status("200 OK", http_status)
+    err_msg += tmp_err_msg
+
+    # It takes some time to delete machine, second delete action force it
+    body, response_headers, http_status, content_type = occi_curl(url = url, custom_request = 'DELETE')
+    check_delete2, tmp_err_msg = check_http_status("200 OK", http_status)
+    err_msg += tmp_err_msg
+
+    body, response_headers, http_status, content_type = occi_curl(url = url)
+    check_exist2, tmp_err_msg = check_http_status("404 Not Found", http_status)
+    err_msg += tmp_err_msg
+
+    return [check_exist1 and check_exist2 and check_delete1 and check_delete2, err_msg]
 
 
 def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
