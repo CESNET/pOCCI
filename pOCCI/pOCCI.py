@@ -11,6 +11,10 @@ if not occi_config:
     print >> sys.stderr, 'No configuration found'
     sys.exit(2)
 
+    if not renderer:
+       print >> sys.stderr, 'No renderer (invalid mimetype?)'
+       sys.exit(2)
+
 from CORE import *
 from occi_curl import occi_curl
 

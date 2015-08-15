@@ -1,7 +1,7 @@
 import json
 import sys
 
-from occi_init import occi_config
+from occi_init import occi_config, renderer, renderer_httpheaders
 
 def occi_format(results):
     count_f = 0

@@ -4,14 +4,17 @@ import urlparse
 
 from occi_libs import *
 from occi_curl import occi_curl
+import occi
+import render
+
 
 categories = []
 
 #'Category: offline;scheme="http://schemas.ogf.org/occi/infrastructure/storagelink/action#";class="action";title="deactivate storagelink"'
 required_categories = [
-    'http://schemas.ogf.org/occi/core#entity',
-    'http://schemas.ogf.org/occi/core#resource',
-    'http://schemas.ogf.org/occi/core#link'
+    occi.Category({'scheme': 'http://schemas.ogf.org/occi/core#', 'term': 'entity'}),
+    occi.Category({'scheme': 'http://schemas.ogf.org/occi/core#', 'term': 'resource'}),
+    occi.Category({'scheme': 'http://schemas.ogf.org/occi/core#', 'term': 'link'}),
 ]
 
 example_attributes = {
@@ -21,86 +24,26 @@ example_attributes = {
 }
 
 
-# occi.core.id{immutable required} occi.core.title occi.core.target occi.core.source{required}
-def parse_attributes(chunk, err_msg):
-    result = []
-
-    m = True
-    while m:
-        m = re.match(r'([^\{ ]+)(\{[^\}]*\})?\s*', chunk)
-        if not m:
-            break
-        matches = m.groups()
-        name = matches[0]
-        attrs = matches[1]
-        chunk = chunk[m.end():]
-
-        if attrs:
-            attrs = attrs[1:-1]
-            attrs = re.split(' ', attrs)
-
-        result.append({'name': name, 'attrs': attrs})
-
-    if chunk:
-        err_msg.append('Error parsing OCCI attributes')
-        return None
-
-    return result
-
-
-# parse and check the body, and get categories
-def parse_body(body, err_msg):
-    categories = []
-    category_ids = {}
-    check_headers = True
-    check_unique = True
-
-    for line in body:
-        item = {}
-        chunks = re.split(';', line)
-        if re.match(r'^Category:', chunks[0]):
-            value = re.sub(r'^Category:\s+', '', chunks[0])
-            item['category'] = value
-
-            # skip the first chunk (category)
-            for chunk in chunks[1:]:
-                keyvalue = re.split(r'\s*=\s*', chunk, 1)
-                key = keyvalue[0]
-                value = keyvalue[1].strip('"')
-                item[key] = value
-
-            categories.append(item)
-
-            # check uniqueness
-            key = item['category'] + item['scheme']
-            if key in category_ids.keys():
-                check_unique = False
-                duplicate_item = item
-            else:
-                category_ids[key] = True
-        else:
-            check_headers = False
-
-    if not check_headers:
-        err_msg.append('Only "Category" expected response headers')
-
-    if not check_unique:
-        err_msg.append('Category not unique (term "%s", scheme "%s")' % (duplicate_item['category'], duplicate_item['scheme']))
-
-    return [check_headers and check_unique, categories]
-
-
 def get_categories(err_msg):
     global categories
+    check_parse = True
 
     body, response_headers, http_status, content_type = occi_curl()
 
-    check_parse, categories = parse_body(body, err_msg)
+    try:
+        categories = renderer.parse_categories(body)
+    except occi.ParseError as pe:
+        categories = []
+        check_parse = False
+        err_msg.append(repr(pe))
 
     if occi_config['curlverbose']:
         print '==== CATEGORIES ===='
-        for category in categories:
-            print category
+        if check_parse:
+            for category in categories:
+                print category
+        else:
+            print 'ERROR: %s' % err_msg[-1]
         print '===================='
 
     return [check_parse, body, response_headers, http_status, content_type]
@@ -188,11 +131,10 @@ def CORE_DISCOVERY001():
 
     count = 0
     for category in required_categories:
-        for line in body:
-            if re.search(r"%s" % category, line):
-                count += 1
-                break
-    if count == 3:
+        if search_category(category) != None:
+            count += 1
+
+    if count == len(required_categories):
         check_cat = True
     else:
         err_msg.append('Body doesn\'t contain appropriate categories')
@@ -202,42 +144,49 @@ def CORE_DISCOVERY001():
 
 def CORE_DISCOVERY002():
     err_msg = []
+    filtered_categories = []
 
-    check_200ok = False
+    check = True
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
     if not categories:
         err_msg += ['No categories returned']
         return [False, err_msg]
 
+    filter = occi.Category({
+        'term': categories[0]['term'],
+        'scheme': categories[0]['scheme'],
+        'class': categories[0]['class'],
+    })
     cat_in = []
     cat_in.append('Content-Type: text/occi')
-    cat_in.append('Category: %s; scheme="%s"; class="%s"' % (categories[0]['category'], categories[0]['scheme'], categories[0]['class']))
+    cat_in += renderer_httpheaders.render_category(filter)
 
     body, response_headers, http_status, content_type = occi_curl(headers = cat_in)
 
     check_ct, err_msg = check_content_type(content_type)
 
-    if re.match(r'^HTTP/.* 200 OK', http_status):
-        check_200ok = True
-    else:
+    if not re.match(r'^HTTP/.* 200 OK', http_status):
+        check = False
         err_msg.append('HTTP status on filter not 200 OK (%s)' % http_status)
 
     check_rct, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
 
-    check_parse, filtered_categories = parse_body(body, err_msg)
+    try:
+        filtered_categories = renderer.parse_categories(body)
+    except occi.ParseError as pe:
+        check = False
 
-    category = categories[0]
     check_filter = False
-    for item in filtered_categories:
-        if category['category'] == item['category'] and category['scheme'] == item['scheme'] and category['class'] == item['class']:
+    for cat in filtered_categories:
+        if match_category(cat, filter):
             check_filter = True
             break
     if not check_filter:
-        err_msg.append('Category "%s" (scheme "%s") not in filtered result' % (category['category'], category['scheme']))
+        err_msg.append('Category "%s" (scheme "%s") not in filtered result' % (filter['term'], filter['scheme']))
 
-    return [check_pretest and check_ct and check_200ok and check_rct and check_parse and check_filter, err_msg]
+    return [check and check_pretest and check_ct and check_rct and check_filter, err_msg]
 
 
 def CORE_CREATE001():
@@ -247,23 +196,16 @@ def CORE_CREATE001():
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
     #kind = search_category({'class': 'kind'})
-    kind = search_category({'class': 'kind', 'category': 'compute'})
+    kind = search_category({'class': 'kind', 'term': 'compute'})
     #print kind
 
     if not kind:
         has_kind = False
         err_msg.append('No OCCI Kind found')
-    for item in ['location', 'category', 'scheme']:
+    for item in ['location', 'term', 'scheme']:
         if not item in kind.keys():
             has_kind = False
             err_msg.append('No %s in OCCI Kind' % item)
-
-    #new_cat = '\n\r'.join([
-    #    'Category: %s; scheme="%s"; class="%s";' % (kind['category'], kind['scheme'], kind['class']),
-    #])
-    #new_cat = dict()
-    #new_cat['Category'], '%s; scheme="%s"; class="%s";' % (kind['category'], kind['scheme'], kind['class'])
-    ##new_cat['X-OCCI-Attribute'] = 'occi.core.id=1'
 
     new_cat = 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="titulek"\n\r\
 X-OCCI-Attribute: occi.core.id="titulek"\n\r\
@@ -345,8 +287,8 @@ def CORE_READ002_COMMON(category, links = []):
     err_msg = []
     headers = []
 
-    headers.append('Content-Type: text/plain')
-    headers.append('Category: %s; scheme="%s"' % (category['category'], category['scheme']))
+    headers.append('Content-Type: text/occi')
+    headers += renderer_httpheaders.render_category(occi.Category({'term': category['term'], 'scheme': category['scheme'], 'class': category['class']}))
 
     body, response_headers, http_status, content_type = occi_curl(url = category['location'], headers = headers)
     for line in body:
@@ -384,23 +326,28 @@ def CORE_READ002():
     mixin = search_category({'class': 'mixin'})
     #kind =  search_category({'class': 'kind'})
     for category in [mixin]:
-        filter = search_category({'rel': '%s%s' % (category['scheme'], category['category'])})
+        filter = search_category({'rel': '%s%s' % (category['scheme'], category['term'])})
         check_read, tmp_err_msg = CORE_READ002_COMMON(category = filter)
         err_msg += tmp_err_msg
 
     return [check_ct and check_read, err_msg]
 
 
-# attribute_definitions = []
-# attributes = {}
-# err_msg = []
 def get_attributes(attribute_definitions, attributes, err_msg):
+    """Fill attribute values from example_attributes for all required attributes.
+
+    :param occi.AttributeDefinition attribute_definitions[]: attribute definitions
+    :param string attributes{}: attributes dictionary
+    :param string err_msg[]: list of errors to append
+    :return: all required attributes has a value
+    :rtype: bool
+    """
     has_all_attributes = True
 
     #print 'list of attributes: %s' % attributes
     for ad in attribute_definitions:
         #print 'attribute: %s' % ad
-        if ad['attrs'] and ('required' in ad['attrs'] and not 'immutable' in ad['attrs']) and not ad['name'] in attributes:
+        if ad.isrequired() and not ad.isimmutable() and not ad['name'] in attributes:
             if ad['name'] not in example_attributes:
                 err_msg.append('Tests error: unknown attribute %s' % ad['name'])
                 has_all_attributes = False
@@ -413,7 +360,7 @@ def get_attributes(attribute_definitions, attributes, err_msg):
 def CORE_DELETE001():
     err_msg = []
 
-    check, err_msg, tmp_url = CORE_READ_URL({'category': 'compute', 'class': 'kind'})
+    check, err_msg, tmp_url = CORE_READ_URL({'term': 'compute', 'class': 'kind'})
 
     if not tmp_url:
         err_msg += ["OCCI entity URL not found!"]
@@ -441,13 +388,23 @@ def CORE_DELETE001():
 
 
 def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
+    """Generic help function to create OCCI Infrastructure resources.
+
+    HTTP Headers renderer is always used.
+
+    :param string resource: OCCI Category term (compute, storage, network)
+    :param string request[]: HTTP headers rendering to append
+    :param occi.AttributeDefinition additional_attributes[]: additional attributes to set from example defaults
+    :param string err_msg[]: error messages list to append
+    :return: status and error message list
+    :rtype: [bool, string[]]
+    """
     has_kind = True
     has_all_attributes = True
-    check_attributes = True
     all_attributes = []
     inserted_attributes = {}
 
-    kind = search_category({'class': 'kind', 'category': resource, 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
+    kind = search_category({'class': 'kind', 'term': resource, 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
     #print kind
 
     if not kind:
@@ -456,35 +413,27 @@ def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
     if not kind:
         return [False, err_msg]
 
-    for item in ['location', 'category', 'scheme']:
+    for item in ['location', 'term', 'scheme']:
         if not item in kind.keys():
             has_kind = False
             err_msg.append('No %s in OCCI Kind' % item)
 
     if 'attributes' in kind:
-        attributes = parse_attributes(kind['attributes'], err_msg)
-    if attributes != None:
-        all_attributes += attributes
-    else:
-        check_attributes = False
+        all_attributes += kind['attributes']
 
     if additional_attributes != None:
-        attributes = parse_attributes(additional_attributes, err_msg)
-    if attributes != None:
-        all_attributes += attributes
-    else:
-        check_attributes = False
+        all_attributes += additional_attributes
 
-    #print 'list of attributes: %s' % attributes
-    for a in all_attributes:
-        #print 'attribute: %s' % a
-        if a['attrs'] and ('required' in a['attrs'] and not 'immutable' in a['attrs']) and a['name'] not in inserted_attributes:
-            if a['name'] not in example_attributes:
-                err_msg.append('Tests error: unknown attribute %s' % a['name'])
+    #print 'list of attributes: %s' % all_attributes
+    for ad in all_attributes:
+        #print 'attribute: %s' % ad
+        if ad.isrequired() and not ad.isimmutable() and ad['name'] not in inserted_attributes:
+            if ad['name'] not in example_attributes:
+                err_msg.append('Tests error: unknown attribute %s' % ad['name'])
                 has_all_attributes = False
                 continue
-            request.append('X-OCCI-Attribute: %s=%s' % (a['name'], example_attributes[a['name']]))
-            inserted_attributes[a['name']] = True
+            request.append('X-OCCI-Attribute: %s=%s' % (ad['name'], example_attributes[ad['name']]))
+            inserted_attributes[ad['name']] = True
 
     post = '\n'.join(request)
 
@@ -513,7 +462,7 @@ def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
     if not check_created:
         err_msg.append('OCCI %s Resource hasn\'t been successfully created' % resource.title())
 
-    return [has_kind and check_attributes and has_all_attributes and check_create and check_ct and check_br and check_rct and check_created, err_msg]
+    return [has_kind and has_all_attributes and check_create and check_ct and check_br and check_rct and check_created, err_msg]
 
 
 def INFRA_CREATE001():
@@ -524,13 +473,16 @@ def INFRA_CREATE001():
 
     request.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
 
-    return INFRA_CREATE_COMMON('compute', request, None, err_msg)
+    return INFRA_CREATE_COMMON('compute', request, [], err_msg)
 
 
 def INFRA_CREATE002():
     err_msg = []
     request = []
-    additional_attributes = "occi.core.title{required} occi.storage.size{required}"
+    additional_attributes = [
+        occi.AttributeDefinition({"name": "occi.core.title", "required": True}),
+        occi.AttributeDefinition({"name": "occi.storage.size", "required": True}),
+    ]
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
@@ -542,7 +494,7 @@ def INFRA_CREATE002():
 def INFRA_CREATE003():
     err_msg = []
     request = []
-    additional_attributes = "occi.core.title{required}"
+    additional_attributes = [occi.AttributeDefinition({"name": "occi.core.title", "required": True})]
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
@@ -566,13 +518,13 @@ def INFRA_CREATE004():
         return [False, err_msg]
 
     request.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
-    # 'category': 'uuid_ttylinux_0', 'scheme': 'http://occi.myriad5.zcu.cz/occi/infrastructure/os_tpl#', 'class': 'mixin'
-    request.append('Category: %s; scheme="%s"; class="%s"' % (os_tpl['category'], os_tpl['scheme'], 'mixin'))
+    # 'term': 'uuid_ttylinux_0', 'scheme': 'http://occi.myriad5.zcu.cz/occi/infrastructure/os_tpl#', 'class': 'mixin'
+    request.append('Category: %s; scheme="%s"; class="%s"' % (os_tpl['term'], os_tpl['scheme'], 'mixin'))
 
     if 'attributes' in os_tpl:
         os_tpl_attributes = os_tpl['attributes']
     else:
-        os_tpl_attributes = None
+        os_tpl_attributes = []
     return INFRA_CREATE_COMMON('compute', request, os_tpl_attributes, err_msg)
 
 
@@ -596,8 +548,8 @@ def INFRA_CREATE005():
     if not check_pretest:
         return [False, err_msg]
 
-    storage = search_category({'category':'storage', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
-    network = search_category({'category':'network', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    storage = search_category({'term': 'storage', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    network = search_category({'term': 'network', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
     check_read, tmp_err_msg = CORE_READ002_COMMON(category=storage, links=storage_links)
     if not check_read:
         check = False
@@ -617,12 +569,12 @@ def INFRA_CREATE005():
             err_msg.append('No network found')
         return [False, err_msg]
 
-    compute = search_category({'category':'compute', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    compute = search_category({'term': 'compute', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
 
     new_compute = 'Category: %s; scheme="%s"; class="%s"\n\r\
 Link: <%s>; rel="%s"; category="%s"\n\r\
 Link: <%s>; rel="%s"; category="%s"\n\r\
-' % (compute['category'], compute['scheme'], compute['class'], storage_links[0], storage['scheme'] + storage['category'], 'http://schemas.ogf.org/occi/infrastructure#storagelink', network_links[0], network['scheme'] + network['category'], 'http://schemas.ogf.org/occi/infrastructure#networkinterface')
+' % (compute['term'], compute['scheme'], compute['class'], storage_links[0], storage['scheme'] + storage['term'], 'http://schemas.ogf.org/occi/infrastructure#storagelink', network_links[0], network['scheme'] + network['term'], 'http://schemas.ogf.org/occi/infrastructure#networkinterface')
 
     body, response_headers, http_status, content_type = occi_curl(url = compute['location'], headers = ['Content-Type: text/plain'], post = new_compute)
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
@@ -652,8 +604,8 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
     if not check_pretest:
         return [False, err_msg]
 
-    compute = search_category({'category':'compute', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
-    resource = search_category({'category':resource_name, 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    compute = search_category({'term':'compute', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    resource = search_category({'term':resource_name, 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
 
     check_read, tmp_err_msg = CORE_READ002_COMMON(category=compute, links=compute_links)
     if not check_read:
@@ -675,16 +627,14 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
             err_msg.append('No compute found')
         return [False, err_msg]
 
-    resourcelink = search_category({'category':'%s%s' % (resource_name, resource_type), 'scheme':'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
+    resourcelink = search_category({'term':'%s%s' % (resource_name, resource_type), 'scheme':'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
     if not resourcelink:
         err_msg.append('No %slink kind found' % resource_name)
         return [False, err_msg]
     #print resourcelink
 
     if 'attributes' in resourcelink:
-        attribute_definitions = parse_attributes(resourcelink['attributes'], err_msg)
-    if not attribute_definitions:
-        check = False
+        attribute_definitions += resourcelink['attributes']
 
     attributes['occi.core.id'] = '"%s"' % gen_id('%s%s' % (resource_name.capitalize(), resource_type))
     attributes['occi.core.source'] = '"%s"' % compute_links[0]
@@ -693,7 +643,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
         check = False
     #print attributes
 
-    new_resourcelink = 'Category: %s; scheme="%s"; class="%s"\n\r' % ( resourcelink['category'], resourcelink['scheme'], resourcelink['class'])
+    new_resourcelink = 'Category: %s; scheme="%s"; class="%s"\n\r' % ( resourcelink['term'], resourcelink['scheme'], resourcelink['class'])
     for key in attributes.keys():
         new_resourcelink += 'X-OCCI-Attribute: %s=%s\n\r' % (key, attributes[key])
 
