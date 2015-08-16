@@ -5,7 +5,7 @@ import occi
 from render_base import Renderer, check_url
 
 
-eol = '\n\r'
+eol = '\r\n'
 
 
 def text_attribute_def(ad = None):
@@ -38,17 +38,17 @@ def text_actions(actions = None):
 
 
 def text_category(category = None):
-    s = '%s; scheme="%s"; class="%s"' % (category['term'], category['scheme'], category['class'])
+    s = '%s;scheme="%s";class="%s"' % (category['term'], category['scheme'], category['class'])
 
     for item in ['title', 'rel', 'location']:
         if item in category:
-            s += '; %s="%s"' % (item, category[item])
+            s += ';%s="%s"' % (item, category[item])
 
     if 'attributes' in category:
-        s += '; %s="%s"' % ('attributes', text_attribute_defs(category['attributes']))
+        s += ';%s="%s"' % ('attributes', text_attribute_defs(category['attributes']))
 
     if 'actions' in category:
-        s += '; %s="%s"' % ('actions', text_actions(category['actions']))
+        s += ';%s="%s"' % ('actions', text_actions(category['actions']))
 
     return s
 
@@ -60,7 +60,7 @@ class TextRenderer(Renderer):
     reChunks = re.compile(r';\s*')
     reCategory = re.compile(r'^Category:\s*(.*)')
     reKeyValue = re.compile(r'\s*=\s*')
-    reQuoted = re.compile(r'^".*"$')
+    reQuoted = re.compile(r'^"(.*)"$')
     reSP = re.compile(r'\s')
 
     reAttributes = re.compile(r'([^\{ ]+)(\{[^\}]*\})?\s*')
@@ -71,9 +71,9 @@ class TextRenderer(Renderer):
 
         :param occi.Category category: OCCI Category object
         :return: render result
-        :rtpye: string
+        :rtype: string
         """
-        return 'Category: ' + text_category(category) + eol
+        return 'Category: ' + text_category(category)
 
 
     def parse_attribute_defs(self, body):
@@ -105,10 +105,13 @@ class TextRenderer(Renderer):
 
             attribute = occi.AttributeDefinition({'name': name})
             if attrs:
-                if 'required' in attrs:
-                    attribute['required'] = True
-                if 'immutable' in attrs:
-                    attribute['immutable'] = True
+                for a in attrs:
+                    if a == 'required':
+                        attribute['required'] = True
+                    elif a == 'immutable':
+                        attribute['immutable'] = True
+                    else:
+                        raise occi.ParseError('Unknown field in OCCI attribute definitions', a)
             result.append(attribute)
 
         if body:
@@ -161,10 +164,12 @@ class TextRenderer(Renderer):
             # every value quoted, only class has quoting optional
             key = keyvalue[0]
             value = keyvalue[1]
-            if key != 'class' or TextRenderer.reQuoted.match(value):
-                value = value.strip('"')
+            valuematch = TextRenderer.reQuoted.match(value)
+            if valuematch == None and key != 'class':
+                raise occi.ParseError('Category value not quoted', chunk)
+            value = valuematch.group(1)
             # sanity check: there should not be any quotes now
-            if TextRenderer.reQuoted.match(value):
+            if value[0] == '"' or (len(value) >= 2 and value[-1] == '"'):
                 raise occi.ParseError('Unexpected quotes in category', chunk)
 
             if key == 'location':
@@ -181,7 +186,7 @@ class TextRenderer(Renderer):
                 raise occi.parseerror('unknown key "%s" in category' % key, chunk)
 
         if not category.validate():
-            raise occi.parseerror('Missing fields in category', body)
+            raise occi.ParseError('Missing fields in category', body)
 
         return category
 
