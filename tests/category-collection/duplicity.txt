@@ -1,0 +1,3 @@
+Category: entity;scheme="http://schemas.ogf.org/occi/core#";class="kind";title="entity";location="/entity/";attributes="occi.core.id{immutable required} occi.core.title"
+Category: resource;scheme="http://schemas.ogf.org/occi/core#";class="kind";title="resource";rel="http://schemas.ogf.org/occi/core#entity";location="/resource/";attributes="occi.core.id{immutable required} occi.core.title occi.core.summary"
+Category: entity;scheme="http://schemas.ogf.org/occi/core#";class="kind";title="entity2";location="/entity2/";attributes="occi.core.id{immutable required} occi.core.title"

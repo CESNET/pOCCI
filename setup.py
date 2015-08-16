@@ -50,7 +50,7 @@ setup(
 
     keywords='OCCI cloud compliance testing pycurl',
 
-    packages=find_packages(),
+    packages=find_packages(exclude=['doc', 'tests']),
 
     install_requires=['pycurl'],
 
@@ -65,4 +65,6 @@ setup(
             'pOCCI=pOCCI.pOCCI:main',
         ],
     },
+
+    test_suite='tests.test_parse_text.suite'
 )
