@@ -30,11 +30,10 @@ def text_attribute_defs(ads = None):
 
 
 def text_actions(actions = None):
-    text_actions = []
     if actions:
-        for action in actions:
-            text_actions.append(actions)
-    return ' '.join(text_actions)
+        return ' '.join(actions)
+    else:
+        return None
 
 
 def text_category(category = None):
@@ -61,7 +60,7 @@ class TextRenderer(Renderer):
     reCategory = re.compile(r'^Category:\s*(.*)')
     reKeyValue = re.compile(r'\s*=\s*')
     reQuoted = re.compile(r'^"(.*)"$')
-    reSP = re.compile(r'\s')
+    reSP = re.compile(r'\s+')
 
     reAttributes = re.compile(r'([^\{ ]+)(\{[^\}]*\})?\s*')
 
@@ -121,17 +120,22 @@ class TextRenderer(Renderer):
 
 
     def parse_actions(self, body):
-        """Parse OCCI Actions. TODO
+        """Parse OCCI Actions.
 
         Example::
 
-           TODO
+           http://schemas.ogf.org/occi/infrastructure/compute/action#start http://schemas.ogf.org/occi/infrastructure/compute/action#stop http://schemas.ogf.org/occi/infrastructure/compute/action#restart http://schemas.ogf.org/occi/infrastructure/compute/action#suspend
 
         :param string body: text to parse
-        :return: array of OCCI Action
-        :rtype: occi.Action[]
+        :return: array of string
+        :rtype: string[]
         """
-        return []
+        actions = TextRenderer.reSP.split(body)
+        for action in actions:
+            # let's require scheme and hostname in scheme URI
+            if not check_url(action, scheme = True, host = True):
+                raise occi.ParseError('URI expected as an action', action)
+        return actions
 
 
     def parse_category(self, body):
