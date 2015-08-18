@@ -1,3 +1,22 @@
+class Error(Exception):
+    """Base class for pOCCI exceptions."""
+    pass
+
+
+class ParseError(Error):
+    """Parse exception."""
+
+    def __init__(self, value, body = None):
+        self.value = value
+        self.body = body
+
+    def __str__(self):
+        if self.body != None:
+            return repr(self.value) + ' (%s)' % repr(self.body)
+        else:
+            return repr(self.value)
+
+
 class Generic(dict):
     """ Generic OCCI object in python. """
 

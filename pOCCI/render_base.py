@@ -27,27 +27,8 @@ def check_url(body, scheme = False, host = False, path = False):
 
     return True
 
+
 class Renderer:
     """ OCCI Renderer base skeleton.
-
-    :ivar string err_msg[]: list of all errors
     """
-
-    def __init__(self):
-        self.err_msg = []
-
-
-    def check(self, err_msg = None, cleanup = True):
-        """Check for errors and cleanup the errors.
-
-        :param string err_msg[]: list where to append the errors
-        :param bool cleanup: clean all errors
-        :return: if there has been any error
-        :rtype: bool
-        """
-        ok = len(self.err_msg) == 0
-        if err_msg != None:
-            err_msg += self.err_msg
-            if cleanup:
-                self.err_msg = []
-        return ok
+    pass

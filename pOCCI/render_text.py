@@ -76,7 +76,7 @@ class TextRenderer(Renderer):
         return 'Category: ' + text_category(category) + eol
 
 
-    def parse_attribute_defs(self, body, msg = ''):
+    def parse_attribute_defs(self, body):
         """ Parse OCCI Attribute Definitions.
 
         Example::
@@ -84,7 +84,6 @@ class TextRenderer(Renderer):
            occi.core.id{immutable required} occi.core.title occi.core.target occi.core.source{required}
 
         :param string body: text to parse
-        :param string msg: error message prefix
         :return: array of OCCI Attribute Definition
         :rtype: occi.AttributeDefinition[]
         """
@@ -113,13 +112,12 @@ class TextRenderer(Renderer):
             result.append(attribute)
 
         if body:
-            self.err_msg.append('%sError parsing OCCI attribute definitions' % msg)
-            return None
+            raise occi.ParseError('Error parsing OCCI attribute definitions', body)
 
         return result
 
 
-    def parse_actions(self, body, msg = ''):
+    def parse_actions(self, body):
         """Parse OCCI Actions. TODO
 
         Example::
@@ -127,14 +125,13 @@ class TextRenderer(Renderer):
            TODO
 
         :param string body: text to parse
-        :param string msg: error message prefix
         :return: array of OCCI Action
         :rtype: occi.Action[]
         """
         return []
 
 
-    def parse_category(self, body, msg = ''):
+    def parse_category(self, body):
         """Parse OCCI Category.
 
         Example::
@@ -142,23 +139,18 @@ class TextRenderer(Renderer):
            Category: entity;scheme="http://schemas.ogf.org/occi/core#";class="kind";title="entity";location="/entity/";attributes="occi.core.id{immutable required} occi.core.title"
 
         :param string body: text to parse
-        :param string msg: error message prefix
         :return: OCCI Category
         :rtype: occi.Category
         """
-        check = True
-
         category = occi.Category()
 
         chunks = TextRenderer.reChunks.split(body)
         matched = TextRenderer.reCategory.match(chunks[0])
         if not matched:
-            self.err_msg.append('%s"Category" expected' % msg)
-            return None
+            raise occi.ParseError('Category" expected', chunks[0])
 
         if not matched.group(1):
-            self.err_msg.append('%sInvalid format of category, term expected' % msg)
-            return None
+            raise occi.ParseERror('Invalid format of category, term expected', chunks[0])
 
         category['term'] = matched.group(1)
 
@@ -173,38 +165,31 @@ class TextRenderer(Renderer):
                 value = value.strip('"')
             # sanity check: there should not be any quotes now
             if TextRenderer.reQuoted.match(value):
-                self.err_msg.append('Unexpected quotes in category' % msg)
-                check = False
+                raise occi.ParseError('Unexpected quotes in category', chunk)
 
             if key == 'location':
                 if not check_url(value):
-                    self.err_msg.append('%sURL is not valid in category location: %s' % (msg, value))
-                    check = False
+                    raise occi.ParseError('URL is not valid in category location', chunk)
                 category[key] = value
             elif key == 'attributes':
-                category[key] = self.parse_attribute_defs(value, msg = msg)
+                category[key] = self.parse_attribute_defs(value)
             elif key == 'actions':
-                category[key] = self.parse_actions(value, msg = msg)
+                category[key] = self.parse_actions(value)
             elif key in ['scheme', 'class', 'title', 'rel']:
                 category[key] = value
             else:
-                self.err_msg.append('%sUnknown key "%s" in category' % (msg, key))
+                raise occi.parseerror('unknown key "%s" in category' % key, chunk)
 
         if not category.validate():
-                self.err_msg.append('%sCategory not valid' % msg)
-                check = False
+            raise occi.parseerror('Missing fields in category', body)
 
-        if check:
-            return category
-        else:
-            return None
+        return category
 
 
-    def parse_categories(self, body, msg = ''):
+    def parse_categories(self, body):
         """Parse OCCI Category Collection.
 
         :param string: body text to parse
-        :param string msg: error message prefix
         :return: Array of OCCI Categories
         :rtype: occi.Category[]
         """
@@ -215,17 +200,12 @@ class TextRenderer(Renderer):
         check_unique = 0
 
         for line in body:
-            category = self.parse_category(line, msg)
-
-            if not category:
-                self.err_msg.append('%sFailed to parse category (%s)' % (msg, line))
-                return None
+            category = self.parse_category(line)
 
             # check uniqueness
             key = category['term'] + category['scheme']
             if key in category_ids:
-                self.err_msg.append('%sCategory not unique (term "%s", scheme "%s")' % (msg, category['term'], category['scheme']))
-                return None
+                raise occi.ParseError('Category not unique (term "%s", scheme "%s")' % (category['term'], category['scheme']), line)
             category_ids.add(key)
 
             categories.append(category)
@@ -247,8 +227,5 @@ if __name__ == "__main__":
     print
 
     categories = r.parse_categories(body)
-    if len(r.err_msg) != 0:
-        print r.err_msg
-        sys.exit(1)
 
     print categories

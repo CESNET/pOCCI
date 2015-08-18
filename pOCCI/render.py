@@ -63,22 +63,9 @@ if __name__ == "__main__":
     json = create_renderer('application/occi+json')
     err = create_renderer('unexistand')
 
-    err_msg = []
     print plain
-    print plain.check(err_msg)
-    print err_msg
-
-    err_msg = []
     print http
-    print http.check(err_msg)
-    print err_msg
-
-    err_msg = []
     print json
-    print json.check(err_msg)
-    print err_msg
-
-    err_msg = []
     print err
 
     category = occi.Category({
