@@ -18,9 +18,9 @@ required_categories = [
 ]
 
 example_attributes = {
-    'occi.core.id': '"1"',
-    'occi.core.title': '"Test_title_%d"' % time.time(),
-    'occi.storage.size': "0.1",
+    'occi.core.id': occi.Attribute({'name': 'occi.core.id', 'value': '1'}),
+    'occi.core.title': occi.Attribute({'name': 'occi.core.title', 'value': 'Test_title_%d' % time.time()}),
+    'occi.storage.size': occi.Attribute({'name': 'occi.storage.size', 'type': 'number', 'value': 0.1}),
 }
 
 
@@ -190,6 +190,13 @@ def CORE_DISCOVERY002():
 
 
 def CORE_CREATE001():
+    """Create an OCCI Resource
+
+    Unsupported test: Creating compute instances without os_tpl is not supported.
+
+    It can be called by::
+       pOCCI -t 'CORE/CREATE/001'
+    """
     err_msg = []
     has_kind = True
 
@@ -207,15 +214,38 @@ def CORE_CREATE001():
             has_kind = False
             err_msg.append('No %s in OCCI Kind' % item)
 
-    new_cat = 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="titulek"\n\r\
-X-OCCI-Attribute: occi.core.id="titulek"\n\r\
-X-OCCI-Attribute: occi.core.title="titulek"\n\r\
-X-OCCI-Attribute: occi.core.summary="sumarko"\n\r\
-X-OCCI-Attribute: occi.compute.architecture="arch"\n\r\
-'
+    new_cat = renderer.render_resource(
+        categories = [
+            occi.Category({
+                'term': 'compute',
+                'scheme': 'http://schemas.ogf.org/occi/infrastructure#',
+                'class': 'kind',
+                'title': 'titulek',
+            }),
+        ],
+        attributes = [
+            occi.Attribute({
+                'name': 'occi.core.id',
+                'value': gen_id('Compute'),
+            }),
+            occi.Attribute({
+                'name': 'occi.core.title',
+                'value': 'titulek',
+            }),
+            occi.Attribute({
+                'name': 'occi.core.summary',
+                'value': 'sumarko',
+            }),
+            occi.Attribute({
+                'name': 'occi.compute.architecture',
+                'value': 'arch',
+            }),
+        ]
+    )
 
     body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'], post=new_cat)
-#, headers = ['Content-Type: text/plain', 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="titulek2"']
+    # when using HTTP headers rendering:
+#    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/occi'] + new_cat, post=' ')
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 
@@ -226,10 +256,12 @@ X-OCCI-Attribute: occi.compute.architecture="arch"\n\r\
 
 
 def CORE_CREATE006():
-    """
-    Unsupported test, not implemented
+    """Add an OCCI Mixin definition
 
-    It can be called by pOCCI -t 'CORE/CREATE/006'
+    Unsupported test: Not implemented.
+
+    It can be called by::
+       pOCCI -t 'CORE/CREATE/006'
     """
 
     err_msg = []
@@ -337,7 +369,7 @@ def get_attributes(attribute_definitions, attributes, err_msg):
     """Fill attribute values from example_attributes for all required attributes.
 
     :param occi.AttributeDefinition attribute_definitions[]: attribute definitions
-    :param string attributes{}: attributes dictionary
+    :param occi.Attribute attributes{}: result attributes dictionary
     :param string err_msg[]: list of errors to append
     :return: all required attributes has a value
     :rtype: bool
@@ -352,6 +384,7 @@ def get_attributes(attribute_definitions, attributes, err_msg):
                 err_msg.append('Tests error: unknown attribute %s' % ad['name'])
                 has_all_attributes = False
                 continue
+            #print 'adding attribute: %s' % ad
             attributes[ad['name']] = example_attributes[ad['name']]
 
     return has_all_attributes
@@ -387,13 +420,13 @@ def CORE_DELETE001():
     return [check_exist1 and check_exist2 and check_delete1, err_msg]
 
 
-def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
+def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
     """Generic help function to create OCCI Infrastructure resources.
 
     HTTP Headers renderer is always used.
 
     :param string resource: OCCI Category term (compute, storage, network)
-    :param string request[]: HTTP headers rendering to append
+    :param occi.Category categories[]: OCCI Categories to add to rendering
     :param occi.AttributeDefinition additional_attributes[]: additional attributes to set from example defaults
     :param string err_msg[]: error messages list to append
     :return: status and error message list
@@ -402,7 +435,7 @@ def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
     has_kind = True
     has_all_attributes = True
     all_attributes = []
-    inserted_attributes = {}
+    attributes = {}
 
     kind = search_category({'class': 'kind', 'term': resource, 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
     #print kind
@@ -424,18 +457,12 @@ def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
     if additional_attributes != None:
         all_attributes += additional_attributes
 
-    #print 'list of attributes: %s' % all_attributes
-    for ad in all_attributes:
-        #print 'attribute: %s' % ad
-        if ad.isrequired() and not ad.isimmutable() and ad['name'] not in inserted_attributes:
-            if ad['name'] not in example_attributes:
-                err_msg.append('Tests error: unknown attribute %s' % ad['name'])
-                has_all_attributes = False
-                continue
-            request.append('X-OCCI-Attribute: %s=%s' % (ad['name'], example_attributes[ad['name']]))
-            inserted_attributes[ad['name']] = True
+    #print 'list of attributes: %s' % repr(all_attributes)
+    if not get_attributes(all_attributes, attributes, err_msg):
+        has_all_attributes = False
+    #print 'list of result attribute keys: %s' % repr(attributes.keys())
 
-    post = '\n'.join(request)
+    post = renderer.render_resource(categories, None, attributes.values())
 
     body, response_request, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'], post=post)
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
@@ -467,18 +494,16 @@ def INFRA_CREATE_COMMON(resource, request, additional_attributes, err_msg):
 
 def INFRA_CREATE001():
     err_msg = []
-    request = []
+    category = occi.Category({'term': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
-    request.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
-
-    return INFRA_CREATE_COMMON('compute', request, [], err_msg)
+    return INFRA_CREATE_COMMON('compute', [category], [], err_msg)
 
 
 def INFRA_CREATE002():
     err_msg = []
-    request = []
+    category = occi.Category({'term': 'storage', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
     additional_attributes = [
         occi.AttributeDefinition({"name": "occi.core.title", "required": True}),
         occi.AttributeDefinition({"name": "occi.storage.size", "required": True}),
@@ -486,27 +511,25 @@ def INFRA_CREATE002():
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
-    request.append('Category: storage; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
-
-    return INFRA_CREATE_COMMON('storage', request, additional_attributes, err_msg)
+    return INFRA_CREATE_COMMON('storage', [category], additional_attributes, err_msg)
 
 
 def INFRA_CREATE003():
     err_msg = []
-    request = []
+    category = occi.Category({'term': 'network', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
     additional_attributes = [occi.AttributeDefinition({"name": "occi.core.title", "required": True})]
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
-    request.append('Category: network; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
-
-    return INFRA_CREATE_COMMON('network', request, additional_attributes, err_msg)
+    return INFRA_CREATE_COMMON('network', [category], additional_attributes, err_msg)
 
 
 def INFRA_CREATE004():
     err_msg = []
     has_tpl = True
-    request = []
+    categories = [
+        occi.Category({'term': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
+    ]
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
 
@@ -517,15 +540,14 @@ def INFRA_CREATE004():
         err_msg.append('No OS template found')
         return [False, err_msg]
 
-    request.append('Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"')
     # 'term': 'uuid_ttylinux_0', 'scheme': 'http://occi.myriad5.zcu.cz/occi/infrastructure/os_tpl#', 'class': 'mixin'
-    request.append('Category: %s; scheme="%s"; class="%s"' % (os_tpl['term'], os_tpl['scheme'], 'mixin'))
+    categories.append(occi.Category({'term': os_tpl['term'], 'scheme': os_tpl['scheme'], 'class': 'mixin'}))
 
     if 'attributes' in os_tpl:
         os_tpl_attributes = os_tpl['attributes']
     else:
         os_tpl_attributes = []
-    return INFRA_CREATE_COMMON('compute', request, os_tpl_attributes, err_msg)
+    return INFRA_CREATE_COMMON('compute', categories, os_tpl_attributes, err_msg)
 
 
 def INFRA_CREATE005():
@@ -636,16 +658,20 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
     if 'attributes' in resourcelink:
         attribute_definitions += resourcelink['attributes']
 
-    attributes['occi.core.id'] = '"%s"' % gen_id('%s%s' % (resource_name.capitalize(), resource_type))
-    attributes['occi.core.source'] = '"%s"' % compute_links[0]
-    attributes['occi.core.target'] = '"%s"' % resource_links[0]
+    attributes['occi.core.id'] = occi.Attribute({'name': 'occi.core.id', 'value': gen_id('%s%s' % (resource_name.capitalize(), resource_type))})
+    attributes['occi.core.source'] = occi.Attribute({'name': 'occi.core.source', 'value': compute_links[0]})
+    attributes['occi.core.target'] = occi.Attribute({'name': 'occi.core.target', 'value': resource_links[0]})
     if not get_attributes(attribute_definitions, attributes, err_msg):
         check = False
     #print attributes
 
-    new_resourcelink = 'Category: %s; scheme="%s"; class="%s"\n\r' % ( resourcelink['term'], resourcelink['scheme'], resourcelink['class'])
-    for key in attributes.keys():
-        new_resourcelink += 'X-OCCI-Attribute: %s=%s\n\r' % (key, attributes[key])
+    new_resourcelink = renderer.render_resource(
+        categories = [
+            occi.Category({'term':  resourcelink['term'], 'scheme': resourcelink['scheme'], 'class': resourcelink['class']}),
+        ],
+        links = None,
+        attributes = attributes.values()
+    )
 
     body, response_headers, http_status, content_type = occi_curl(url = resourcelink['location'], headers = ['Content-Type: text/plain'], post = new_resourcelink)
 
@@ -658,6 +684,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
     resource_link = urlparse.urlparse(resource_links[0]).path
 
     body, response_headers, http_status, content_type = occi_curl(base_url = compute_links[0], url = '', headers = ['Content-Type: text/plain'])
+    #print body
     for line in body:
         if re.match(r'^Link: <.*%s>' % resource_link, line):
             check_link = True

@@ -31,4 +31,15 @@ def check_url(body, scheme = False, host = False, path = False):
 class Renderer:
     """ OCCI Renderer base skeleton.
     """
-    pass
+
+    def render_resource(self, categories, links = None, attributes = None):
+        """Render OCCI Resource instance
+
+        :param occi.Category categories[]: OCCI Category array
+        :param occi.Link links[]: OCCI Link array
+        :param occi.Attribute attributes[]: OCCI Attribute array
+        :return: render result
+        :rtype: string[]
+        """
+        if categories == None or not categories:
+            raise occi.RenderError('Category required')

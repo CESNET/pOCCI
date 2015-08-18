@@ -52,8 +52,64 @@ def text_category(category = None):
     return s
 
 
+def text_attribute_value(attribute):
+    """Render OCCI Attribute value.
+
+    :param occi.Attribute attribute: attribute with a value to render
+    :return attribute value renderin
+    :rtype string
+    """
+
+    if 'type' in attribute:
+        type = attribute['type']
+    else:
+        type = 'string'
+    value = attribute['value']
+
+    if type == 'string':
+        return '"' + value + '"'
+    elif type == 'number':
+        return repr(value)
+    elif type == 'bool':
+        if value:
+            return "true"
+        else:
+            return "false"
+    elif type == 'enum':
+        return repr(value)
+
+
+def text_attribute_repr(attribute):
+    """Render one OCCI Attribute.
+    """
+
+    return attribute['name'] + '=' + text_attribute_value(attribute)
+
+
+def text_link_attribute(key, value):
+    """Render Link Attribute
+    """
+    # term or quoted string, using only the quotes now
+    return key + '=' + '"' + value + '"'
+
+
+def text_link(link):
+    s = '<%s>;rel="%s"' % (link['uri'], ' '.join(link['rel']))
+
+    if 'self' in link:
+        s += ';self="%s"' % link['self']
+    if 'category' in link:
+        s += ';category="%s"' % ' '.join(link['category'])
+
+    if 'attributes' in link:
+        for key, value in link['attributes'].iteritems():
+            s += ';%s' % text_link_attributes(key, value)
+
+    return s
+
+
 class TextRenderer(Renderer):
-    """ Plain Text OCCI Renderer
+    """Plain Text OCCI Renderer
     """
 
     reChunks = re.compile(r';\s*')
@@ -65,14 +121,101 @@ class TextRenderer(Renderer):
     reAttributes = re.compile(r'([^\{ ]+)(\{[^\}]*\})?\s*')
 
 
-    def render_category(self, category = None):
-        """ Render OCCI Category
+    def render_category(self, category):
+        """Render OCCI Category
 
         :param occi.Category category: OCCI Category object
         :return: render result
         :rtype: string
         """
         return 'Category: ' + text_category(category)
+
+
+    def render_categories(self, categories):
+        """Render OCCI Category collection
+
+        :param occi.Category category[]: OCCI Category array
+        :return: render result
+        :rtype: string
+        """
+        res = []
+        for category in categories:
+            res.append(self.render_category(category))
+        return eol.join(res) + eol
+
+
+    def render_resource(self, categories, links = None, attributes = None):
+        """Render OCCI Resource instance
+
+        :param occi.Category category: OCCI Category object
+        :param occi.Link links[]: OCCI Link array
+        :param occi.Attribute attributes[]: OCCI Attribute array
+        :return: render result
+        :rtype: string
+        """
+        Renderer.render_resource(self, categories, links, attributes)
+        cat_s = self.render_categories(categories)
+        res = []
+        if links != None:
+            for link in links:
+                res.append(self.render_link(link))
+        if attributes != None:
+            for attr in attributes:
+                res.append(self.render_attribute(attr))
+        if res:
+            return cat_s + eol.join(res) + eol
+        else:
+            return cat_s
+
+
+    def render_link(self, link):
+        """ Render OCCI Link
+
+        :param occi.Link link: OCCI Link object
+        :return: render result
+        :rtype: string
+        """
+        return 'Link: ' + text_link(link)
+
+
+    def render_attribute(self, attribute):
+        """ Render Attribute
+
+        :param occi.Attribute attribute: OCCI Attribute object
+        :return render result
+        :rtype: string
+        """
+        return 'X-OCCI-Attribute: ' + text_attribute_repr(attribute)
+
+
+    def render_attributes(self, attributes):
+        """ Render Attributes
+
+        :param occi.Attribute attribute[]: OCCI Attribute object
+        :return render result
+        :rtype: string
+        """
+        if not attributes:
+            return ''
+        s = []
+        for attribute in attributes:
+            s.append(TextRenderer.render_attribute(attribute) + eol)
+        return ''.join(s) + eol
+
+
+    def render_locations(self, locations):
+        """ Render Locations
+
+        :param string location: location URI
+        :return render result
+        :rtype: string
+        """
+        if not location:
+            return ''
+        s = []
+        for location in locations:
+            s.append('X-OCCI-Location: ' + location)
+        return ''.join(s)
 
 
     def parse_attribute_defs(self, body):
@@ -220,21 +363,3 @@ class TextRenderer(Renderer):
             categories.append(category)
 
         return categories
-
-
-if __name__ == "__main__":
-    body = []
-
-    r = TextRenderer()
-    print r
-
-    with open('../body.txt') as f:
-        for line in f:
-            body.append(line.rstrip('\r\n'))
-
-    print body
-    print
-
-    categories = r.parse_categories(body)
-
-    print categories

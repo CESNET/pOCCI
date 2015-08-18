@@ -17,6 +17,10 @@ class ParseError(Error):
             return repr(self.value)
 
 
+class RenderError(Error):
+    """Render exception."""
+
+
 class Generic(dict):
     """ Generic OCCI object in python. """
 
@@ -42,6 +46,7 @@ class Attribute(Generic):
 
     :ivar string name: attribute name
     :ivar value: attribute value (any type)
+    :ivar string type: 'string', 'number', 'boolean', 'enum' [string]
     """
     __slots__ = []
 
@@ -55,7 +60,7 @@ class AttributeDefinition(Generic):
 
     :ivar bool immutable: attribute can't be changed [false]
     :ivar bool required: attribute is required [false]
-    :ivar string type: 'string', 'number', 'boolean' [string]
+    :ivar string type: 'string', 'number', 'boolean', 'enum' [string]
     :ivar default: default value
     :ivar string description: description
     """
@@ -83,3 +88,17 @@ class Category(Generic):
 
     def validate(self):
         return 'term' in self and 'scheme' in self and 'class' in self;
+
+
+class Link(Category):
+    """OCCI Link
+
+    :ivar string uri: URI
+    :ivar rel string[]: resource types
+    :ivar self string: self URI
+    :ivar string category[]: types
+    :ivar string attributes{}: attributes
+    """
+
+    def validate(self):
+        return 'uri' in self and rel in self

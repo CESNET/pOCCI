@@ -67,33 +67,70 @@ if __name__ == "__main__":
     print http
     print json
     print err
+    print
 
+    attr_defs = [
+        occi.AttributeDefinition({
+            'name': 'occi.core.id',
+            'type': 'number',
+            'immutable': True,
+            'required': True,
+        }),
+        occi.AttributeDefinition({
+            'name': 'occi.core.title',
+        }),
+    ]
     category = occi.Category({
         'term': 'kind',
         'class': 'myClass',
         'scheme': 'myScheme',
         'title': 'myTitle',
-        'attributes': [
-            occi.AttributeDefinition({
-                'name': 'occi.core.id',
-                'immutable': True,
-                'required': True,
-            }),
-            occi.AttributeDefinition({
-                'name': 'occi.core.title',
-            }),
-        ],
     })
+    links = [
+        occi.Link({
+            'uri': 'http://localhost/myresource1',
+            'rel': ['/rel'],
+        }),
+        occi.Link({
+            'uri': 'http://localhost/myresource2',
+            'rel': ['/relA', '/relB'],
+        }),
+    ]
+    attr_values = [
+        occi.Attribute({
+            'name': 'occi.core.id',
+            'type': 'number',
+            'value': 1,
+        }),
+        occi.Attribute({
+            'name': 'occi.core.title',
+            'value': 'Title 1',
+        }),
+    ]
 
-    print
     print 'Python category:'
     print category
     print 'Text category:'
     print plain.render_category(category)
-
     print
-    category['attributes'] = []
+
+    category['attributes'] = attr_defs
     print 'Python category:'
     print category
     print 'Text category:'
     print plain.render_category(category)
+    print
+
+    print 'Resource instance without links (plain):'
+    print plain.render_resource([category], None, attr_values)
+
+    print 'Resource instance without links (http):'
+    print http.render_resource([category], None, attr_values)
+    print
+
+    print 'Resource instance (plain):'
+    print plain.render_resource([category], links, attr_values)
+
+    print 'Resource instance (http):'
+    print http.render_resource([category], links, attr_values)
+    print
