@@ -32,6 +32,16 @@ class Renderer:
     """ OCCI Renderer base skeleton.
     """
 
+    def render_categories(self, categories):
+        """Render OCCI Category collection
+
+        :param occi.Category category[]: OCCI Category array
+        :return: render result
+        :rtype: any
+        """
+        pass
+
+
     def render_resource(self, categories, links = None, attributes = None):
         """Render OCCI Resource instance
 
@@ -39,7 +49,26 @@ class Renderer:
         :param occi.Link links[]: OCCI Link array
         :param occi.Attribute attributes[]: OCCI Attribute array
         :return: render result
-        :rtype: string[]
+        :rtype: any
         """
         if categories == None or not categories:
             raise occi.RenderError('Category required')
+
+
+    def parse_categories(self, body):
+        """Parse OCCI Category Collection
+
+        :param string[]: body text to parse
+        :return: Array of OCCI Categories
+        :rtype: occi.Category[]
+        """
+        pass
+
+
+    def parse_locations(self, body):
+        """Parse OCCI Entity collection
+
+        :param string[]: body text to parse
+        :return: array of renderer-specific strings
+        :rtype: string[]
+        """

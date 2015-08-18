@@ -292,13 +292,15 @@ def CORE_READ_URL(filter):
     #kind =  search_category({'class': 'kind'})
     for category in [mixin]:
         body, response_headers, http_status, content_type = occi_curl(url = category['location'])
-        for line in body:
-            tmp_url = re.match(r'X-OCCI-Location: (.*)', line)
-            url = tmp_url.group(1)
-            if not url or not tmp_url or not bool(urlparse.urlparse(url).netloc):
-                check_url = False
-                err_msg.append('Output is not valid')
-                break
+        try:
+            locations = renderer.parse_locations(body)
+        except occi.ParseError as pe:
+            locations = []
+            check_url = False
+            err_msg.append(repr(pe))
+        url = None
+        if locations:
+            url = locations[0]
 
         if re.match(r'^HTTP/.* 200 OK', http_status):
             check_200ok = True
@@ -323,15 +325,13 @@ def CORE_READ002_COMMON(category, links = []):
     headers += renderer_httpheaders.render_category(occi.Category({'term': category['term'], 'scheme': category['scheme'], 'class': category['class']}))
 
     body, response_headers, http_status, content_type = occi_curl(url = category['location'], headers = headers)
-    for line in body:
-        tmp_url = re.match(r'X-OCCI-Location: (.*)', line)
-        url = tmp_url.group(1)
-        if not tmp_url or not bool(urlparse.urlparse(url).netloc):
-            check_url = False
-            err_msg.append('Output is not valid')
-            del links[:]
-            break
-        links.append(url)
+    try:
+        locations = renderer.parse_locations(body)
+    except occi.ParseError as pe:
+        locations = []
+        check_url = False
+        err_msg.append(repr(pe))
+    links[0:] = locations
 
     if re.match(r'^HTTP/.* 200 OK', http_status):
         check_200ok = True

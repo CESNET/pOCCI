@@ -1,6 +1,7 @@
 #! /usr/bin/python
 
 import os
+import re
 import sys
 import unittest
 
@@ -11,12 +12,12 @@ from pOCCI import occi
 from pOCCI import render
 
 
-def readCategoryCollection(fname):
+def readCollection(fname):
     with open(fname, 'r') as f:
         return f.readlines()
 
 
-class TestParse(unittest.TestCase):
+class TestCategories(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
@@ -33,7 +34,7 @@ class TestParse(unittest.TestCase):
             'error-category.txt',
             'error-category2.txt',
         ]:
-            self.categories.append(readCategoryCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname)))
+            self.categories.append(readCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname)))
 
 
     def testCategoriesOK(self):
@@ -86,9 +87,42 @@ class TestParse(unittest.TestCase):
             categories = self.renderer.parse_categories(self.categories[8])
 
 
+class TestEntities(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        self.renderer = render.create_renderer('text/plain')
+        self.entities = []
+        for fname in [
+            'entities.txt',
+            'invalid-format.txt',
+            'invalid-uri.txt',
+        ]:
+            self.entities.append(readCollection(os.path.join(os.path.dirname(__file__), 'entity-collection', fname)))
+
+
+    def testEntitiesOK(self):
+        entities = self.renderer.parse_locations(self.entities[0])
+
+        assert(entities)
+        assert(len(entities))
+        assert(re.match(r'https://', entities[-1]))
+
+
+    def testEntitiesErrorFormat(self):
+        with self.assertRaises(occi.ParseError):
+            entities = self.renderer.parse_locations(self.entities[1])
+
+
+    def testEntitiesErrorURI(self):
+        with self.assertRaises(occi.ParseError):
+            entities = self.renderer.parse_locations(self.entities[2])
+
+
 def suite():
         return unittest.TestSuite([
-                unittest.TestLoader().loadTestsFromTestCase(TestParse),
+                unittest.TestLoader().loadTestsFromTestCase(TestCategories),
+                unittest.TestLoader().loadTestsFromTestCase(TestEntities),
         ])
 
 
