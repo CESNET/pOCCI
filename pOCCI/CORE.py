@@ -31,7 +31,7 @@ def get_categories(err_msg):
     body, response_headers, http_status, content_type = occi_curl()
 
     try:
-        categories = renderer.parse_categories(body)
+        categories = renderer.parse_categories(body, response_headers)
     except occi.ParseError as pe:
         categories = []
         check_parse = False
@@ -160,7 +160,7 @@ def CORE_DISCOVERY002():
     })
     cat_in = []
     cat_in.append('Content-Type: text/occi')
-    cat_in += renderer_httpheaders.render_category(filter)
+    cat_in += renderer_httpheaders.render_category(filter)[1]
 
     body, response_headers, http_status, content_type = occi_curl(headers = cat_in)
 
@@ -174,7 +174,7 @@ def CORE_DISCOVERY002():
     err_msg += tmp_err_msg
 
     try:
-        filtered_categories = renderer.parse_categories(body)
+        filtered_categories = renderer.parse_categories(body, response_headers)
     except occi.ParseError as pe:
         check = False
 
@@ -214,7 +214,7 @@ def CORE_CREATE001():
             has_kind = False
             err_msg.append('No %s in OCCI Kind' % item)
 
-    new_cat = renderer.render_resource(
+    new_cat_s, new_cat_h = renderer.render_resource(
         categories = [
             occi.Category({
                 'term': 'compute',
@@ -243,7 +243,7 @@ def CORE_CREATE001():
         ]
     )
 
-    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'], post=new_cat)
+    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'] + new_cat_h, post=new_cat_s)
     # when using HTTP headers rendering:
 #    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/occi'] + new_cat, post=' ')
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
@@ -293,7 +293,7 @@ def CORE_READ_URL(filter):
     for category in [mixin]:
         body, response_headers, http_status, content_type = occi_curl(url = category['location'])
         try:
-            locations = renderer.parse_locations(body)
+            locations = renderer.parse_locations(body, response_headers)
         except occi.ParseError as pe:
             locations = []
             check_url = False
@@ -322,11 +322,11 @@ def CORE_READ002_COMMON(category, links = []):
     headers = []
 
     headers.append('Content-Type: text/occi')
-    headers += renderer_httpheaders.render_category(occi.Category({'term': category['term'], 'scheme': category['scheme'], 'class': category['class']}))
+    headers += renderer_httpheaders.render_category(occi.Category({'term': category['term'], 'scheme': category['scheme'], 'class': category['class']}))[1]
 
     body, response_headers, http_status, content_type = occi_curl(url = category['location'], headers = headers)
     try:
-        locations = renderer.parse_locations(body)
+        locations = renderer.parse_locations(body, response_headers)
     except occi.ParseError as pe:
         locations = []
         check_url = False
@@ -462,9 +462,9 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
         has_all_attributes = False
     #print 'list of result attribute keys: %s' % repr(attributes.keys())
 
-    post = renderer.render_resource(categories, None, attributes.values())
+    new_cat_s, new_cat_h = renderer.render_resource(categories, None, attributes.values())
 
-    body, response_request, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'], post=post)
+    body, response_request, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'] + new_cat_h, post=new_cat_s)
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 
@@ -665,7 +665,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
         check = False
     #print attributes
 
-    new_resourcelink = renderer.render_resource(
+    new_resourcelink_s, new_resourcelink_h = renderer.render_resource(
         categories = [
             occi.Category({'term':  resourcelink['term'], 'scheme': resourcelink['scheme'], 'class': resourcelink['class']}),
         ],
@@ -673,7 +673,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
         attributes = attributes.values()
     )
 
-    body, response_headers, http_status, content_type = occi_curl(url = resourcelink['location'], headers = ['Content-Type: text/plain'], post = new_resourcelink)
+    body, response_headers, http_status, content_type = occi_curl(url = resourcelink['location'], headers = ['Content-Type: text/plain'] + new_resourcelink_h, post = new_resourcelink_s)
 
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg

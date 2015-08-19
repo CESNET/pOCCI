@@ -8,6 +8,8 @@ class HTTPHeadersRenderer(Renderer):
     """HTTP Headers OCCI Renderer
 
     RFC 7230 http://www.ietf.org/rfc/rfc7230.txt.
+
+    Empty string is always returned as body during rendering.
     """
 
     def render_category(self, category):
@@ -15,9 +17,9 @@ class HTTPHeadersRenderer(Renderer):
 
         :param occi.Category category: OCCI Category object
         :return: render result
-        :rtype: string[]
+        :rtype: [string, string[]]
         """
-        return ['Category: ' + text_category(category)]
+        return ['', ['Category: ' + text_category(category)]]
 
 
     def render_categories(self, categories):
@@ -25,14 +27,14 @@ class HTTPHeadersRenderer(Renderer):
 
         :param occi.Category category[]: OCCI Category array
         :return: render result
-        :rtype: string[]
+        :rtype: [string, string[]]
         """
         if not categories:
-            return ''
+            return ['', []]
         res = []
         for category in categories:
             res.append(text_category(category))
-        return ['Category: ' + ', '.join(res)]
+        return ['', ['Category: ' + ', '.join(res)]]
 
 
     def render_links(self, links):
@@ -83,13 +85,14 @@ class HTTPHeadersRenderer(Renderer):
         :param occi.Link links[]: OCCI Link array
         :param occi.Attribute attributes[]: OCCI Attribute array
         :return: render result
-        :rtype: string[]
+        :rtype: [string, string[]]
         """
         Renderer.render_resource(self, categories, links, attributes)
         res = []
-        res += self.render_categories(categories)
+        cat_s, cat_h = self.render_categories(categories)
+        res += cat_h
         if links != None:
             res += self.render_links(links)
         if attributes != None:
             res += self.render_attributes(attributes)
-        return res
+        return ['', res]

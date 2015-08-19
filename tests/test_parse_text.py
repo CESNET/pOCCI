@@ -43,7 +43,7 @@ class TestCategories(unittest.TestCase):
         TODO: better to have OCCI Category collection rendering instead to render it one by one here.
         """
         for i in range(0,1):
-            categories = self.renderer.parse_categories(self.categories[i])
+            categories = self.renderer.parse_categories(self.categories[i], None)
 
             assert(categories)
             assert(len(categories))
@@ -51,7 +51,7 @@ class TestCategories(unittest.TestCase):
 
             body = []
             for cat in categories:
-                body.append(self.renderer.render_category(cat))
+                body.append(self.renderer.render_category(cat)[0])
 
             # compare only several lines first
             assert(self.categories[i][0] == body[0] + '\n')
@@ -66,25 +66,25 @@ class TestCategories(unittest.TestCase):
 
     def testCategoriesDuplicity(self):
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[2])
+            categories = self.renderer.parse_categories(self.categories[2], None)
 
 
     def testCategoriesMissingFields(self):
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[3])
+            categories = self.renderer.parse_categories(self.categories[3], None)
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[4])
+            categories = self.renderer.parse_categories(self.categories[4], None)
 
 
     def testCategoriesError(self):
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[5])
+            categories = self.renderer.parse_categories(self.categories[5], None)
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[6])
+            categories = self.renderer.parse_categories(self.categories[6], None)
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[7])
+            categories = self.renderer.parse_categories(self.categories[7], None)
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[8])
+            categories = self.renderer.parse_categories(self.categories[8], None)
 
 
 class TestEntities(unittest.TestCase):
@@ -102,7 +102,7 @@ class TestEntities(unittest.TestCase):
 
 
     def testEntitiesOK(self):
-        entities = self.renderer.parse_locations(self.entities[0])
+        entities = self.renderer.parse_locations(self.entities[0], None)
 
         assert(entities)
         assert(len(entities))
@@ -111,12 +111,12 @@ class TestEntities(unittest.TestCase):
 
     def testEntitiesErrorFormat(self):
         with self.assertRaises(occi.ParseError):
-            entities = self.renderer.parse_locations(self.entities[1])
+            entities = self.renderer.parse_locations(self.entities[1], None)
 
 
     def testEntitiesErrorURI(self):
         with self.assertRaises(occi.ParseError):
-            entities = self.renderer.parse_locations(self.entities[2])
+            entities = self.renderer.parse_locations(self.entities[2], None)
 
 
 def suite():

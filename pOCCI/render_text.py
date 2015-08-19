@@ -110,6 +110,8 @@ def text_link(link):
 
 class TextRenderer(Renderer):
     """Plain Text OCCI Renderer
+
+    Empty array is always returned as headers during rendering.
     """
 
     reChunks = re.compile(r';\s*')
@@ -125,9 +127,9 @@ class TextRenderer(Renderer):
 
         :param occi.Category category: OCCI Category object
         :return: render result
-        :rtype: string
+        :rtype: [string, string[]]
         """
-        return 'Category: ' + text_category(category)
+        return ['Category: ' + text_category(category), []]
 
 
     def render_categories(self, categories):
@@ -135,12 +137,13 @@ class TextRenderer(Renderer):
 
         :param occi.Category category[]: OCCI Category array
         :return: render result
-        :rtype: string
+        :rtype: [string, string[]]
         """
         res = []
         for category in categories:
-            res.append(self.render_category(category))
-        return eol.join(res) + eol
+            cat_s, cat_h = self.render_category(category)
+            res.append(cat_s)
+        return [eol.join(res) + eol, []]
 
 
     def render_resource(self, categories, links = None, attributes = None):
@@ -150,10 +153,11 @@ class TextRenderer(Renderer):
         :param occi.Link links[]: OCCI Link array
         :param occi.Attribute attributes[]: OCCI Attribute array
         :return: render result
-        :rtype: string
+        :rtype: [string, string[]]
+        :return: render result
         """
         Renderer.render_resource(self, categories, links, attributes)
-        cat_s = self.render_categories(categories)
+        cat_s, cat_h = self.render_categories(categories)
         res = []
         if links != None:
             for link in links:
@@ -162,9 +166,9 @@ class TextRenderer(Renderer):
             for attr in attributes:
                 res.append(self.render_attribute(attr))
         if res:
-            return cat_s + eol.join(res) + eol
+            return [cat_s + eol.join(res) + eol, []]
         else:
-            return cat_s
+            return [cat_s, []]
 
 
     def render_link(self, link):
@@ -337,10 +341,11 @@ class TextRenderer(Renderer):
         return category
 
 
-    def parse_categories(self, body):
+    def parse_categories(self, body, headers):
         """Parse OCCI Category Collection
 
-        :param string[]: body text to parse
+        :param string body[]: text to parse
+        :param string headers[]: headers to parse (unused in plain/text)
         :return: Array of OCCI Categories
         :rtype: occi.Category[]
         """
@@ -364,10 +369,11 @@ class TextRenderer(Renderer):
         return categories
 
 
-    def parse_locations(self, body):
+    def parse_locations(self, body, headers):
         """Parse OCCI Entity collection
 
-        :param string[]: body text to parse
+        :param string body[]: text to parse
+        :param string headers[]: headers to parse (unused in plain/text)
         :return: Array of links
         :rtype: string[]
         """
