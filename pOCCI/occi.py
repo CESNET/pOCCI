@@ -12,9 +12,9 @@ class ParseError(Error):
 
     def __str__(self):
         if self.body != None:
-            return repr(self.value) + ' (%s)' % repr(self.body)
+            return str(self.value) + ' (%s)' % str(self.body)
         else:
-            return repr(self.value)
+            return str(self.value)
 
 
 class RenderError(Error):

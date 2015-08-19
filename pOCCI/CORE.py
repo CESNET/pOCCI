@@ -35,7 +35,7 @@ def get_categories(err_msg):
     except occi.ParseError as pe:
         categories = []
         check_parse = False
-        err_msg.append(repr(pe))
+        err_msg.append(str(pe))
 
     if occi_config['curlverbose']:
         print '==== CATEGORIES ===='
@@ -177,6 +177,7 @@ def CORE_DISCOVERY002():
         filtered_categories = renderer.parse_categories(body, response_headers)
     except occi.ParseError as pe:
         check = False
+        err_msg.append(str(pe))
 
     check_filter = False
     for cat in filtered_categories:
@@ -297,7 +298,7 @@ def CORE_READ_URL(filter):
         except occi.ParseError as pe:
             locations = []
             check_url = False
-            err_msg.append(repr(pe))
+            err_msg.append(str(pe))
         url = None
         if locations:
             url = locations[0]
@@ -330,7 +331,7 @@ def CORE_READ002_COMMON(category, links = []):
     except occi.ParseError as pe:
         locations = []
         check_url = False
-        err_msg.append(repr(pe))
+        err_msg.append(str(pe))
     links[0:] = locations
 
     if re.match(r'^HTTP/.* 200 OK', http_status):
