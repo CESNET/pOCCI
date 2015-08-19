@@ -142,3 +142,26 @@ class HTTPHeadersRenderer(TextRenderer):
                 categories.append(category)
 
         return categories
+
+
+    def parse_locations(self, body, headers):
+        """Parse OCCI Entity collection
+
+        :param string body[]: text to parse (unused in text/occi)
+        :param string headers[]: headers to parse
+        :return: Array of links
+        :rtype: string[]
+        """
+        locations = []
+        for line in headers:
+            matched = TextRenderer.reLocation.match(line)
+            if not matched:
+                continue
+            uris_str = matched.group(2)
+            uris = HTTPHeadersRenderer.reSEP.split(uris_str)
+            for uri in uris:
+                if not check_url(uri, scheme = True, host = True):
+                    raise occi.ParseError('Invalid URI in OCCI Entity collection', line)
+                locations.append(uri)
+
+        return locations

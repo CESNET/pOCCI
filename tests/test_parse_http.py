@@ -59,9 +59,45 @@ class TestCategories(unittest.TestCase):
             assert(headers[0] == self.data[i])
 
 
+class TestEntities(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.renderer = render.create_renderer('text/occi')
+        self.data = []
+        for fname in [
+            'http-entities.txt',
+            'invalid-format.txt',
+            'invalid-uri.txt',
+        ]:
+            self.data.append(readCollection(os.path.join(os.path.dirname(__file__
+), 'entity-collection', fname)))
+
+
+    def testEntitiesOK(self):
+        entities = self.renderer.parse_locations(None, self.data[0])
+
+        assert(entities)
+        assert(len(entities) == 5)
+        for entity in entities:
+            assert(re.match(r'https://', entity))
+
+
+    def testEntitiesErrorFormat(self):
+        # invalid format can't be detected, foreign HTTP Headers must be skipped
+        #with self.assertRaises(occi.ParseError):
+            entities = self.renderer.parse_locations(None, self.data[1])
+
+
+    def testEntitiesErrorURI(self):
+        with self.assertRaises(occi.ParseError):
+            entities = self.renderer.parse_locations(None, self.data[2])
+
+
+
 def suite():
         return unittest.TestSuite([
                 unittest.TestLoader().loadTestsFromTestCase(TestCategories),
+                unittest.TestLoader().loadTestsFromTestCase(TestEntities),
         ])
 
 

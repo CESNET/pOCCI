@@ -120,7 +120,7 @@ class TextRenderer(Renderer):
     reQuoted = re.compile(r'^"(.*)"$')
     reSP = re.compile(r'\s+')
     reAttributes = re.compile(r'([^\{ ]+)(\{[^\}]*\})?\s*')
-    reLocation = re.compile(r'^X-OCCI-Location:\s*(.*)')
+    reLocation = re.compile(r'^(X-OCCI-Location|Location):\s*(.*)')
 
     def render_category(self, category):
         """Render OCCI Category
@@ -371,7 +371,7 @@ class TextRenderer(Renderer):
         """Parse OCCI Entity collection
 
         :param string body[]: text to parse
-        :param string headers[]: headers to parse (unused in plain/text)
+        :param string headers[]: headers to parse (unused in text/plain)
         :return: Array of links
         :rtype: string[]
         """
@@ -380,7 +380,7 @@ class TextRenderer(Renderer):
             matched = TextRenderer.reLocation.match(line)
             if not matched:
                 raise occi.ParseError('OCCI Location expected in OCCI Entity collection', line)
-            uri = matched.group(1)
+            uri = matched.group(2)
             if not check_url(uri, scheme = True, host = True):
                 raise occi.ParseError('Invalid URI in OCCI Entity collection', line)
             locations.append(uri)

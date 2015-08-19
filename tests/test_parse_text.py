@@ -94,7 +94,7 @@ class TestEntities(unittest.TestCase):
         self.renderer = render.create_renderer('text/plain')
         self.entities = []
         for fname in [
-            'entities.txt',
+            'text-entities.txt',
             'invalid-format.txt',
             'invalid-uri.txt',
         ]:
@@ -106,7 +106,8 @@ class TestEntities(unittest.TestCase):
 
         assert(entities)
         assert(len(entities))
-        assert(re.match(r'https://', entities[-1]))
+        for entity in entities:
+            assert(re.match(r'https://', entity))
 
 
     def testEntitiesErrorFormat(self):
