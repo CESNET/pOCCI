@@ -13,7 +13,8 @@ from pOCCI import render
 
 
 def readCollection(fname):
-    return [line.rstrip('\r\n') for line in open(fname)]
+    with open(fname, 'r') as f:
+        return f.readlines()
 
 
 class TestCategories(unittest.TestCase):
@@ -56,7 +57,7 @@ class TestCategories(unittest.TestCase):
             #print headers[0]
             #print
 
-            assert(headers[0] == self.data[i])
+            assert(headers[0] + '\r\n' == self.data[i])
 
 
 class TestEntities(unittest.TestCase):

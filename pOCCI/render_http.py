@@ -118,6 +118,7 @@ class HTTPHeadersRenderer(TextRenderer):
         category_ids = set()
 
         for line in headers:
+            line = line.rstrip('\r\n')
             matched = TextRenderer.reCategory.match(line)
             if not matched:
                 continue
@@ -154,6 +155,7 @@ class HTTPHeadersRenderer(TextRenderer):
         """
         locations = []
         for line in headers:
+            line = line.rstrip('\r\n')
             matched = TextRenderer.reLocation.match(line)
             if not matched:
                 continue
