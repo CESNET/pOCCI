@@ -24,15 +24,15 @@ class TestCategories(unittest.TestCase):
         self.renderer = render.create_renderer('text/plain')
         self.categories = []
         for fname in [
-            'ok-dummy.txt',
-            'ok-opennebula.txt',
-            'duplicity.txt',
-            'missing-class.txt',
-            'missing-scheme.txt',
-            'error-attrdef.txt',
-            'error-attrdef2.txt',
-            'error-category.txt',
-            'error-category2.txt',
+            'text-ok-dummy.txt',
+            'text-ok-opennebula.txt',
+            'text-duplicity.txt',
+            'text-missing-class.txt',
+            'text-missing-scheme.txt',
+            'text-error-attrdef.txt',
+            'text-error-attrdef2.txt',
+            'text-error-category.txt',
+            'text-error-category2.txt',
         ]:
             self.categories.append(readCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname)))
 

@@ -66,5 +66,5 @@ setup(
         ],
     },
 
-    test_suite='tests.test_parse_text.suite'
+    test_suite='tests'
 )

@@ -1,0 +1,70 @@
+#! /usr/bin/python
+
+import os
+import re
+import sys
+import unittest
+
+# to launch manually
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pOCCI import occi
+from pOCCI import render
+
+
+def readCollection(fname):
+    return [line.rstrip('\r\n') for line in open(fname)]
+
+
+class TestCategories(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        self.renderer = render.create_renderer('text/occi')
+        self.fulldata = []
+        self.data = []
+        for fname in [
+            'http-ok-dummy.txt',
+            'http-ok-opennebula.txt',
+        ]:
+            headers = readCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname))
+            self.fulldata.append(headers)
+            for h in headers:
+                if re.match(r'Category:', h):
+                    self.data.append(h)
+                    break
+
+
+    def testCategoriesOK(self):
+        """Parse headers with category collection.
+        """
+        for i in range(0,1):
+            categories = self.renderer.parse_categories(None, self.fulldata[i])
+
+            assert(categories)
+            assert(len(categories))
+            assert(categories[-1]['term'] == 'offline')
+
+            #for cat in categories:
+            #    print cat
+            #    print
+
+            #print 'ORIGINAL:'
+            #print self.data[i]
+            body, headers = self.renderer.render_categories(categories)
+            #print 'RENDERING:'
+            #print headers[0]
+            #print
+
+            assert(headers[0] == self.data[i])
+
+
+def suite():
+        return unittest.TestSuite([
+                unittest.TestLoader().loadTestsFromTestCase(TestCategories),
+        ])
+
+
+if __name__ == '__main__':
+        suite = suite()
+        unittest.TextTestRunner(verbosity=2).run(suite)

@@ -1,16 +1,22 @@
+import re
+
 import occi
 
 from render_base import Renderer
 from render_text import *
 
 
-class HTTPHeadersRenderer(Renderer):
+class HTTPHeadersRenderer(TextRenderer):
     """HTTP Headers OCCI Renderer
 
     RFC 7230 http://www.ietf.org/rfc/rfc7230.txt.
 
     Empty string is always returned as body during rendering.
+
+    Beware of HTTP Headers size limitations. It is better to not use 'text/occi' mimetype for transfering OCCI Category Collection.
     """
+
+    reSEP = re.compile(r'\s*,\s*')
 
     def render_category(self, category):
         """Render OCCI Category
@@ -34,7 +40,7 @@ class HTTPHeadersRenderer(Renderer):
         res = []
         for category in categories:
             res.append(text_category(category))
-        return ['', ['Category: ' + ', '.join(res)]]
+        return ['', ['Category: ' + ','.join(res)]]
 
 
     def render_links(self, links):
@@ -96,3 +102,43 @@ class HTTPHeadersRenderer(Renderer):
         if attributes != None:
             res += self.render_attributes(attributes)
         return ['', res]
+
+
+    def parse_categories(self, body, headers):
+        """Parse OCCI Category Collection
+
+        Beware of HTTP Headers size limitations. It is better to not use 'text/occi' mimetype for transfering OCCI Category Collection.
+
+        :param string body[]: text to parse (unused in plain/occi)
+        :param string headers[]: headers to parse
+        :return: Array of OCCI Categories
+        :rtype: occi.Category[]
+        """
+        categories = []
+        category_ids = set()
+
+        for line in headers:
+            matched = TextRenderer.reCategory.match(line)
+            if not matched:
+                continue
+
+            line = line[matched.end():]
+            #print 'CATEGORY HIT:'
+            #print line
+            bodies = HTTPHeadersRenderer.reSEP.split(line)
+            #print 'SPLAT BODIES:'
+            #print '\n\n'.join(bodies)
+
+            for cat_s in bodies:
+                # use the helper parser function inherited from text/plain renderer
+                category = TextRenderer.parse_category_body(self, cat_s)
+
+                # check uniqueness
+                key = category['term'] + category['scheme']
+                if key in category_ids:
+                    raise occi.ParseError('Category not unique (term "%s", scheme "%s")' % (category['term'], category['scheme']), cat_s)
+                category_ids.add(key)
+
+                categories.append(category)
+
+        return categories

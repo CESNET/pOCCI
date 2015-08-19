@@ -115,7 +115,7 @@ class TextRenderer(Renderer):
     """
 
     reChunks = re.compile(r';\s*')
-    reCategory = re.compile(r'^Category:\s*(.*)')
+    reCategory = re.compile(r'^Category:\s*')
     reKeyValue = re.compile(r'\s*=\s*')
     reQuoted = re.compile(r'^"(.*)"$')
     reSP = re.compile(r'\s+')
@@ -284,12 +284,12 @@ class TextRenderer(Renderer):
         return actions
 
 
-    def parse_category(self, body):
-        """Parse OCCI Category.
+    def parse_category_body(self, body):
+        """Parse OCCI Category body
 
         Example::
 
-           Category: entity;scheme="http://schemas.ogf.org/occi/core#";class="kind";title="entity";location="/entity/";attributes="occi.core.id{immutable required} occi.core.title"
+           entity;scheme="http://schemas.ogf.org/occi/core#";class="kind";title="entity";location="/entity/";attributes="occi.core.id{immutable required} occi.core.title"
 
         :param string body: text to parse
         :return: OCCI Category
@@ -298,14 +298,11 @@ class TextRenderer(Renderer):
         category = occi.Category()
 
         chunks = TextRenderer.reChunks.split(body)
-        matched = TextRenderer.reCategory.match(chunks[0])
-        if not matched:
-            raise occi.ParseError('Category" expected', chunks[0])
 
-        if not matched.group(1):
-            raise occi.ParseERror('Invalid format of category, term expected', chunks[0])
+        if not chunks[0]:
+            raise occi.ParseError('Invalid format of category, term expected', body)
 
-        category['term'] = matched.group(1)
+        category['term'] = chunks[0]
 
         # skip the first chunk (category term)
         for chunk in chunks[1:]:
@@ -316,7 +313,7 @@ class TextRenderer(Renderer):
             value = keyvalue[1]
             valuematch = TextRenderer.reQuoted.match(value)
             if valuematch == None and key != 'class':
-                raise occi.ParseError('Category value not quoted', chunk)
+                raise occi.ParseError('Category value not properly quoted or unexpected EOF', chunk)
             value = valuematch.group(1)
             # sanity check: there should not be any quotes now
             if value[0] == '"' or (len(value) >= 2 and value[-1] == '"'):
@@ -351,12 +348,13 @@ class TextRenderer(Renderer):
         """
         categories = []
         category_ids = set()
-        check_categories = 0
-        check_quoting = 0
-        check_unique = 0
 
         for line in body:
-            category = self.parse_category(line)
+            matched = TextRenderer.reCategory.match(line)
+            if not matched:
+                raise occi.ParseError('"Category" expected', line)
+
+            category = self.parse_category_body(line[matched.end():])
 
             # check uniqueness
             key = category['term'] + category['scheme']
