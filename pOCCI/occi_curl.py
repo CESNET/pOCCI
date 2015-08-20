@@ -13,6 +13,8 @@ def get_header(buff):
 
 
 def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config['authtype'], ignoressl = occi_config['ignoressl'], user = occi_config['user'], passwd = occi_config['passwd'], mimetype = occi_config['mimetype'], headers = [], post = '', custom_request = ''):
+    global header
+
     curlverbose = occi_config['curlverbose']
     buffer = StringIO()
     curl = pycurl.Curl()
@@ -63,6 +65,7 @@ def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config
         curl.setopt(pycurl.CUSTOMREQUEST, custom_request)
 
     # DO IT!
+    header = []
     curl.perform()
     curl.close()
 
