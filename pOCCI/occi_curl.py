@@ -12,10 +12,12 @@ def get_header(buff):
 	header.append(buff)
 
 
-def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config['authtype'], ignoressl = occi_config['ignoressl'], user = occi_config['user'], passwd = occi_config['passwd'], mimetype = occi_config['mimetype'], headers = [], post = '', custom_request = ''):
+def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config['authtype'], ignoressl = occi_config['ignoressl'], user = occi_config['user'], passwd = occi_config['passwd'], mimetype = '', headers = [], post = '', custom_request = ''):
     global header
 
     curlverbose = occi_config['curlverbose']
+    if not mimetype:
+        mimetype = occi_config['mimetype']
     buffer = StringIO()
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, str(base_url + url))
@@ -37,14 +39,14 @@ def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config
         curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
         curl.setopt(pycurl.USERPWD, "%s:%s" % (user, passwd))
     
-    # Set appropriate mime type
-    curl.setopt(pycurl.HTTPHEADER, ['Accept: %s' % mimetype])
-    
     # Verbose mode
     curl.setopt(pycurl.VERBOSE, curlverbose)
 
     curl.setopt(pycurl.CONNECTTIMEOUT, occi_config['connectiontimeout'])
     curl.setopt(pycurl.TIMEOUT, occi_config['timeout'])
+
+    # Set appropriate mime type
+    headers = ['Accept: %s' % mimetype] + headers
 
     # Set requested HTTP headers
     if headers:
@@ -53,15 +55,18 @@ def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config
     # HTTP header response
     curl.setopt(pycurl.HEADERFUNCTION, get_header)
 
-    if post:
+    if post or custom_request == 'POST':
         curl.setopt(pycurl.POST, 1)
-        curl.setopt(pycurl.POSTFIELDS, post)
+        if post:
+            curl.setopt(pycurl.POSTFIELDS, post)
+        else:
+            curl.setopt(pycurl.POSTFIELDS, 'OK')
         if curlverbose:
             print "==== POST ==== "
             print post
             print "============== "
 
-    if custom_request:
+    if custom_request and custom_request != 'POST':
         curl.setopt(pycurl.CUSTOMREQUEST, custom_request)
 
     # DO IT!
