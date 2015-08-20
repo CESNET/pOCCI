@@ -28,10 +28,10 @@ def get_categories(err_msg):
     global categories
     check_parse = True
 
-    body, response_headers, http_status, content_type = occi_curl()
+    body, response_headers, http_status, content_type = occi_curl(mimetype = occi_config['mimetype.big'])
 
     try:
-        categories = renderer.parse_categories(body, response_headers)
+        categories = renderer_big.parse_categories(body, response_headers)
     except occi.ParseError as pe:
         categories = []
         check_parse = False
@@ -56,8 +56,15 @@ def check_content_type(content_type):
         return [False, ['Wrong Content-Type in response']]
 
 
-def check_requested_content_type(content_type):
-    if content_type == occi_config['mimetype']:
+def check_requested_content_type(content_type, big = False, headers = False):
+    if big:
+        requested = occi_config['mimetype.big']
+    elif headers:
+        requested = 'text/occi'
+    else:
+        requested = occi_config['mimetype']
+
+    if content_type == requested:
         return [True, []]
     else:
         return [False, ['Result mime type differs']]
@@ -127,7 +134,7 @@ def CORE_DISCOVERY001():
     check_ct, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
 
-    check_rct, tmp_err_msg = check_requested_content_type(content_type)
+    check_rct, tmp_err_msg = check_requested_content_type(content_type, big = True)
     err_msg += tmp_err_msg
 
     count = 0
@@ -466,7 +473,7 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
 
     new_cat_s, new_cat_h = renderer.render_resource(categories, None, attributes.values())
 
-    body, response_request, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'] + new_cat_h, post=new_cat_s)
+    body, response_request, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, post=new_cat_s, custom_request = 'POST')
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 
@@ -678,7 +685,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
         attributes = attributes.values()
     )
 
-    body, response_headers, http_status, content_type = occi_curl(url = resourcelink['location'], headers = ['Content-Type: text/plain'] + new_resourcelink_h, post = new_resourcelink_s)
+    body, response_headers, http_status, content_type = occi_curl(url = resourcelink['location'], headers = ['Content-Type: %s' % occi_config['mimetype']] + new_resourcelink_h, post = new_resourcelink_s, custom_request = 'POST')
 
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
@@ -688,7 +695,8 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
 
     resource_link = urlparse.urlparse(resource_links[0]).path
 
-    body, response_headers, http_status, content_type = occi_curl(base_url = compute_links[0], url = '', headers = ['Content-Type: text/plain'])
+    # TODO: make mimetype configurable also here (==> use renderer)
+    body, response_headers, http_status, content_type = occi_curl(base_url = compute_links[0], url = '', mimetype = 'text/plain')
     #print body
     for line in body:
         if re.match(r'^Link: <.*%s>' % resource_link, line):
