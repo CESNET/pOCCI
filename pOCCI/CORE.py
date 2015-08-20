@@ -98,14 +98,15 @@ def search_category(filter):
     return None
 
 
-def check_body_resource(body):
-    #['X-OCCI-Location: https://myriad5.zcu.cz:11443/compute/3eda9528-d40a-4a00-b4e1-d5fe51a95e4a']
-    expected = 'X-OCCI-Location:'
-    for line in body:
-        if re.match(r'%s' % expected, line):
-            return [True, line, []]
-        else:
-            return [False, line, ['HTTP Body doesn\'t contain the OCCI Compute Resource description: "%s" expected "%s"' % (line, expected)]]
+def check_body_entities(body, headers, err_msg = []):
+    try:
+        entities = renderer.parse_locations(body, headers)
+    except occi.ParseError as pe:
+        err_msg.append(str(pe))
+        err_msg.append('HTTP Body doesn\'t contain the OCCI Compute Resource description')
+        return None
+
+    return entities
 
 
 def gen_id(prefix):
@@ -472,8 +473,8 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
     check_ct, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
 
-    check_br, body_resource, tmp_err_msg = check_body_resource(body)
-    err_msg += tmp_err_msg
+    entities = check_body_entities(body, response_request, err_msg)
+    check_br = (entities != None and entities)
 
     check_rct, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
@@ -482,15 +483,18 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
         print body
 
     body, response_headers, http_status, content_type = occi_curl(url = kind['location'])
+    entities2 = check_body_entities(body, response_headers, err_msg)
+    # check if the entity is really created (just check the first: entities[0])
     check_created = False
-    for line in body:
-        if line == body_resource:
-            check_created = True
-            break
+    if entities:
+        for line in entities2:
+            if line == entities[0]:
+                check_created = True
+                break
     if not check_created:
         err_msg.append('OCCI %s Resource hasn\'t been successfully created' % resource.title())
 
-    return [has_kind and has_all_attributes and check_create and check_ct and check_br and check_rct and check_created, err_msg]
+    return [has_kind and has_all_attributes and check_create and check_created and check_ct and check_br and check_rct and check_created, err_msg]
 
 
 def INFRA_CREATE001():
