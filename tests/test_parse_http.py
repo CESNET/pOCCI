@@ -113,6 +113,7 @@ class TestCategories(unittest.TestCase):
         self.data = []
         for fname in [
             'http-ok-dummy.txt',
+            'http-ok-ec2.txt',
             'http-ok-opennebula.txt',
         ]:
             headers = readCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname))
@@ -126,7 +127,7 @@ class TestCategories(unittest.TestCase):
     def testCategoriesOK(self):
         """Parse headers with category collection.
         """
-        for i in range(0,1):
+        for i in range(0,2):
             categories = self.renderer.parse_categories(None, self.fulldata[i])
 
             assert(categories)
@@ -189,13 +190,14 @@ class TestResource(unittest.TestCase):
         self.data = []
         for fname in [
             'http-ok-opennebula-compute.txt',
+            'http-ok-ec2-compute.txt',
             'http-ok-ignore-unknown.txt',
         ]:
             self.data.append(readCollection(os.path.join(os.path.dirname(__file__), 'resource', fname)))
 
 
     def testResourceOK(self):
-        for i in range(0,1):
+        for i in range(0,2):
             categories, links, attributes = self.renderer.parse_resource(None, self.data[i])
 
             assert(categories)
@@ -207,23 +209,35 @@ class TestResource(unittest.TestCase):
             assert(attributes)
             assert(len(attributes))
 
+            #print i
             #for c in categories: print c
             #for l in links: print l
             #for a in attributes: print a
 
-            assert(categories[0]['term'] == 'compute')
-            assert(attributes[0]['value'] == '103')
-            assert(attributes[1]['value'] == 'one-103')
-            assert(attributes[3]['value'] == 1)
-            assert(re.match(r'/storage/0', links[0]['uri']) != None)
+            if i == 0 or i == 2:
+                assert(categories[0]['term'] == 'compute')
+                assert(attributes[0]['value'] == '103')
+                assert(attributes[1]['value'] == 'one-103')
+                assert(attributes[3]['value'] == 1)
+                assert(re.match(r'/storage/0', links[0]['uri']) != None)
+            elif i == 1:
+                assert(categories[0]['term'] == 'compute')
+                assert(attributes[0]['value'] == 'i-375ab99b')
+                assert(attributes[1]['value'] == 'x64')
+                assert(attributes[3]['value'] == 0.613)
+                assert(re.match(r'/storage/vol-2cc1133a', links[0]['uri']) != None)
 
             # rendering
             body, headers = self.renderer.render_resource(categories, links, attributes)
 
             # full compare
             # (with the first datafile without additional fields)
-            original = ''.join(self.data[0])
+            reference = i
+            if i == 2:
+                reference = 0
+            original = ''.join(self.data[reference])
             rendering = '\n'.join(headers) + '\n'
+            #print 'INDEX: %d\n' % i
             #print 'ORIGINAL:\n'; print original
             #print 'RENDERING:\n'; print rendering
             assert(original == rendering)

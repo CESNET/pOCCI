@@ -26,6 +26,7 @@ class TestCategories(unittest.TestCase):
         for fname in [
             'text-ok-dummy.txt',
             'text-ok-opennebula.txt',
+            'text-ok-ec2.txt',
             'text-duplicity.txt',
             'text-missing-class.txt',
             'text-missing-scheme.txt',
@@ -42,7 +43,7 @@ class TestCategories(unittest.TestCase):
 
         TODO: better to have OCCI Category collection rendering instead to render it one by one here.
         """
-        for i in range(0,1):
+        for i in range(0,2):
             categories = self.renderer.parse_categories(self.categories[i], None)
 
             assert(categories)
@@ -66,25 +67,25 @@ class TestCategories(unittest.TestCase):
 
     def testCategoriesDuplicity(self):
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[2], None)
+            categories = self.renderer.parse_categories(self.categories[3], None)
 
 
     def testCategoriesMissingFields(self):
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[3], None)
-        with self.assertRaises(occi.ParseError):
             categories = self.renderer.parse_categories(self.categories[4], None)
+        with self.assertRaises(occi.ParseError):
+            categories = self.renderer.parse_categories(self.categories[5], None)
 
 
     def testCategoriesError(self):
-        with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[5], None)
         with self.assertRaises(occi.ParseError):
             categories = self.renderer.parse_categories(self.categories[6], None)
         with self.assertRaises(occi.ParseError):
             categories = self.renderer.parse_categories(self.categories[7], None)
         with self.assertRaises(occi.ParseError):
             categories = self.renderer.parse_categories(self.categories[8], None)
+        with self.assertRaises(occi.ParseError):
+            categories = self.renderer.parse_categories(self.categories[9], None)
 
 
 class TestEntities(unittest.TestCase):
@@ -128,6 +129,7 @@ class TestResource(unittest.TestCase):
         self.data = []
         for fname in [
             'text-ok-opennebula-compute.txt',
+            'text-ok-ec2-compute.txt',
             'text-bad-quote-attribute.txt',
             'text-bad-quote-category.txt',
             'text-bad-quote-link.txt',
@@ -137,50 +139,58 @@ class TestResource(unittest.TestCase):
 
 
     def testResourceOK(self):
-        categories, links, attributes = self.renderer.parse_resource(self.data[0], None)
+        for i in range(0,1):
+            categories, links, attributes = self.renderer.parse_resource(self.data[i], None)
 
-        assert(categories)
-        assert(len(categories))
+            assert(categories)
+            assert(len(categories))
 
-        assert(links)
-        assert(len(links))
+            assert(links)
+            assert(len(links))
 
-        assert(attributes)
-        assert(len(attributes))
+            assert(attributes)
+            assert(len(attributes))
 
-        #for c in categories: print c
-        #for l in links: print l
-        #for a in attributes: print a
+            #for c in categories: print c
+            #for l in links: print l
+            #for a in attributes: print a
 
-        assert(categories[0]['term'] == 'compute')
-        assert(attributes[0]['value'] == '103')
-        assert(attributes[1]['value'] == 'one-103')
-        assert(attributes[3]['value'] == 1)
-        assert(re.match(r'/compute/103', links[0]['uri']) != None)
+            if i == 0:
+                assert(categories[0]['term'] == 'compute')
+                assert(attributes[0]['value'] == '103')
+                assert(attributes[1]['value'] == 'one-103')
+                assert(attributes[3]['value'] == 1)
+                assert(re.match(r'/compute/103', links[0]['uri']) != None)
+            elif i == 1:
+                assert(categories[0]['term'] == 'compute')
+                assert(attributes[0]['value'] == 'i-375ab99b')
+                assert(attributes[1]['value'] == 'x64')
+                assert(attributes[3]['value'] == 0.613)
+                assert(re.match(r'/compute/i-375ab99b', links[0]['uri']) != None)
 
-        # rendering
-        body, headers = self.renderer.render_resource(categories, links, attributes)
+            # rendering
+            body, headers = self.renderer.render_resource(categories, links, attributes)
 
-        # full compare
-        original = ''.join(self.data[0])
-        rendering = body
-        #print 'ORIGINAL:\n'; print original
-        #print 'RENDERING:\n'; print rendering
-        assert(original == rendering)
+            # full compare
+            original = ''.join(self.data[i])
+            rendering = body
+            #print 'ORIGINAL:\n'; print original
+            #print 'RENDERING:\n'; print rendering
+            assert(original == rendering)
 
 
     def testResourceBadQuoting(self):
         with self.assertRaises(occi.ParseError):
-            self.renderer.parse_resource(self.data[1], None)
-        with self.assertRaises(occi.ParseError):
             self.renderer.parse_resource(self.data[2], None)
         with self.assertRaises(occi.ParseError):
             self.renderer.parse_resource(self.data[3], None)
+        with self.assertRaises(occi.ParseError):
+            self.renderer.parse_resource(self.data[4], None)
 
 
     def testResourceErrorFormat(self):
         with self.assertRaises(occi.ParseError):
-            self.renderer.parse_resource(self.data[4], None)
+            self.renderer.parse_resource(self.data[5], None)
 
 
 def suite():
