@@ -379,17 +379,13 @@ class TextRenderer(Renderer):
         for chunk in chunks[1:]:
             keyvalue = TextRenderer.reKeyValue.split(chunk, 1)
 
-            # only rel and self has value quoted
             key = keyvalue[0]
             value = keyvalue[1]
             valuematch = TextRenderer.reQuoted.match(value)
-            if key in ['rel', 'self']:
+            # mandatory quoting
+            if key in ['rel', 'self', 'category']:
                 if valuematch == None:
                     raise occi.ParseError('Link value not properly quoted or unexpected EOF', chunk)
-            # XXX: probaly forgotten quotes in standard?
-            #elif key == 'category':
-            #    if valuematch != None:
-            #        raise occi.ParseError('Link category value shoud not be quoted', chunk)
             # quoting of the other attributes optional
             if valuematch != None:
                 value = valuematch.group(1)
