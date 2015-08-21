@@ -16,8 +16,7 @@ class HTTPHeadersRenderer(TextRenderer):
     Beware of HTTP Headers size limitations. It is better to not use 'text/occi' mimetype for transfering OCCI Category Collection.
     """
 
-    reHeaderChunk = re.compile(r'(?P<chunk>(?P<quoted>"([^"\\]|\\.)*")|(?P<qt>[^,"]+\s*=\s*"([^"\\]|\\.)*")|(?P<term>[^,"]+)|(?P<empty>))(?P<sep>\s*,\s*)?')
-    reSEP = re.compile(r'\s*,\s*')
+    reHeaderChunk = re.compile(r'(?P<chunk>((?P<quoted>"([^"\\]|\\.)*")|(?P<term>[^,"\\]+))*)(?P<sep>\s*,\s*)?')
 
     def render_category(self, category):
         """Render OCCI Category
@@ -108,8 +107,6 @@ class HTTPHeadersRenderer(TextRenderer):
     def parse_header_values(self, body):
         """Helper generator method to split values in HTTP Header.
 
-        It is limited only to OCCI Attribute values parsing.
-
         :param string body: parsed text
         :return: result values
         :rtype: string
@@ -160,7 +157,7 @@ class HTTPHeadersRenderer(TextRenderer):
             line = line[matched.end():]
             #print 'CATEGORY HIT:'
             #print line
-            bodies = HTTPHeadersRenderer.reSEP.split(line)
+            bodies = self.parse_header_values(line)
             #print 'SPLAT BODIES:'
             #print '\n\n'.join(bodies)
 
@@ -194,7 +191,7 @@ class HTTPHeadersRenderer(TextRenderer):
             if not matched:
                 continue
             uris_str = matched.group(2)
-            uris = HTTPHeadersRenderer.reSEP.split(uris_str)
+            uris = self.parse_header_values(uris_str)
             for uri in uris:
                 if not check_url(uri, scheme = True, host = True):
                     raise occi.ParseError('Invalid URI in OCCI Entity collection', line)
@@ -221,14 +218,14 @@ class HTTPHeadersRenderer(TextRenderer):
             matched = TextRenderer.reCategory.match(line)
             if matched != None:
                 cats_str = line[matched.end():]
-                for s in HTTPHeadersRenderer.reSEP.split(cats_str):
+                for s in self.parse_header_values(cats_str):
                     categories.append(self.parse_category_body(s))
                 continue
 
             matched = TextRenderer.reLink.match(line)
             if matched != None:
                 links_str = line[matched.end():]
-                for s in HTTPHeadersRenderer.reSEP.split(links_str):
+                for s in self.parse_header_values(links_str):
                     links.append(self.parse_link_body(s))
                 continue
 

@@ -52,6 +52,8 @@ class TestHeaderValues(unittest.TestCase):
             'org.openstack.credentials.publickey.data="ssh-dss AAAAB3NzaC1kc3MAAACBAJAQxCSi3hx/2UKXJMD7MzeHKiMFl7LxWKp0Bw6ArlaKXRAozISe7djcjufCJYyZ8R86Pjh8rYaN9oAmikLQGThJlVsV7TojpcMn1UVrIWz4sC02VoOe8wtVY60akplt7jLfA4Qn1T4wu6Q8jHB4Wv48x7fDO51w01Q/j4CdXXpnAAAAFQDBT/N1u+BKQ/V1+CN50gdBJxplEwAAAIAL/9tgJsF69UQZh/l6M139eFFOxz6GawQd+5H/v6ECjcBICqAZBKpv70JiYrT+5UptmPJ1FKo5S+UHWAWUdyc2Lu8BJ9PsHYI5sNeGoSoTlx/ZlBqrA9Pf5oBb1uO3HMAtrnN17b6JCv6sHBxHCJqRI8ATk5mA2JPxBHwTiqxoDQAAAIAfnCNxwI8T7tQD4x2s7KVYm4oRVE7bO8L+o9An9/JPWIaNYHNTuAkOAoRlW54m9kBexPhAQxt2HF6/JMIgS2lglTAbygAneH63v96xT9L2Gqyj2mAQIZ8NgxVtVFymsQxuhB5s1pkK3WJreOW9PY9np69CU0zjLDKXyZ0J2RCbvw== root@myriads.zcu.cz"',
             'org.openstack.compute.user_data="# user data"',
         ],
+        'a=1;b="2";c="3"': ['a=1;b="2";c="3"'],
+        'a=1;b="2,2";c="3\\,3",A=1': ['a=1;b="2,2";c="3\\,3"', 'A=1'],
     }
 
     bodies_error = [

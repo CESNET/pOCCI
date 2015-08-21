@@ -119,12 +119,14 @@ class TextRenderer(Renderer):
     reCategory = re.compile(r'^Category:\s*')
     reLink = re.compile(r'^Link:\s*')
     reAttribute = re.compile(r'^X-OCCI-Attribute:\s*')
-    reKeyValue = re.compile(r'\s*=\s*')
+    reKeyValue = re.compile(r'\s*?=\s*')
+    reKeyCheck = re.compile(r'[A-Za-z0-9_\.-]*$')
     reQuoted = re.compile(r'^"(.*)"$')
     reSP = re.compile(r'\s+')
     reAttributes = re.compile(r'([^\{ ]+)(\{[^\}]*\})?\s*')
     reLocation = re.compile(r'^(X-OCCI-Location|Location):\s*(.*)')
     reQuotedLink = re.compile(r'^<(.*)>$')
+    reStringUnescape = re.compile(r'\\(.)')
     reNumber = re.compile(r'^([0-9\.+-]+)$')
     reIntNumber = re.compile(r'^([0-9+-]+)$')
     reBool = re.compile(r'^(true|false)$')
@@ -315,9 +317,12 @@ class TextRenderer(Renderer):
         for chunk in chunks[1:]:
             keyvalue = TextRenderer.reKeyValue.split(chunk, 1)
 
-            # every value quoted, only class has quoting optional
             key = keyvalue[0]
             value = keyvalue[1]
+            keymatch = TextRenderer.reKeyCheck.match(key)
+            if keymatch == None:
+                raise occi.ParseError('Invalid characters in category property', chunk)
+            # every value quoted, only class has quoting optional
             valuematch = TextRenderer.reQuoted.match(value)
             if valuematch == None and key != 'class':
                 raise occi.ParseError('Category value not properly quoted or unexpected EOF', chunk)
@@ -381,6 +386,9 @@ class TextRenderer(Renderer):
 
             key = keyvalue[0]
             value = keyvalue[1]
+            keymatch = TextRenderer.reKeyCheck.match(key)
+            if keymatch == None:
+                raise occi.ParseError('Invalid characters in link property', chunk)
             valuematch = TextRenderer.reQuoted.match(value)
             # mandatory quoting
             if key in ['rel', 'self', 'category']:
@@ -427,8 +435,8 @@ class TextRenderer(Renderer):
         matched = TextRenderer.reQuoted.match(body)
         if matched != None:
             t = 'string'
-            # XXX: ignored any escaping
             value = matched.group(1)
+            value = TextRenderer.reStringUnescape.sub(r'\1', value)
             if len(value) + 2 < len(body):
                 raise occi.ParseError('Unexpected quotes in OCCI Attribute value', body)
             return [t, value]
@@ -466,6 +474,9 @@ class TextRenderer(Renderer):
         keyvalue = TextRenderer.reKeyValue.split(body, 1)
         key = keyvalue[0]
         value = keyvalue[1]
+        keymatch = TextRenderer.reKeyCheck.match(key)
+        if keymatch == None:
+            raise occi.ParseError('Invalid characters in attribute name', chunk)
         t, v = self.parse_attribute_value(value)
 
         return occi.Attribute({'name': key, 'type': t, 'value': v})
