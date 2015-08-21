@@ -693,13 +693,21 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
     if not check_create:
         print body
 
-    resource_link = urlparse.urlparse(resource_links[0]).path
+    resource_link = resource_links[0]
+    resource_link_rel = urlparse.urlparse(resource_link).path
 
-    # TODO: make mimetype configurable also here (==> use renderer)
-    body, response_headers, http_status, content_type = occi_curl(base_url = compute_links[0], url = '', mimetype = 'text/plain')
-    #print body
-    for line in body:
-        if re.match(r'^Link: <.*%s>' % resource_link, line):
+    body, response_headers, http_status, content_type = occi_curl(base_url = compute_links[0], url = '')
+
+    try:
+        result_categories, result_links, result_attributes = renderer.parse_resource(body, response_headers)
+    except occi.ParseError as pe:
+        err_msg += [str(pe)]
+
+    #print resource_link
+    #print result_links
+    for l in result_links:
+        # accept both: relative and absolute URI
+        if l['uri'] == resource_link or l['uri'] == resource_link_rel:
             check_link = True
             break
 

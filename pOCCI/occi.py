@@ -101,4 +101,4 @@ class Link(Category):
     """
 
     def validate(self):
-        return 'uri' in self and rel in self
+        return 'uri' in self and 'rel' in self

@@ -120,10 +120,74 @@ class TestEntities(unittest.TestCase):
             entities = self.renderer.parse_locations(self.entities[2], None)
 
 
+class TestResource(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        self.renderer = render.create_renderer('text/plain')
+        self.data = []
+        for fname in [
+            'text-ok-opennebula-compute.txt',
+            'text-bad-quote-attribute.txt',
+            'text-bad-quote-category.txt',
+            'text-bad-quote-link.txt',
+            'text-invalid-format.txt',
+        ]:
+            self.data.append(readCollection(os.path.join(os.path.dirname(__file__), 'resource', fname)))
+
+
+    def testResourceOK(self):
+        categories, links, attributes = self.renderer.parse_resource(self.data[0], None)
+
+        assert(categories)
+        assert(len(categories))
+
+        assert(links)
+        assert(len(links))
+
+        assert(attributes)
+        assert(len(attributes))
+
+        #for c in categories: print c
+        #for l in links: print l
+        #for a in attributes: print a
+
+        assert(categories[0]['term'] == 'compute')
+        assert(attributes[0]['value'] == '103')
+        assert(attributes[1]['value'] == 'one-103')
+        assert(attributes[3]['value'] == 1)
+        assert(re.match(r'/compute/103', links[0]['uri']) != None)
+
+        # rendering
+        body, headers = self.renderer.render_resource(categories, links, attributes)
+
+        # full compare
+        original = ''.join(self.data[0])
+        rendering = body
+        #print 'ORIGINAL:\n'; print original
+        #print 'RENDERING:\n'; print rendering
+        assert(original == rendering)
+
+
+    def testResourceBadQuoting(self):
+        with self.assertRaises(occi.ParseError):
+            self.renderer.parse_resource(self.data[1], None)
+        with self.assertRaises(occi.ParseError):
+            self.renderer.parse_resource(self.data[2], None)
+        with self.assertRaises(occi.ParseError):
+            self.renderer.parse_resource(self.data[3], None)
+
+
+    def testResourceErrorFormat(self):
+        with self.assertRaises(occi.ParseError):
+            self.renderer.parse_resource(self.data[4], None)
+
+
 def suite():
         return unittest.TestSuite([
                 unittest.TestLoader().loadTestsFromTestCase(TestCategories),
                 unittest.TestLoader().loadTestsFromTestCase(TestEntities),
+                unittest.TestLoader().loadTestsFromTestCase(TestResource),
         ])
 
 

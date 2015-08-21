@@ -82,3 +82,15 @@ class Renderer:
         :return: array of renderer-specific strings
         :rtype: string[]
         """
+        pass
+
+
+    def parse_resource(self, body, header):
+        """Parse OCCI Resource instance
+
+        :param string body[]: text to parse
+        :param string headers[]: headers to parse
+        :return: categories, links, and attributes
+        :rtype: [occi.Category categories[], occi.Link links[], occi.Attribute attributes[]]
+        """
+        pass

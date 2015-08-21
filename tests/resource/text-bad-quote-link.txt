@@ -1,0 +1,3 @@
+Category: user_data;scheme="http://schemas.openstack.org/compute/instance#";class="mixin";location="/mixin/user_data/";title="OpenStack's contextualization extension - user_data"
+X-OCCI-Attribute: occi.core.id="103"
+Link: </compute/103?action=stop>;rel="http://schemas.ogf.org/occi/infrastructure/compute/action#stop

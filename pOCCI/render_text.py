@@ -1,3 +1,4 @@
+import collections
 import re
 import sys
 
@@ -103,7 +104,7 @@ def text_link(link):
 
     if 'attributes' in link:
         for key, value in link['attributes'].iteritems():
-            s += ';%s' % text_link_attributes(key, value)
+            s += ';%s' % text_link_attribute(key, value)
 
     return s
 
@@ -116,11 +117,17 @@ class TextRenderer(Renderer):
 
     reChunks = re.compile(r';\s*')
     reCategory = re.compile(r'^Category:\s*')
+    reLink = re.compile(r'^Link:\s*')
+    reAttribute = re.compile(r'^X-OCCI-Attribute:\s*')
     reKeyValue = re.compile(r'\s*=\s*')
     reQuoted = re.compile(r'^"(.*)"$')
     reSP = re.compile(r'\s+')
     reAttributes = re.compile(r'([^\{ ]+)(\{[^\}]*\})?\s*')
     reLocation = re.compile(r'^(X-OCCI-Location|Location):\s*(.*)')
+    reQuotedLink = re.compile(r'^<(.*)>$')
+    reNumber = re.compile(r'^([0-9\.+-]+)$')
+    reIntNumber = re.compile(r'^([0-9+-]+)$')
+    reBool = re.compile(r'^(true|false)$')
 
     def render_category(self, category):
         """Render OCCI Category
@@ -321,21 +328,151 @@ class TextRenderer(Renderer):
 
             if key == 'location':
                 if not check_url(value):
-                    raise occi.ParseError('URL is not valid in category location', chunk)
+                    raise occi.ParseError('URL is not valid in OCCI Category location', chunk)
+                category[key] = value
+            elif key == 'scheme':
+                if not check_url(value):
+                    raise occi.ParseError('URL is not valid in OCCI Category scheme', chunk)
                 category[key] = value
             elif key == 'attributes':
                 category[key] = self.parse_attribute_defs(value)
             elif key == 'actions':
                 category[key] = self.parse_actions(value)
-            elif key in ['scheme', 'class', 'title', 'rel']:
+            elif key in ['class', 'title', 'rel']:
                 category[key] = value
             else:
                 raise occi.parseerror('unknown key "%s" in category' % key, chunk)
 
         if not category.validate():
-            raise occi.ParseError('Missing fields in category', body)
+            raise occi.ParseError('Missing fields in OCCI Category', body)
 
         return category
+
+
+    def parse_link_body(self, body):
+        """Parse OCCI Link body
+
+        Example::
+
+           </storage/0>;rel="http://schemas.ogf.org/occi/infrastructure#storage";self="/link/storagelink/compute_103_disk_0";category="http://schemas.ogf.org/occi/infrastructure#storagelink http://opennebula.org/occi/infrastructure#storagelink";occi.core.id="compute_103_disk_0";occi.core.title="ttylinux";occi.core.target="/storage/0";occi.core.source="/compute/103";occi.storagelink.deviceid="/dev/hda";occi.storagelink.state="active"
+
+        :param string body: text to parse
+        :return: OCCI Link
+        :rtype: occi.Link
+        """
+        link = occi.Link()
+
+        chunks = TextRenderer.reChunks.split(body)
+
+        if not chunks[0]:
+            raise occi.ParseError('Invalid format of OCCI Link, URI and "rel" expected', body)
+
+        matched = TextRenderer.reQuotedLink.match(chunks[0])
+        if not matched:
+            raise occi.ParseError('URI is not properly quoted in OCCI Link', body)
+
+        link['uri'] = matched.group(1)
+        if not check_url(link['uri']):
+            raise occi.ParseError('URL is not valid in OCCI Link', link['uri'])
+
+        # skip the first chunk (URI)
+        for chunk in chunks[1:]:
+            keyvalue = TextRenderer.reKeyValue.split(chunk, 1)
+
+            # only rel and self has value quoted
+            key = keyvalue[0]
+            value = keyvalue[1]
+            valuematch = TextRenderer.reQuoted.match(value)
+            if key in ['rel', 'self']:
+                if valuematch == None:
+                    raise occi.ParseError('Link value not properly quoted or unexpected EOF', chunk)
+            # XXX: probaly forgotten quotes in standard?
+            #elif key == 'category':
+            #    if valuematch != None:
+            #        raise occi.ParseError('Link category value shoud not be quoted', chunk)
+            # quoting of the other attributes optional
+            if valuematch != None:
+                value = valuematch.group(1)
+            # sanity check: there should not be any quotes now
+            if value[0] == '"' or (len(value) >= 2 and value[-1] == '"'):
+                raise occi.ParseError('Unexpected quotes in OCCI Link values', chunk)
+
+            if key == 'scheme':
+                if not check_url(value):
+                    raise occi.ParseError('URL is not valid in OCCI Category scheme', chunk)
+                link[key] = value
+            elif key in ['rel', 'category']:
+                link[key] = TextRenderer.reSP.split(value)
+            elif key in ['self']:
+                link[key] = value
+            else:
+                if 'attributes' not in link:
+                    link['attributes'] = collections.OrderedDict()
+                link['attributes'][key] = value
+
+        if not link.validate():
+            raise occi.ParseError('Missing fields in OCCI Link', body)
+
+        return link
+
+
+    def parse_attribute_value(self, body):
+        """Parse OCCI Attribute value and detect its type
+
+        string, number, and boolean types are detected, enum is returned as string.
+
+        :param string body: text to parse
+        :return: attribute type and value
+        :rtype: [string, any]
+        """
+        if not body:
+            raise occi.ParseError('OCCI Attribute value expected')
+
+        matched = TextRenderer.reQuoted.match(body)
+        if matched != None:
+            t = 'string'
+            # XXX: ignored any escaping
+            value = matched.group(1)
+            if len(value) + 2 < len(body):
+                raise occi.ParseError('Unexpected quotes in OCCI Attribute value', body)
+            return [t, value]
+
+        matched = TextRenderer.reNumber.match(body)
+        if matched != None:
+            t = 'number'
+            if TextRenderer.reIntNumber.match(body) != None:
+                value = int(matched.group(1))
+            else:
+                value = float(matched.group(1))
+            return [t, value]
+
+        matched = TextRenderer.reBool.match(body)
+        if matched != None:
+            t = 'boolean'
+            if matched.group(1) == 'false':
+                value = False
+            else:
+                value = True
+            return [t, value]
+
+        raise occi.ParseError('Unexpected format of OCCI Attribute value', body)
+
+
+    def parse_attribute_body(self, body):
+        """Parse OCCI Attribute body
+
+        :param string body: text to parse
+        :return: attribute type and value
+        :rtype: occi.Attribute
+        """
+
+        attribute = occi.Attribute()
+        keyvalue = TextRenderer.reKeyValue.split(body, 1)
+        key = keyvalue[0]
+        value = keyvalue[1]
+        t, v = self.parse_attribute_value(value)
+
+        return occi.Attribute({'name': key, 'type': t, 'value': v})
 
 
     def parse_categories(self, body, headers):
@@ -386,3 +523,38 @@ class TextRenderer(Renderer):
             locations.append(uri)
 
         return locations
+
+
+    def parse_resource(self, body, header):
+        """Parse OCCI Resource instance
+
+        :param string body[]: text to parse
+        :param string headers[]: headers to parse (unused in text/plain)
+        :return: categories, links, and attributes
+        :rtype: [occi.Category categories[], occi.Link links[], occi.Attribute attributes[]]
+        """
+        categories = []
+        links = []
+        attributes = []
+
+        for line in body:
+            line = line.rstrip('\r\n')
+            matched = TextRenderer.reCategory.match(line)
+            if matched != None:
+                s = line[matched.end():]
+                categories.append(self.parse_category_body(s))
+                continue
+            matched = TextRenderer.reLink.match(line)
+            if matched != None:
+                s = line[matched.end():]
+                links.append(self.parse_link_body(s))
+                continue
+            matched = TextRenderer.reAttribute.match(line)
+            if matched != None:
+                s = line[matched.end():]
+                attributes.append(self.parse_attribute_body(s))
+                continue
+            else:
+                raise occi.ParseError('Unexpected content of OCCI Resource instance')
+
+        return [categories, links, attributes]

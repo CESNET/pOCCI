@@ -1,0 +1,20 @@
+Category: compute;scheme="http://schemas.ogf.org/occi/infrastructure#";class="kind";title="compute resource";location="/compute/"
+Category: compute;scheme="http://opennebula.org/occi/infrastructure#";class="mixin";title="OpenNebula specific Compute attributes";location="/mixin/compute/"
+Category: uuid_ttylinux_0;scheme="http://occi.example.com/occi/infrastructure/os_tpl#";class="mixin";title="ttylinux";location="/mixin/os_tpl/uuid_ttylinux_0/"
+Category: public_key;scheme="http://schemas.openstack.org/instance/credentials#";class="mixin";title="OpenStack's contextualization extension - credentials";location="/mixin/public_key/"
+Category: user_data;scheme="http://schemas.openstack.org/compute/instance#";class="mixin";title="OpenStack's contextualization extension - user_data";location="/mixin/user_data/"
+Link: </compute/103?action=stop>;rel="http://schemas.ogf.org/occi/infrastructure/compute/action#stop"
+Link: </compute/103?action=restart>;rel="http://schemas.ogf.org/occi/infrastructure/compute/action#restart"
+Link: </compute/103?action=suspend>;rel="http://schemas.ogf.org/occi/infrastructure/compute/action#suspend"
+Link: </storage/0>;rel="http://schemas.ogf.org/occi/infrastructure#storage";self="/link/storagelink/compute_103_disk_0";category="http://schemas.ogf.org/occi/infrastructure#storagelink http://opennebula.org/occi/infrastructure#storagelink";occi.core.id="compute_103_disk_0";occi.core.title="ttylinux";occi.core.target="/storage/0";occi.core.source="/compute/103";occi.storagelink.deviceid="/dev/hda";occi.storagelink.state="active"
+Link: </network/0>;rel="http://schemas.ogf.org/occi/infrastructure#network";self="/link/networkinterface/compute_103_nic_0";category="http://schemas.ogf.org/occi/infrastructure#networkinterface http://schemas.ogf.org/occi/infrastructure/networkinterface#ipnetworkinterface http://opennebula.org/occi/infrastructure#networkinterface";occi.core.id="compute_103_nic_0";occi.core.title="example";occi.core.target="/network/0";occi.core.source="/compute/103";occi.networkinterface.interface="eth0";occi.networkinterface.mac="02:00:c0:a8:00:4f";occi.networkinterface.state="active";occi.networkinterface.address="192.168.0.79";org.opennebula.networkinterface.bridge="vbr0"
+X-OCCI-Attribute: occi.core.id="103"
+X-OCCI-Attribute: occi.core.title="one-103"
+X-OCCI-Attribute: occi.core.summary="Instantiated with rOCCI-server on Thu, 20 Aug 2015 13:48:50 +0200."
+X-OCCI-Attribute: occi.compute.cores=1
+X-OCCI-Attribute: occi.compute.memory=0.125
+X-OCCI-Attribute: occi.compute.state="active"
+X-OCCI-Attribute: org.opennebula.compute.id="103"
+X-OCCI-Attribute: org.opennebula.compute.cpu=1.0
+X-OCCI-Attribute: org.openstack.credentials.publickey.data="ssh-dss AAAAB3NzaC1kc3MAAACBAJAQxCSi3hx/2UKXJMD7MzeHKiMFl7LxWKp0Bw6ArlaKXRAozISe7djcjufCJYyZ8R86Pjh8rYaN9oAmikLQGThJlVsV7TojpcMn1UVrIWz4sC02VoOe8wtVY60akplt7jLfA4Qn1T4wu6Q8jHB4Wv48x7fDO51w01Q/j4CdXXpnAAAAFQDBT/N1u+BKQ/V1+CN50gdBJxplEwAAAIAL/9tgJsF69UQZh/l6M139eFFOxz6GawQd+5H/v6ECjcBICqAZBKpv70JiYrT+5UptmPJ1FKo5S+UHWAWUdyc2Lu8BJ9PsHYI5sNeGoSoTlx/ZlBqrA9Pf5oBb1uO3HMAtrnN17b6JCv6sHBxHCJqRI8ATk5mA2JPxBHwTiqxoDQAAAIAfnCNxwI8T7tQD4x2s7KVYm4oRVE7bO8L+o9An9/JPWIaNYHNTuAkOAoRlW54m9kBexPhAQxt2HF6/JMIgS2lglTAbygAneH63v96xT9L2Gqyj2mAQIZ8NgxVtVFymsQxuhB5s1pkK3WJreOW9PY9np69CU0zjLDKXyZ0J2RCbvw== root@myriads.zcu.cz"
+X-OCCI-Attribute: org.openstack.compute.user_data="# user data"

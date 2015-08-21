@@ -16,6 +16,7 @@ class HTTPHeadersRenderer(TextRenderer):
     Beware of HTTP Headers size limitations. It is better to not use 'text/occi' mimetype for transfering OCCI Category Collection.
     """
 
+    reHeaderChunk = re.compile(r'(?P<chunk>(?P<quoted>"([^"\\]|\\.)*")|(?P<qt>[^,"]+\s*=\s*"([^"\\]|\\.)*")|(?P<term>[^,"]+)|(?P<empty>))(?P<sep>\s*,\s*)?')
     reSEP = re.compile(r'\s*,\s*')
 
     def render_category(self, category):
@@ -55,7 +56,7 @@ class HTTPHeadersRenderer(TextRenderer):
         res = []
         for link in links:
             res.append(text_link(link))
-        return ['Link: ' + ', '.join(res)]
+        return ['Link: ' + ','.join(res)]
 
 
     def render_attributes(self, attributes):
@@ -102,6 +103,39 @@ class HTTPHeadersRenderer(TextRenderer):
         if attributes != None:
             res += self.render_attributes(attributes)
         return ['', res]
+
+
+    def parse_header_values(self, body):
+        """Helper generator method to split values in HTTP Header.
+
+        It is limited only to OCCI Attribute values parsing.
+
+        :param string body: parsed text
+        :return: result values
+        :rtype: string
+        """
+        m = None
+        while body:
+            m = HTTPHeadersRenderer.reHeaderChunk.match(body)
+            #print m
+            #if m:
+            #    print m.groupdict()
+            #    print m.end()
+            # error on empty match
+            if m == None or m.group('chunk') == None or m.end() == 0:
+                raise occi.ParseError('Bad quoting in HTTP Headers', body)
+                m = None
+                break
+            chunk = m.group('chunk')
+            body = body[m.end():]
+            if body and not m.group('sep'):
+                raise occi.ParseError('Separator expected in HTTP Headers (%s)' % chunk, body)
+                m = None
+                break
+            yield chunk.strip(' \t')
+            #print 'remains: #%s#' % body
+        if m and m.group('sep'):
+            yield ''
 
 
     def parse_categories(self, body, headers):
@@ -167,3 +201,44 @@ class HTTPHeadersRenderer(TextRenderer):
                 locations.append(uri)
 
         return locations
+
+
+    def parse_resource(self, body, headers):
+        """Parse OCCI Resource instance
+
+        :param string body[]: text to parse (unused in text/occi)
+        :param string headers[]: headers to parse
+        :return: categories, links, and attributes
+        :rtype: [occi.Category categories[], occi.Link links[], occi.Attribute attributes[]]
+        """
+        categories = []
+        links = []
+        attributes = []
+
+        for line in headers:
+            line = line.rstrip('\r\n')
+
+            matched = TextRenderer.reCategory.match(line)
+            if matched != None:
+                cats_str = line[matched.end():]
+                for s in HTTPHeadersRenderer.reSEP.split(cats_str):
+                    categories.append(self.parse_category_body(s))
+                continue
+
+            matched = TextRenderer.reLink.match(line)
+            if matched != None:
+                links_str = line[matched.end():]
+                for s in HTTPHeadersRenderer.reSEP.split(links_str):
+                    links.append(self.parse_link_body(s))
+                continue
+
+            matched = TextRenderer.reAttribute.match(line)
+            if matched != None:
+                attrs_str = line[matched.end():]
+                for s in self.parse_header_values(attrs_str):
+                    attributes.append(self.parse_attribute_body(s))
+                continue
+            else:
+                continue
+
+        return [categories, links, attributes]
