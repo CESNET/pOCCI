@@ -71,6 +71,13 @@ render_text
    :members:
    :undoc-members:
 
+render_uri
+----------
+
+.. automodule:: pOCCI.render_uri
+   :members:
+   :undoc-members:
+
 version
 -------
 

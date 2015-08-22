@@ -4,12 +4,14 @@ import occi
 from render_json import *
 from render_http import *
 from render_text import *
+from render_uri import *
 
 
 mimetypes = [
     'text/plain',
     'text/occi+plain',
     'text/occi',
+    'text/uri-list',
     'application/occi+json',
 ]
 
@@ -51,6 +53,8 @@ def create_renderer(req_mimetype):
         renderer = TextRenderer()
     elif mimetype in ['text/occi']:
         renderer = HTTPHeadersRenderer()
+    elif mimetype in ['text/uri-list']:
+        renderer = URIListRenderer()
     elif mimetype in ['application/occi+json']:
         renderer = JSONRenderer()
 

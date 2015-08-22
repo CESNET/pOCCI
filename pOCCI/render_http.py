@@ -79,9 +79,9 @@ class HTTPHeadersRenderer(TextRenderer):
 
         :param string location: location URI
         :return: render result
-        :rtype: string[]
+        :rtype: [string, string[]]
         """
-        return ['X-OCCI-Location: ' + ','.join(location)]
+        return ['', ['X-OCCI-Location: ' + ','.join(location)]]
 
 
     def render_resource(self, categories, links = None, attributes = None):

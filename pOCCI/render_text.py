@@ -131,6 +131,7 @@ class TextRenderer(Renderer):
     reIntNumber = re.compile(r'^([0-9+-]+)$')
     reBool = re.compile(r'^(true|false)$')
 
+
     def render_category(self, category):
         """Render OCCI Category
 
@@ -218,16 +219,16 @@ class TextRenderer(Renderer):
     def render_locations(self, locations):
         """ Render Locations
 
-        :param string location: location URI
+        :param string location[]: location URI
         :return render result
-        :rtype: string
+        :rtype: [string, string[]]
         """
         if not location:
             return ''
         s = []
         for location in locations:
             s.append('X-OCCI-Location: ' + location)
-        return ''.join(s)
+        return [''.join(s), []]
 
 
     def parse_attribute_defs(self, body):

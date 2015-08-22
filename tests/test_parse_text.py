@@ -95,7 +95,7 @@ class TestEntities(unittest.TestCase):
         self.renderer = render.create_renderer('text/plain')
         self.entities = []
         for fname in [
-            'text-entities.txt',
+            'text-ok-entities.txt',
             'invalid-format.txt',
             'invalid-uri.txt',
         ]:

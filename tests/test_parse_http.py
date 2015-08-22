@@ -156,7 +156,7 @@ class TestEntities(unittest.TestCase):
         self.renderer = render.create_renderer('text/occi')
         self.data = []
         for fname in [
-            'http-entities.txt',
+            'http-ok-entities.txt',
             'invalid-format.txt',
             'invalid-uri.txt',
         ]:
