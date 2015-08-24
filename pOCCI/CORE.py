@@ -9,6 +9,9 @@ import render
 
 
 categories = []
+renderer = None
+renderer_big = None
+renderer_httpheaders = None
 
 #'Category: offline;scheme="http://schemas.ogf.org/occi/infrastructure/storagelink/action#";class="action";title="deactivate storagelink"'
 required_categories = [
@@ -22,6 +25,23 @@ example_attributes = {
     'occi.core.title': occi.Attribute({'name': 'occi.core.title', 'value': 'Test_title_%d' % time.time()}),
     'occi.storage.size': occi.Attribute({'name': 'occi.storage.size', 'type': 'number', 'value': 0.1}),
 }
+
+
+def testsuite_init():
+    """Initialize OCCI testsuite
+
+    Renderers from occi_libs needs to be initialized first.
+    """
+    self = sys.modules[__name__]
+    occi_libs = sys.modules['occi_libs']
+
+    self.renderer = occi_libs.renderer
+    self.renderer_big = occi_libs.renderer_big
+    self.renderer_httpheaders = occi_libs.renderer_httpheaders
+
+    if not self.renderer:
+        print >> sys.stderr, 'No renderer (invalid mimetype?)'
+        sys.exit(2)
 
 
 def get_categories(err_msg):
@@ -252,9 +272,7 @@ def CORE_CREATE001():
         ]
     )
 
-    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/plain'] + new_cat_h, post=new_cat_s)
-    # when using HTTP headers rendering:
-#    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: text/occi'] + new_cat, post=' ')
+    body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, post=new_cat_s, custom_request = 'POST')
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 

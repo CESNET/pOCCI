@@ -12,12 +12,39 @@ def get_header(buff):
 	header.append(buff)
 
 
-def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config['authtype'], ignoressl = occi_config['ignoressl'], user = occi_config['user'], passwd = occi_config['passwd'], mimetype = '', headers = [], post = '', custom_request = ''):
+def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, user = None, passwd = None, mimetype = None, headers = [], post = '', custom_request = ''):
+    """Send HTTP request
+
+    :param string base_url: OCCI server URL (default: from config)
+    :param string url: path element of the URL
+    :param string authtype: authentication type (default: from config)
+    :param bool ignoressl: ignore SSL problems (default: from config)
+    :param string user: user name for 'basic' auth (default: from config)
+    :param string passwd: password for 'basic' auth (default: from config)
+    :param string mimetype: accepted mimetype (empty string = '\*/\*')
+    :param string headers[]: HTTP Headers
+    :param string post: HTTP Body
+    :param string custom_request: HTTP Request type (default: 'GET' or 'POST')
+
+    :return: [body, header, HTTP status, content type]
+    :rtype: [string[], string[], string, string]
+    """
     global header
 
-    curlverbose = occi_config['curlverbose']
-    if not mimetype:
+    if base_url == None:
+        base_url = occi_config['url']
+    if authtype == None:
+        authtype = occi_config['authtype']
+    if ignoressl == None:
+        ignoressl = occi_config['ignoressl']
+    if user == None:
+        user = occi_config['user']
+    if passwd == None:
+        passwd = occi_config['passwd']
+    if mimetype == None:
         mimetype = occi_config['mimetype']
+    curlverbose = occi_config['curlverbose']
+
     buffer = StringIO()
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, str(base_url + url))
@@ -46,7 +73,10 @@ def occi_curl(base_url = occi_config['url'], url = '/-/', authtype = occi_config
     curl.setopt(pycurl.TIMEOUT, occi_config['timeout'])
 
     # Set appropriate mime type
-    headers = ['Accept: %s' % mimetype] + headers
+    if mimetype:
+        headers = ['Accept: %s' % mimetype] + headers
+    else:
+        headers = ['Accept: */*'] + headers
 
     # Set requested HTTP headers
     if headers:

@@ -6,15 +6,6 @@ import sys, time
 import os
 
 from occi_libs import *
-
-if not occi_config:
-    print >> sys.stderr, 'No configuration found'
-    sys.exit(2)
-
-    if not renderer:
-       print >> sys.stderr, 'No renderer (invalid mimetype?)'
-       sys.exit(2)
-
 from CORE import *
 from occi_curl import occi_curl
 
@@ -52,8 +43,11 @@ OPTIONS:\n\
   -h, --help ................ usage message\n\
   -f, --format FORMAT ....... output format (plain, json)\n\
   -l, --list ................ list all test\n\
+  -m, --mime-type MIME-TYPE . render format\n\
   -t, --tests <TEST1,...> ... list of tests\n\
   -v, --verbose ............. verbose mode\n\
+\n\
+MIME-TYPES: text/plain, text/occi\n\
 " % os.path.basename(name)
 
 
@@ -61,8 +55,12 @@ def main(argv=sys.argv[1:]):
     results = []
     tests = []
 
+    if not occi_config:
+        print >> sys.stderr, 'No configuration found'
+        sys.exit(2)
+
     try:
-        opts, args = getopt.getopt(argv,"hf:lt:v",["help", "format=", "list", "tests=", "verbose"])
+        opts, args = getopt.getopt(argv,"hf:lm:t:v",["help", "format=", "list", "mime-type", "tests=", "verbose"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -75,6 +73,8 @@ def main(argv=sys.argv[1:]):
         elif opt in ("-l", "--list"):
             print '\n'.join(sorted(tests_definitions.keys()));
             sys.exit();
+        elif opt in ("-m", "--mime-type"):
+            occi_config['mimetype'] = arg
         elif opt in ("-t", "--tests"):
             tests = arg.split(",")
         elif opt in ("-v", "--verbose"):
@@ -82,6 +82,9 @@ def main(argv=sys.argv[1:]):
 
     if not tests:
         tests = sorted(list(set(tests_definitions.keys()) - tests_skipped))
+
+    occi_init()
+    testsuite_init()
 
     for test in tests:
         if not re.match(r'OCCI/', test):
@@ -103,4 +106,3 @@ def main(argv=sys.argv[1:]):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
