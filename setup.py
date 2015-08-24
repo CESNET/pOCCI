@@ -55,7 +55,7 @@ setup(
     install_requires=['pycurl'],
 
     package_data={
-        'pOCCI': ['pOCCI.cfg'],
+        'pOCCI': ['pOCCI.cfg', 'pOCCI.1'],
     },
 
     data_files=[('/etc/', ['pOCCI/pOCCI.cfg'])],

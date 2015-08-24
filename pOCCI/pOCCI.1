@@ -1,0 +1,92 @@
+.TH POCCI 1 "August 2015" "CESNET" "pOCCI"
+
+
+.SH NAME
+pOCCI \- OCCI compliance testing and client
+
+
+.SH SYNOPSIS
+\fBpOCCI\fR [\fIOPTIONS\fR]
+
+
+.SH DESCRIPTION
+\fBpOCCI\fR is OCCI implementation written in python.
+
+\fBpOCCI\fR tool performs OCCI compliance testing as described in:
+
+\fIhttp://www.etsi.org/deliver/etsi_ts/103100_103199/103142/01.01.01_60/ts_103142v010101p.pdf\fR.
+
+
+.SH OPTIONS
+.TP
+\fB-h\fR, \fP--help\fR
+Usage message.
+
+.TP
+\fB-f\fR, \fP--format\fR \fIFORMAT\fR
+Output format (\fBplain\fR, \fBjson\fR).
+
+.TP
+\fB-l\fR, \fP--list\fR
+List all OCCI compliance tests.
+
+.TP
+\fB-m\fR, \fP--mime-type\fR \fIMIME-TYPE\fR
+Render format to comunicate with OCCI server. If \fBtext/occi\fR is selected, category are performed as \fBtext/plain\fR due to HTTP Headers size limitations. Possible values: \fBtext/plain\fR, \fBtext/occi\fR.
+
+.TP
+\fB-t\fR, \fP--tests\fR \fITEST1,...\fR
+List of OCCI compliance tests to perform.
+
+.TP
+\fB-v\fR, \fP--verbose\fR
+Verbose mode: communication, HTTP Headers, transferred data.
+
+
+.SH EXIT STATUS
+.TP
+0
+All OCCI compliane tests \fBOK\fR.
+
+.TP
+1
+Some OCCI compliance tests \fBFAILED\fR.
+
+.TP
+2
+Error from OCCI testsuite framework.
+
+
+.SH FILES
+
+.TP
+\fB~/.pOCCI.cfg\fR, \fB/etc/pOCCI.cfg\fR
+pOCCI configuration file.
+
+
+.SH EXAMPLES
+
+.TP
+\fBpOCCI.cfg\fR file example:
+
+.nf
+[main]
+url = 'https://example.com:11443'
+authtype = 'basic'
+ignoressl = False
+user = 'oneadmin'
+passwd = 'good-password'
+mimetype = 'text/plain'
+outputformat = 'json'
+curlverbose = False
+connectiontimeout = 60
+timeout = 120
+.fi
+
+
+.SH BUGS
+Please report all bugs to issue tracker at \fIhttps://github.com/CESNET/pOCCI/issues\fR.
+
+
+.SH AUTHORS
+CESNET
