@@ -58,7 +58,7 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
         buffer = StringIO()
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, str(base_url + url))
-    curl.setopt(pycurl.WRITEDATA, buffer)
+    curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
     
     # Disable check of SSL certificate
     if ignoressl:
