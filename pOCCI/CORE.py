@@ -325,20 +325,17 @@ def CORE_READ_URL(filter):
             locations = []
             check_url = False
             err_msg.append(str(pe))
-        url = None
-        if locations:
-            url = locations[0]
 
         if re.match(r'^HTTP/.* 200 OK', http_status):
             check_200ok = True
         else:
             err_msg.append('Returned HTTP status is not 200 OK (%s)' % http_status)
 
-    return [check_url and check_pretest and check_ct and check_200ok, err_msg, url]
+    return [check_url and check_pretest and check_ct and check_200ok, err_msg, locations]
 
 
 def CORE_READ001():
-    check, err_msg, url = CORE_READ_URL({'class': 'mixin'})
+    check, err_msg, urls = CORE_READ_URL({'class': 'mixin'})
     return [check, err_msg]
 
 
@@ -420,13 +417,13 @@ def get_attributes(attribute_definitions, attributes, err_msg):
 def CORE_DELETE001():
     err_msg = []
 
-    check, err_msg, tmp_url = CORE_READ_URL({'term': 'compute', 'class': 'kind'})
+    check, err_msg, tmp_urls = CORE_READ_URL({'term': 'compute', 'class': 'kind'})
 
-    if not tmp_url:
+    if not tmp_urls:
         err_msg += ["OCCI entity URL not found!"]
         return [False, err_msg]
 
-    url = urlparse.urlparse(tmp_url).path
+    url = urlparse.urlparse(tmp_urls[0]).path
 
     body, response_headers, http_status, content_type = occi_curl(url = url)
     check_exist1, tmp_err_msg = check_http_status("200 OK", http_status)
@@ -445,6 +442,52 @@ def CORE_DELETE001():
     err_msg += tmp_err_msg
 
     return [check_exist1 and check_exist2 and check_delete1, err_msg]
+
+
+def CORE_UPDATE001():
+    """Full update of a specific OCCI Entity
+
+    Needs powered off entity instance.
+    """
+    err_msg = []
+
+    check, err_msg, urls = CORE_READ_URL({'class': 'mixin', 'scheme': 'http://occi.example.org/occi/infrastructure/os_tpl#'})
+    if not urls:
+        err_msg.append('No OCCI Entity instance found')
+        return [False, err_msg]
+    url = urls[0]
+
+    print urls
+
+    body, response_headers, http_status, content_type = occi_curl(base_url = url, url = '')
+
+    categories, links, attributes = renderer.parse_resource(body, response_headers)
+    print attributes
+    a = None
+    for a in attributes:
+        if a['name'] == 'occi.core.title':
+            break
+    if a == None or a['name'] != 'occi.core.title':
+        a = occi.Attribute({'name': 'occi.core.title', 'value': gen_id('c_pOCCI')})
+        attributes.append(a)
+    else:
+        a['value'] = gen_id(a['value'])
+    body, headers = renderer.render_resource(categories, links, attributes)
+
+    body, response_headers, http_status, content_type = occi_curl(base_url = url, url = '', headers = ['Content-Type: %s' % occi_config['mimetype']] + headers, post = body, custom_request = 'PUT')
+    print body
+    print http_status
+
+    check_ct, tmp_err_msg = check_content_type(content_type)
+    err_msg += tmp_err_msg
+
+    check, tmp_err_msg = check_http_status("200 OK", http_status)
+    if not check:
+        check, tmp_err_msg = check_http_status("201 Created", http_status)
+    if not check:
+        err_msg.append('HTTP status is neither 200 OK nor 201 Created')
+
+    return [check and check_ct, err_msg]
 
 
 def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
