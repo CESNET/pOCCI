@@ -1,15 +1,22 @@
 from occi_libs import occi_config
 
 import pycurl
-from StringIO import StringIO
 import re
+import sys
 import urllib
+if sys.version_info >= (3,):
+    from StringIO import BytesIO
+else:
+    from StringIO import StringIO
 
 # Helper callback function
 header = []
-def get_header(buff):
+def get_header2(buff):
 	global header
 	header.append(buff)
+def get_header3(buff):
+	global header
+	header.append(buff.decode('iso-8859-1'))
 
 
 def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, user = None, passwd = None, mimetype = None, headers = [], post = '', custom_request = ''):
@@ -45,7 +52,10 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
         mimetype = occi_config['mimetype']
     curlverbose = occi_config['curlverbose']
 
-    buffer = StringIO()
+    if sys.version_info >= (3,):
+        buffer = BytesIO()
+    else:
+        buffer = StringIO()
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, str(base_url + url))
     curl.setopt(pycurl.WRITEDATA, buffer)
@@ -83,7 +93,10 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
         curl.setopt(pycurl.HTTPHEADER, headers)
 
     # HTTP header response
-    curl.setopt(pycurl.HEADERFUNCTION, get_header)
+    if sys.version_info >= (3,):
+        curl.setopt(pycurl.HEADERFUNCTION, get_header3)
+    else:
+        curl.setopt(pycurl.HEADERFUNCTION, get_header2)
 
     if post or custom_request == 'POST':
         curl.setopt(pycurl.POST, 1)
@@ -115,6 +128,17 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
         else:
             if re.match(r'^HTTP', item):
                 http_status = item.rstrip()
-    content_type = re.split(';', h['Content-Type'])[0]
+    content_type = None
+    if 'Content-Type' in h:
+        content_type = re.split(';', h['Content-Type'])[0]
 
-    return [buffer.getvalue().splitlines(), header, http_status, content_type]
+    body = buffer.getvalue()
+    if sys.version_info >= (3,):
+        encoding = 'iso-8859-1'
+        if content_type:
+            match = re.search(r';\s*charset=(\S+)', h['Content-Type'])
+            if match:
+                encoding = match.group(1)
+        body = body.decode(encoding)
+
+    return [body.splitlines(), header, http_status, content_type]
