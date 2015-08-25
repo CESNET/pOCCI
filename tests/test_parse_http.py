@@ -14,7 +14,8 @@ from pOCCI import render
 
 def readCollection(fname):
     with open(fname, 'r') as f:
-        return f.readlines()
+        for line in f.readlines():
+            yield line.rstrip('\r\n') + '\r\n'
 
 
 class TestHeaderValues(unittest.TestCase):
@@ -118,7 +119,7 @@ class TestCategories(unittest.TestCase):
             'http-ok-ec2.txt',
             'http-ok-opennebula.txt',
         ]:
-            headers = readCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname))
+            headers = list(readCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname)))
             self.fulldata.append(headers)
             for h in headers:
                 if re.match(r'Category:', h):
@@ -160,8 +161,7 @@ class TestEntities(unittest.TestCase):
             'invalid-format.txt',
             'invalid-uri.txt',
         ]:
-            self.data.append(readCollection(os.path.join(os.path.dirname(__file__
-), 'entity-collection', fname)))
+            self.data.append(list(readCollection(os.path.join(os.path.dirname(__file__), 'entity-collection', fname))))
 
 
     def testEntitiesOK(self):
@@ -195,7 +195,7 @@ class TestResource(unittest.TestCase):
             'http-ok-ec2-compute.txt',
             'http-ok-ignore-unknown.txt',
         ]:
-            self.data.append(readCollection(os.path.join(os.path.dirname(__file__), 'resource', fname)))
+            self.data.append(list(readCollection(os.path.join(os.path.dirname(__file__), 'resource', fname))))
 
 
     def testResourceOK(self):
@@ -238,7 +238,7 @@ class TestResource(unittest.TestCase):
             if i == 2:
                 reference = 0
             original = ''.join(self.data[reference])
-            rendering = '\n'.join(headers) + '\n'
+            rendering = '\r\n'.join(headers) + '\r\n'
             #print 'INDEX: %d\n' % i
             #print 'ORIGINAL:\n'; print original
             #print 'RENDERING:\n'; print rendering

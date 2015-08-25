@@ -56,6 +56,7 @@ setup(
 
     package_data={
         'pOCCI': ['pOCCI.cfg', 'pOCCI.1'],
+        'tests': ['*/*.txt'],
     },
 
     data_files=[('/etc/', ['pOCCI/pOCCI.cfg'])],
@@ -66,5 +67,5 @@ setup(
         ],
     },
 
-    test_suite='tests'
+    test_suite='tests',
 )

@@ -33,7 +33,10 @@ def testsuite_init():
     Renderers from occi_libs needs to be initialized first.
     """
     self = sys.modules[__name__]
-    occi_libs = sys.modules['occi_libs']
+    if 'pOCCI.occi_libs' in sys.modules:
+        occi_libs = sys.modules['pOCCI.occi_libs']
+    else:
+        occi_libs = sys.modules['occi_libs']
 
     self.renderer = occi_libs.renderer
     self.renderer_big = occi_libs.renderer_big

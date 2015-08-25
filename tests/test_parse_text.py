@@ -14,7 +14,8 @@ from pOCCI import render
 
 def readCollection(fname):
     with open(fname, 'r') as f:
-        return f.readlines()
+        for line in f.readlines():
+            yield line.rstrip('\r\n')
 
 
 class TestCategories(unittest.TestCase):
@@ -35,13 +36,11 @@ class TestCategories(unittest.TestCase):
             'text-error-category.txt',
             'text-error-category2.txt',
         ]:
-            self.categories.append(readCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname)))
+            self.categories.append(list(readCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname))))
 
 
     def testCategoriesOK(self):
         """Parse text body with category collection, then render the parsed result and compare with the original text.
-
-        TODO: better to have OCCI Category collection rendering instead to render it one by one here.
         """
         for i in range(0,2):
             categories = self.renderer.parse_categories(self.categories[i], None)
@@ -50,18 +49,12 @@ class TestCategories(unittest.TestCase):
             assert(len(categories))
             assert(categories[-1]['term'] == 'offline')
 
-            body = []
-            for cat in categories:
-                body.append(self.renderer.render_category(cat)[0])
-
-            # compare only several lines first
-            assert(self.categories[i][0] == body[0] + '\n')
-            assert(self.categories[i][1] == body[1] + '\n')
-            assert(self.categories[i][2] == body[2] + '\n')
+            body, headers = self.renderer.render_categories(categories)
+            assert(len(headers) == 0)
 
             # full compare
-            original = ''.join(self.categories[i])
-            rendering = '\n'.join(body) + '\n'
+            original = '\r\n'.join(self.categories[i]) + '\r\n'
+            rendering = body
             assert(original == rendering)
 
 
@@ -99,7 +92,7 @@ class TestEntities(unittest.TestCase):
             'invalid-format.txt',
             'invalid-uri.txt',
         ]:
-            self.entities.append(readCollection(os.path.join(os.path.dirname(__file__), 'entity-collection', fname)))
+            self.entities.append(list(readCollection(os.path.join(os.path.dirname(__file__), 'entity-collection', fname))))
 
 
     def testEntitiesOK(self):
@@ -135,7 +128,7 @@ class TestResource(unittest.TestCase):
             'text-bad-quote-link.txt',
             'text-invalid-format.txt',
         ]:
-            self.data.append(readCollection(os.path.join(os.path.dirname(__file__), 'resource', fname)))
+            self.data.append(list(readCollection(os.path.join(os.path.dirname(__file__), 'resource', fname))))
 
 
     def testResourceOK(self):
@@ -172,7 +165,7 @@ class TestResource(unittest.TestCase):
             body, headers = self.renderer.render_resource(categories, links, attributes)
 
             # full compare
-            original = ''.join(self.data[i])
+            original = '\r\n'.join(self.data[i]) + '\r\n'
             rendering = body
             #print 'ORIGINAL:\n'; print original
             #print 'RENDERING:\n'; print rendering
