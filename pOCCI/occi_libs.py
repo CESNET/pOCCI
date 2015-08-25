@@ -95,11 +95,10 @@ def occi_config_init():
 
     config = ConfigParser.ConfigParser()
     config.read(['/etc/pOCCI.cfg', os.path.expanduser('~/.pOCCI.cfg')])
-    if not config.has_section('main'):
-        return False
-    for key, value in config.items('main'):
-        #print 'config: %s = %s (%s)' % (key, value, type(eval(value)))
-        occi_config[key] = eval(value)
+    if config.has_section('main'):
+        for key, value in config.items('main'):
+            #print 'config: %s = %s (%s)' % (key, value, type(eval(value)))
+            occi_config[key] = eval(value)
 
     for key, value in occi_defaults.iteritems():
         if not key in occi_config:
