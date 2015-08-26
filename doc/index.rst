@@ -14,6 +14,14 @@ API
 
    API
 
+Development
+===========
+
+.. toctree::
+   :maxdepth: 2
+
+   devel
+
 Index
 =====
 
