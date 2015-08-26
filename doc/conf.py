@@ -19,12 +19,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.viewcode',
-    'numpydoc',
 ]
-
-# To suppress autodoc errors.
-# We don't need class members documented anyway.
-numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
