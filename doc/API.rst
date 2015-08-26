@@ -22,13 +22,6 @@ occi_curl
    :members:
    :undoc-members:
 
-occi_init
----------
-
-.. automodule:: pOCCI.occi_init
-   :members:
-   :undoc-members:
-
 occi_libs
 ---------
 
