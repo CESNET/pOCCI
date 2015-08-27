@@ -338,7 +338,7 @@ def CORE_READ_URL(filter):
 
 
 def CORE_READ001():
-    check, err_msg, urls = CORE_READ_URL({'class': 'mixin'})
+    check, err_msg, urls = CORE_READ_URL(occi_config['occi.tests.category'])
     return [check, err_msg]
 
 
@@ -420,7 +420,7 @@ def get_attributes(attribute_definitions, attributes, err_msg):
 def CORE_DELETE001():
     err_msg = []
 
-    check, err_msg, tmp_urls = CORE_READ_URL({'term': 'compute', 'class': 'kind'})
+    check, err_msg, tmp_urls = CORE_READ_URL(occi_config['occi.tests.category'])
 
     if not tmp_urls:
         err_msg += ["OCCI entity URL not found!"]
@@ -454,7 +454,7 @@ def CORE_UPDATE001():
     """
     err_msg = []
 
-    check, err_msg, urls = CORE_READ_URL({'class': 'mixin', 'scheme': 'http://occi.example.org/occi/infrastructure/os_tpl#'})
+    check, err_msg, urls = CORE_READ_URL(occi_config['occi.tests.category'])
     if not urls:
         err_msg.append('No OCCI Entity instance found')
         return [False, err_msg]

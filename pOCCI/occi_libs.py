@@ -3,6 +3,7 @@ import os
 import sys
 import ConfigParser
 
+import occi
 import render
 
 
@@ -15,9 +16,12 @@ occi_defaults = {
     'curlverbose': False,
     'connectiontimeout': 60,
     'timeout': 120,
+
+    'tests.category': 'Category:compute;class=kind;scheme="http://schemas.ogf.org/occi/infrastructure#"',
 }
 
 occi_config = {}
+renderers = {}
 renderer = None
 renderer_big = None
 renderer_httpheaders = None
@@ -114,20 +118,44 @@ def occi_render_init():
        - For HTTP GET requests 'text/occi' is always needed
        - For bigger data 'text/occi' should not be used (using 'text/plain')
     """
+    mimetypes = ['text/plain', 'text/occi']
     self = sys.modules[__name__]
 
+    # renderers always needed
+    for mime in mimetypes:
+        renderers[mime] = render.create_renderer(mime)
+
     # user configurable renderer
-    renderer = render.create_renderer(occi_config['mimetype'])
+    if occi_config['mimetype'] in mimetypes:
+        renderer = renderers[occi_config['mimetype']]
+    else:
+        renderer = render.create_renderer(occi_config['mimetype'])
 
     # big data requires anything except HTTP Headers renderer
     renderer_big = renderer
     if occi_config['mimetype'] != occi_config['mimetype.big']:
-        renderer_big = render.create_renderer(occi_config['mimetype.big'])
+        if occi_config['mimetype.big'] in mimetypes:
+            renderer_big = renderers[occi_config['mimetype.big']]
+        else:
+            renderer_big = render.create_renderer(occi_config['mimetype.big'])
 
     # HTTP GET requests needs HTTP Headers renderer
     renderer_httpheaders = renderer
     if occi_config['mimetype'] != 'text/occi':
-        renderer_httpheaders = render.create_renderer('text/occi')
+        renderer_httpheaders = renderers['text/occi']
+
+    # configurable filters
+    for f in ['tests.category', 'tests.entity']:
+        if f in occi_config:
+            try:
+                categories = renderers['text/plain'].parse_categories([occi_config[f]], None)
+            except occi.ParseError as pe:
+                print ("Can't parse '%s' config option: " % f) + str(pe)
+                sys.exit(2)
+            if categories:
+                occi_config['occi.%s' % f] = categories[0]
+            if occi_config['curlverbose']:
+                print ("[config] '%s'=" % f) + str(categories[0])
 
     self.renderer = renderer
     self.renderer_big = renderer_big
