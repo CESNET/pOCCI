@@ -8,6 +8,7 @@ import os
 from occi_libs import *
 from CORE import *
 from occi_curl import occi_curl
+import version
 
 
 tests_definitions = {
@@ -48,6 +49,7 @@ OPTIONS:\n\
   -m, --mime-type MIME-TYPE . render format\n\
   -t, --tests <TEST1,...> ... list of tests\n\
   -v, --verbose ............. verbose mode\n\
+  -V, --version ............. print version information\n\
 \n\
 MIME-TYPES: text/plain, text/occi\n\
 " % os.path.basename(name)
@@ -62,7 +64,7 @@ def main(argv=sys.argv[1:]):
         sys.exit(2)
 
     try:
-        opts, args = getopt.getopt(argv,"hf:lm:t:v",["help", "format=", "list", "mime-type", "tests=", "verbose"])
+        opts, args = getopt.getopt(argv,"hf:lm:t:vV",["help", "format=", "list", "mime-type", "tests=", "verbose", "version"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -81,6 +83,9 @@ def main(argv=sys.argv[1:]):
             tests = arg.split(",")
         elif opt in ("-v", "--verbose"):
             occi_config['curlverbose'] = True
+        elif opt in ("-V", "--version"):
+            print version.__version__
+            sys.exit()
 
     if not tests:
         tests = sorted(list(set(tests_definitions.keys()) - tests_skipped))
