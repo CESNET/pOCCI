@@ -317,6 +317,8 @@ class TextRenderer(Renderer):
         # skip the first chunk (category term)
         for chunk in chunks[1:]:
             keyvalue = TextRenderer.reKeyValue.split(chunk, 1)
+            if len(keyvalue) != 2:
+                raise occi.ParseError('Key/value pair expected in category', chunk)
 
             key = keyvalue[0]
             value = keyvalue[1]
