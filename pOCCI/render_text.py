@@ -327,7 +327,8 @@ class TextRenderer(Renderer):
             valuematch = TextRenderer.reQuoted.match(value)
             if valuematch == None and key != 'class':
                 raise occi.ParseError('Category value not properly quoted or unexpected EOF', chunk)
-            value = valuematch.group(1)
+            if valuematch:
+                value = valuematch.group(1)
             # sanity check: there should not be any quotes now
             if value[0] == '"' or (len(value) >= 2 and value[-1] == '"'):
                 raise occi.ParseError('Unexpected quotes in category', chunk)
