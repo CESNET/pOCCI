@@ -34,7 +34,6 @@ tests_definitions = {
 tests_skipped = set([
     'OCCI/CORE/CREATE/001',
     'OCCI/CORE/CREATE/006',
-    'OCCI/CORE/UPDATE/001',
     'OCCI/INFRA/CREATE/005',
 ])
 

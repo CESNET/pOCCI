@@ -450,22 +450,30 @@ def CORE_DELETE001():
 def CORE_UPDATE001():
     """Full update of a specific OCCI Entity
 
-    Needs powered off entity instance.
+    Requires existing compute machine.
+
+    OpenNebula issues:
+
+    * https://github.com/EGI-FCTF/rOCCI-server/issues/125: poweroff state required
+    * https://github.com/EGI-FCTF/rOCCI-server/issues/126: not all attributes implemented
+    * https://github.com/EGI-FCTF/rOCCI-server/issues/128: parse error
     """
     err_msg = []
+    check_response = True
 
     check, err_msg, urls = CORE_READ_URL(occi_config['occi.tests.category'])
     if not urls:
         err_msg.append('No OCCI Entity instance found')
         return [False, err_msg]
+    #print urls
     url = urls[0]
-
-    print urls
 
     body, response_headers, http_status, content_type = occi_curl(base_url = url, url = '')
 
     categories, links, attributes = renderer.parse_resource(body, response_headers)
-    print attributes
+
+    # change one attribute
+    #print attributes
     a = None
     for a in attributes:
         if a['name'] == 'occi.core.title':
@@ -477,20 +485,43 @@ def CORE_UPDATE001():
         a['value'] = gen_id(a['value'])
     body, headers = renderer.render_resource(categories, links, attributes)
 
+    # update
     body, response_headers, http_status, content_type = occi_curl(base_url = url, url = '', headers = ['Content-Type: %s' % occi_config['mimetype']] + headers, post = body, custom_request = 'PUT')
-    print body
-    print http_status
+    #print body
+    #print http_status
 
     check_ct, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
+    if content_type != occi_config['mimetype']:
+        err_msg += ['Content-Type is not requested "%s"' % occi_config['mimetype']]
+        check_ct = False
 
     check, tmp_err_msg = check_http_status("200 OK", http_status)
-    if not check:
+    if check:
+        # response contains OCCI Entity description
+        response_categories, response_links, response_attributes = renderer.parse_resource(body, response_headers)
+        if not response_categories or not response_attributes:
+            err_msg += ['HTTP Response doesn\'t contain categories or attributes']
+            check_response = False
+    else:
         check, tmp_err_msg = check_http_status("201 Created", http_status)
-    if not check:
-        err_msg.append('HTTP status is neither 200 OK nor 201 Created')
+        if check:
+            response_urls = renderer_httpheaders.parse_locations(None, response_headers)
+            #print 'Entity URL'
+            #print 'Response URLs:\n  '
+            #print response_urls
+            check_response = False
+            for url in response_urls:
+                if response_url == url:
+                    check_response = True
+            if not check_response:
+                err_msg += ['HTTP Location headers is not OCCI Entity URL (%s)' % response_url]
 
-    return [check and check_ct, err_msg]
+    if not check:
+        err_msg.append('HTTP status is neither 200 OK nor 201 Created (%s)' % http_status)
+        print body
+
+    return [check and check_ct and check_response, err_msg]
 
 
 def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
