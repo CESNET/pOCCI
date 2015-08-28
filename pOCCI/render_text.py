@@ -57,8 +57,8 @@ def text_attribute_value(attribute):
     """Render OCCI Attribute value.
 
     :param occi.Attribute attribute: attribute with a value to render
-    :return attribute value renderin
-    :rtype string
+    :return: attribute value rendering
+    :rtype: string
     """
 
     if 'type' in attribute:
@@ -195,7 +195,7 @@ class TextRenderer(Renderer):
         """ Render Attribute
 
         :param occi.Attribute attribute: OCCI Attribute object
-        :return render result
+        :return: render result
         :rtype: string
         """
         return 'X-OCCI-Attribute: ' + text_attribute_repr(attribute)
@@ -205,7 +205,7 @@ class TextRenderer(Renderer):
         """ Render Attributes
 
         :param occi.Attribute attribute[]: OCCI Attribute object
-        :return render result
+        :return: render result
         :rtype: string
         """
         if not attributes:
@@ -220,7 +220,7 @@ class TextRenderer(Renderer):
         """ Render Locations
 
         :param string location[]: location URI
-        :return render result
+        :return: render result
         :rtype: [string, string[]]
         """
         if not location:

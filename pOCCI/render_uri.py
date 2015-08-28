@@ -38,7 +38,7 @@ class URIListRenderer:
         """ Render Locations
 
         :param string location[]: location URI
-        :return render result
+        :return: render result
         :rtype: [string, string[]]
         """
         return ['\n'.join(locations), []]
@@ -46,6 +46,8 @@ class URIListRenderer:
 
     def parse_categories(self, body, headers):
         """Parse OCCI Category Collection
+
+        This method can't be used in URI list rendering.
 
         :param string body[]: text to parse
         :param string headers[]: headers to parse
