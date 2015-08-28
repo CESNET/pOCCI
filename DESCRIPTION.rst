@@ -1,4 +1,1 @@
-OCCI Compliance tests
-=======================
-
-This is the description file for the OCCI Compliance Tests.
+.. include:: README.rst
