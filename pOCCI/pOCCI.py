@@ -44,14 +44,19 @@ def usage(name = __file__):
 \n\
 OPTIONS:\n\
   -h, --help ................ usage message\n\
+  -a, --auth-type AUTH ...... authentization type\n\
+  -e, --endpoint, --url URL . OCCI server endpoint\n\
   -f, --format FORMAT ....... output format (plain, json)\n\
   -l, --list ................ list all test\n\
   -m, --mime-type MIME-TYPE . render format\n\
+  -p, --password PWD ........ password for basic auth-type\n\
   -t, --tests <TEST1,...> ... list of tests\n\
+  -u, --user USER ........... user name for basic auth-type\n\
   -v, --verbose ............. verbose mode\n\
   -V, --version ............. print version information\n\
 \n\
-MIME-TYPES: text/plain, text/occi\n\
+MIME-TYPE: text/plain, text/occi\n\
+AUTH: basic\n\
 " % os.path.basename(name)
 
 
@@ -64,7 +69,7 @@ def main(argv=sys.argv[1:]):
         sys.exit(2)
 
     try:
-        opts, args = getopt.getopt(argv,"hf:lm:t:vV",["help", "format=", "list", "mime-type", "tests=", "verbose", "version"])
+        opts, args = getopt.getopt(argv,"ha:e:f:lm:p:t:u:vV",["help", "auth-type=", "endpoint=", "format=", "list", "mime-type=", "password=", "tests=", "url=", "user=", "verbose", "version"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -72,6 +77,10 @@ def main(argv=sys.argv[1:]):
         if opt in ("-h", "--help"):
             usage()
             sys.exit()
+        elif opt in ("-a", "--auth-type"):
+            occi_config["authtype"] = arg
+        elif opt in ("-e", "--endpoint", "--url"):
+            occi_config["url"] = arg
         elif opt in ("-f", "--format"):
             occi_config['outputformat'] = arg
         elif opt in ("-l", "--list"):
@@ -79,8 +88,12 @@ def main(argv=sys.argv[1:]):
             sys.exit();
         elif opt in ("-m", "--mime-type"):
             occi_config['mimetype'] = arg
+        elif opt in ("-p", "--password"):
+            occi_config["passwd"] = arg
         elif opt in ("-t", "--tests"):
             tests = arg.split(",")
+        elif opt in ("-u", "--user"):
+            occi_config["user"] = arg
         elif opt in ("-v", "--verbose"):
             occi_config['curlverbose'] = True
         elif opt in ("-V", "--version"):
@@ -89,6 +102,15 @@ def main(argv=sys.argv[1:]):
 
     if not tests:
         tests = sorted(list(set(tests_definitions.keys()) - tests_skipped))
+
+    if 'url' not in occi_config or not occi_config['url']:
+        print 'OCCI URL required'
+        sys.exit(2)
+
+    if occi_config['authtype'] == 'basic':
+        if 'user' not in occi_config or not occi_config['user'] or 'passwd' not in occi_config or not occi_config['passwd']:
+            print 'User and password is required for "basic" authentication type'
+            sys.exit(2)
 
     occi_init()
     testsuite_init()

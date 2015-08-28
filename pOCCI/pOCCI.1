@@ -23,6 +23,16 @@ pOCCI \- OCCI compliance testing and client
 Usage message.
 
 .TP
+\fB-a\fR, \fP--auth-type\fR \fIAUTH-TYPE\fR
+Authentication type to used. Default if \fBbasic\fR.
+
+Available values: \fBbasic\fR
+
+.TP
+\fB-e\fR, \fP--endpoint\fR, \fP--url\fR \fIURL\fR
+OCCI server endpoint. For example: \fIhttps://example.com:11443\fR.
+
+.TP
 \fB-f\fR, \fP--format\fR \fIFORMAT\fR
 Output format (\fBplain\fR, \fBjson\fR).
 
@@ -32,11 +42,21 @@ List all OCCI compliance tests.
 
 .TP
 \fB-m\fR, \fP--mime-type\fR \fIMIME-TYPE\fR
-Render format to communicate with OCCI server. If \fBtext/occi\fR is selected, category are performed as \fBtext/plain\fR due to HTTP Headers size limitations. Possible values: \fBtext/plain\fR, \fBtext/occi\fR.
+Render format to communicate with OCCI server. If \fBtext/occi\fR is selected, category are performed as \fBtext/plain\fR due to HTTP Headers size limitations. Default is \fBtext/plain\fR.
+
+Possible values: \fBtext/plain\fR, \fBtext/occi\fR.
+
+.TP
+\fB-p\fR, \fP--password\fR \fIPASSWORD\fR
+User password, if \fBbasic\fR autentization is used.
 
 .TP
 \fB-t\fR, \fP--tests\fR \fITEST1,...\fR
 List of OCCI compliance tests to perform. Separated by commas.
+
+.TP
+\fB-u\fR, \fP--user\fR \fIUSER\fR
+User name, if \fBbasic\fR autentization is used.
 
 .TP
 \fB-v\fR, \fP--verbose\fR

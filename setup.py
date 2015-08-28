@@ -59,8 +59,6 @@ setup(
         'tests': ['*/*.txt'],
     },
 
-    data_files=[('/etc/', ['pOCCI/pOCCI.cfg'])],
-
     entry_points={
         'console_scripts': [
             'pOCCI=pOCCI.pOCCI:main',
