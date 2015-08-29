@@ -1,6 +1,8 @@
 OCCI Compliance tests
 =======================
 
+|build-status| |coverage-status|
+
 Install::
 
  python setup.py install
@@ -23,3 +25,10 @@ Example config file::
  timeout = 120
 
 Run pOCCI
+
+.. |build-status| image:: https://travis-ci.org/CESNET/pOCCI.svg?branch=master
+   :target: https://travis-ci.org/CESNET/pOOCI
+   :alt: Build status
+.. |coverage-status| image:: https://img.shields.io/coveralls/CESNET/pOCCI.svg
+   :target: https://coveralls.io/r/CESNET/pOCCI
+   :alt: Test coverage percentage
