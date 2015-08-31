@@ -1,0 +1,62 @@
+.TH POCCI-PARSE 1 "August 2015" "CESNET" "pOCCI"
+
+
+.SH NAME
+pOCCI-parse \- OCCI message parser and converter
+
+
+.SH SYNOPSIS
+\fBpOCCI-parse\fR [\fIOPTIONS\fR]
+
+
+.SH DESCRIPTION
+\fBpOCCI-parse\fR is a tool to perform checking, parsing, and converting of OCCI messages between various mime-types.
+
+
+.SH OPTIONS
+.TP
+\fB-h\fR, \fP--help\fR
+Usage message.
+
+.TP
+\fB-i\fR, \fP--input-mime\fR \fIMIME-TYPE\fR
+Input mime-type. Default is \fBtext/plain\fR.
+
+Possible values: \fBtext/plain\fR, \fBtext/occi\fR, \fBtext/uri-list\fR
+
+.TP
+\fB-o\fR, \fP--output-mime\fR \fIMIME-TYPE\fR
+Output mime-type. Default is \fBtext/plain\fR.
+
+Possible values: \fBtext/plain\fR, \fBtext/occi\fR, \fBtext/uri-list\fR
+
+.TP
+\fB-t\fR, \fP--type\fR \fIOCCI-TYPE\fR
+OCCI message type. Default is \fBcategories\fR.
+
+Possible values: \fBcategories\fR, \fBentities\fR, \fBresource\fR.
+
+.TP
+\fB-V\fR, \fP--version\fR
+Print version information.
+
+.SH EXIT STATUS
+.TP
+0
+Parsing and conversion \fBOK\fR.
+
+.TP
+1
+Parsing or conversion \fBFAILED\fR.
+
+.TP
+2
+Other error.
+
+
+.SH BUGS
+Please report all bugs to issue tracker at \fIhttps://github.com/CESNET/pOCCI/issues\fR.
+
+
+.SH AUTHORS
+CESNET

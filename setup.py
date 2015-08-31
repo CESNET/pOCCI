@@ -55,13 +55,18 @@ setup(
     install_requires=['pycurl'],
 
     package_data={
-        'pOCCI': ['pOCCI.cfg', 'pOCCI.1'],
+        'pOCCI': [
+            'pOCCI.cfg',
+            'pOCCI.1',
+            'pOCCI-parse.1',
+         ],
         'tests': ['*/*.txt'],
     },
 
     entry_points={
         'console_scripts': [
             'pOCCI=pOCCI.pOCCI:main',
+            'pOCCI-parse=pOCCI.pOCCI_parse:main',
         ],
     },
 
