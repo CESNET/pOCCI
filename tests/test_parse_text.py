@@ -103,6 +103,13 @@ class TestEntities(unittest.TestCase):
         for entity in entities:
             assert(re.match(r'https://', entity))
 
+        body, headers = self.renderer.render_locations(entities)
+
+        # full compare
+        original = '\r\n'.join(self.entities[0]) + '\r\n'
+        rendering = body
+        assert(original == rendering)
+
 
     def testEntitiesErrorFormat(self):
         with self.assertRaises(occi.ParseError):

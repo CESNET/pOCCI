@@ -223,11 +223,11 @@ class TextRenderer(Renderer):
         :return: render result
         :rtype: [string, string[]]
         """
-        if not location:
+        if not locations:
             return ''
         s = []
         for location in locations:
-            s.append('X-OCCI-Location: ' + location)
+            s.append('X-OCCI-Location: ' + location + eol)
         return [''.join(s), []]
 
 
