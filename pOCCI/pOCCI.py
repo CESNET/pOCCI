@@ -44,11 +44,14 @@ def usage(name = __file__):
 OPTIONS:\n\
   -h, --help ................ usage message\n\
   -a, --auth-type AUTH ...... authentization type\n\
+  -c, --cert FILE ........... SSL certificate file\n\
   -e, --endpoint, --url URL . OCCI server endpoint\n\
   -f, --format FORMAT ....... output format (plain, json)\n\
+  -k, --key FILE ............ SSL key file\n\
   -l, --list ................ list all test\n\
   -m, --mime-type MIME-TYPE . render format\n\
   -p, --password PWD ........ password for basic auth-type\n\
+  --passphrase PASS ......... SSL key passphrase\n\
   -t, --tests <TEST1,...> ... list of tests\n\
   -u, --user USER ........... user name for basic auth-type\n\
   -v, --verbose ............. verbose mode\n\
@@ -68,7 +71,7 @@ def main(argv=sys.argv[1:]):
         sys.exit(2)
 
     try:
-        opts, args = getopt.getopt(argv,"ha:e:f:lm:p:t:u:vV",["help", "auth-type=", "endpoint=", "format=", "list", "mime-type=", "password=", "tests=", "url=", "user=", "verbose", "version"])
+        opts, args = getopt.getopt(argv,"ha:c:e:f:k:lm:p:t:u:vV",["help", "auth-type=", "cert=", "endpoint=", "format=", "key=", "list", "mime-type=", "passphrase=", "password=", "tests=", "url=", "user=", "verbose", "version"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -78,15 +81,21 @@ def main(argv=sys.argv[1:]):
             sys.exit()
         elif opt in ("-a", "--auth-type"):
             occi_config["authtype"] = arg
+        elif opt in ("-c", "--cert"):
+            occi_config["cert"] = arg
         elif opt in ("-e", "--endpoint", "--url"):
             occi_config["url"] = arg
         elif opt in ("-f", "--format"):
             occi_config['outputformat'] = arg
+        elif opt in ("-k", "--key"):
+            occi_config["key"] = arg
         elif opt in ("-l", "--list"):
             print '\n'.join(sorted(tests_definitions.keys()));
             sys.exit();
         elif opt in ("-m", "--mime-type"):
             occi_config['mimetype'] = arg
+        elif opt in ("--passphrase"):
+            occi_config["passphrase"] = arg
         elif opt in ("-p", "--password"):
             occi_config["passwd"] = arg
         elif opt in ("-t", "--tests"):
@@ -108,7 +117,11 @@ def main(argv=sys.argv[1:]):
 
     if occi_config['authtype'] == 'basic':
         if 'user' not in occi_config or not occi_config['user'] or 'passwd' not in occi_config or not occi_config['passwd']:
-            print 'User and password is required for "basic" authentication type'
+            print 'User and password is required for "basic" authentization type.'
+            sys.exit(2)
+    elif occi_config['authtype'] == 'x509':
+        if 'cert' not in occi_config or not occi_config['cert'] or 'key' not in occi_config or not occi_config['key']:
+            print 'SSL certificate and key is required for "x509" authentization type.'
             sys.exit(2)
 
     occi_init()

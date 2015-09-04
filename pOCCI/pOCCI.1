@@ -26,7 +26,11 @@ Usage message.
 \fB-a\fR, \fP--auth-type\fR \fIAUTH-TYPE\fR
 Authentication type to used. Default if \fBbasic\fR.
 
-Available values: \fBbasic\fR
+Available values: \fBbasic\fR, \fBx509\fR.
+
+.TP
+\fB-c\fR, \fP--cert\fR \fIFILE\fR
+SSL user certificate file, if \fBx509\fR autentization is used.
 
 .TP
 \fB-e\fR, \fP--endpoint\fR, \fP--url\fR \fIURL\fR
@@ -35,6 +39,10 @@ OCCI server endpoint. For example: \fIhttps://example.com:11443\fR.
 .TP
 \fB-f\fR, \fP--format\fR \fIFORMAT\fR
 Output format (\fBplain\fR, \fBjson\fR).
+
+.TP
+\fB-k\fR, \fP--key\fR \fIFILE\fR
+SSL user key file, if \fBx509\fR autentization is used.
 
 .TP
 \fB-l\fR, \fP--list\fR
@@ -49,6 +57,10 @@ Possible values: \fBtext/plain\fR, \fBtext/occi\fR.
 .TP
 \fB-p\fR, \fP--password\fR \fIPASSWORD\fR
 User password, if \fBbasic\fR autentization is used.
+
+.TP
+\fP--passphrse\fR \fIPASSPHRASE\fR
+Passphrase for SSL user key, if \fBx509\fR autentization is used. Default is no passphrase.
 
 .TP
 \fB-t\fR, \fP--tests\fR \fITEST1,...\fR
@@ -85,6 +97,24 @@ Error from OCCI testsuite framework.
 .TP
 \fB~/.pOCCI.cfg\fR, \fB/etc/pOCCI.cfg\fR
 pOCCI configuration file.
+
+Available options and default values:
+ * \fBurl\fR
+ * \fBauthtype\fR = 'basic'
+ * \fBcapath\fR
+ * \fBcachain\fR
+ * \fBignoressl\fR = False
+ * \fBuser\fR
+ * \fBpasswd\fR
+ * \fBcert\fR
+ * \fBkey\fR
+ * \fBpassphrase\fR
+ * \fBcurlverbose\fR = False
+ * \fBconnectiontimeout\fR = 60
+ * \fBtimeout\fR = 120
+ * \fBmimetype\fR = 'text/plain'
+ * \fBoutputformat\fR = 'json'
+ * \fBtests.category\fR = 'Category:compute;class=kind;scheme="http://schemas.ogf.org/occi/infrastructure#"'
 
 
 .SH EXAMPLES

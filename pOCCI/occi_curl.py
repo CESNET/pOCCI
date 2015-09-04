@@ -75,6 +75,13 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
     if authtype == "basic":
         curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
         curl.setopt(pycurl.USERPWD, "%s:%s" % (user, passwd))
+    elif authtype == "x509":
+        if 'cert' in occi_config and occi_config['cert']:
+            curl.setopt(pycurl.SSLCERT, occi_config['cert'])
+        if 'key' in occi_config and occi_config['key']:
+            curl.setopt(pycurl.SSLKEY, occi_config['key'])
+        if 'passphrase' in occi_config and occi_config['passphrase']:
+            curl.setopt(pycurl.SSLCERTPASSWD, occi_config['passphrase'])
     
     # Verbose mode
     curl.setopt(pycurl.VERBOSE, curlverbose)
