@@ -92,7 +92,7 @@ def main(argv=sys.argv[1:]):
         elif opt in ["-l", "--list"]:
             print '\n'.join(sorted(tests_definitions.keys()));
             sys.exit();
-        elif opt in ]"-m", "--mime-type"]:
+        elif opt in ["-m", "--mime-type"]:
             occi_config['mimetype'] = arg
         elif opt in ["--passphrase"]:
             occi_config["passphrase"] = arg
