@@ -76,35 +76,35 @@ def main(argv=sys.argv[1:]):
         usage()
         sys.exit(2)
     for opt, arg in opts:
-        if opt in ("-h", "--help"):
+        if opt in ["-h", "--help"]:
             usage()
             sys.exit()
-        elif opt in ("-a", "--auth-type"):
+        elif opt in ["-a", "--auth-type"]:
             occi_config["authtype"] = arg
-        elif opt in ("-c", "--cert"):
+        elif opt in ["-c", "--cert"]:
             occi_config["cert"] = arg
-        elif opt in ("-e", "--endpoint", "--url"):
+        elif opt in ["-e", "--endpoint", "--url"]:
             occi_config["url"] = arg
-        elif opt in ("-f", "--format"):
+        elif opt in ["-f", "--format"]:
             occi_config['outputformat'] = arg
-        elif opt in ("-k", "--key"):
+        elif opt in ["-k", "--key"]:
             occi_config["key"] = arg
-        elif opt in ("-l", "--list"):
+        elif opt in ["-l", "--list"]:
             print '\n'.join(sorted(tests_definitions.keys()));
             sys.exit();
-        elif opt in ("-m", "--mime-type"):
+        elif opt in ]"-m", "--mime-type"]:
             occi_config['mimetype'] = arg
-        elif opt in ("--passphrase"):
+        elif opt in ["--passphrase"]:
             occi_config["passphrase"] = arg
-        elif opt in ("-p", "--password"):
+        elif opt in ["-p", "--password"]:
             occi_config["passwd"] = arg
-        elif opt in ("-t", "--tests"):
+        elif opt in ["-t", "--tests"]:
             tests = arg.split(",")
-        elif opt in ("-u", "--user"):
+        elif opt in ["-u", "--user"]:
             occi_config["user"] = arg
-        elif opt in ("-v", "--verbose"):
+        elif opt in ["-v", "--verbose"]:
             occi_config['curlverbose'] = True
-        elif opt in ("-V", "--version"):
+        elif opt in ["-V", "--version"]:
             print version.__version__
             sys.exit()
 
