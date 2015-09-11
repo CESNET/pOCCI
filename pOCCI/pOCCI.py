@@ -52,6 +52,7 @@ OPTIONS:\n\
   -m, --mime-type MIME-TYPE . render format\n\
   -p, --password PWD ........ password for basic auth-type\n\
   --passphrase PASS ......... SSL key passphrase\n\
+  -S, --ignore-ssl .......... ignore SSL errors\n\
   -t, --tests <TEST1,...> ... list of tests\n\
   -u, --user USER ........... user name for basic auth-type\n\
   -v, --verbose ............. verbose mode\n\
@@ -71,7 +72,7 @@ def main(argv=sys.argv[1:]):
         sys.exit(2)
 
     try:
-        opts, args = getopt.getopt(argv,"ha:c:e:f:k:lm:p:t:u:vV",["help", "auth-type=", "cert=", "endpoint=", "format=", "key=", "list", "mime-type=", "passphrase=", "password=", "tests=", "url=", "user=", "verbose", "version"])
+        opts, args = getopt.getopt(argv,"ha:c:e:f:k:lm:p:St:u:vV",["help", "auth-type=", "cert=", "endpoint=", "format=", "ignore-ssl", "key=", "list", "mime-type=", "passphrase=", "password=", "tests=", "url=", "user=", "verbose", "version"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -98,6 +99,8 @@ def main(argv=sys.argv[1:]):
             occi_config["passphrase"] = arg
         elif opt in ["-p", "--password"]:
             occi_config["passwd"] = arg
+        elif opt in ["-S", "--ignore-ssl"]:
+            occi_config["ignoressl"] = True
         elif opt in ["-t", "--tests"]:
             tests = arg.split(",")
         elif opt in ["-u", "--user"]:
