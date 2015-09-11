@@ -1,0 +1,1 @@
+Category: kind;scheme="myScheme";class="myClass";title="myTitle";attributes="occi.core.id{immutable required} occi.core.title"

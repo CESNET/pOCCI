@@ -1,0 +1,2 @@
+Category: kind;scheme="myScheme";class="myClass";title="myTitle";attributes="occi.core.id{immutable required} occi.core.title"
+X-OCCI-Attribute: occi.core.id=1,occi.core.title="Title 1",pocci.test.enabled=true,pocci.test.fs="ext3"
