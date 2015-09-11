@@ -67,7 +67,7 @@ def text_attribute_value(attribute):
         type = 'string'
     value = attribute['value']
 
-    if type == 'string':
+    if type in ['string', 'enum']:
         return '"' + value + '"'
     elif type == 'number':
         return repr(value)
@@ -76,8 +76,6 @@ def text_attribute_value(attribute):
             return "true"
         else:
             return "false"
-    elif type == 'enum':
-        return repr(value)
 
 
 def text_attribute_repr(attribute):
@@ -199,21 +197,6 @@ class TextRenderer(Renderer):
         :rtype: string
         """
         return 'X-OCCI-Attribute: ' + text_attribute_repr(attribute)
-
-
-    def render_attributes(self, attributes):
-        """ Render Attributes
-
-        :param occi.Attribute attribute[]: OCCI Attribute object
-        :return: render result
-        :rtype: string
-        """
-        if not attributes:
-            return ''
-        s = []
-        for attribute in attributes:
-            s.append(TextRenderer.render_attribute(attribute) + eol)
-        return ''.join(s) + eol
 
 
     def render_locations(self, locations):
