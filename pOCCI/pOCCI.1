@@ -24,13 +24,13 @@ Usage message.
 
 .TP
 \fB-a\fR, \fP--auth-type\fR \fIAUTH-TYPE\fR
-Authentication type to used. Default if \fBbasic\fR.
+Authentication type to use. Default is \fBbasic\fR.
 
 Available values: \fBbasic\fR, \fBx509\fR.
 
 .TP
 \fB-c\fR, \fP--cert\fR \fIFILE\fR
-SSL user certificate file, if \fBx509\fR autentization is used.
+User SSL certificate file, if \fBx509\fR autentization is used.
 
 .TP
 \fB-e\fR, \fP--endpoint\fR, \fP--url\fR \fIURL\fR
@@ -42,24 +42,24 @@ Output format (\fBplain\fR, \fBjson\fR).
 
 .TP
 \fB-k\fR, \fP--key\fR \fIFILE\fR
-SSL user key file, if \fBx509\fR autentization is used.
+User SSL key file, if \fBx509\fR autentization is used.
 
 .TP
 \fB-l\fR, \fP--list\fR
-List all OCCI compliance tests.
+Get list of all OCCI compliance tests.
 
 .TP
 \fB-m\fR, \fP--mime-type\fR \fIMIME-TYPE\fR
-Render format to communicate with OCCI server. If \fBtext/occi\fR is selected, category are performed as \fBtext/plain\fR due to HTTP Headers size limitations. Default is \fBtext/plain\fR.
+Render format to communicate with OCCI server. If \fBtext/occi\fR is selected, listing of categories is performed through \fBtext/plain\fR due to HTTP Headers size limitations. Default is \fBtext/plain\fR.
 
-Possible values: \fBtext/plain\fR, \fBtext/occi\fR.
+Possible values: \fBtext/plain\fR, \fBtext/occi\fR, \fBtext/occi+plain\fR.
 
 .TP
 \fB-p\fR, \fP--password\fR \fIPASSWORD\fR
 User password, if \fBbasic\fR autentization is used.
 
 .TP
-\fP--passphrse\fR \fIPASSPHRASE\fR
+\fB-P\fR, \fP--passphrase\fR \fIPASSPHRASE\fR
 Passphrase for SSL user key, if \fBx509\fR autentization is used. Default is no passphrase.
 
 .TP
