@@ -5,6 +5,7 @@ Welcome to pOCCI's documentation!
    :maxdepth: 2
 
    usage
+   matrix
 
 API
 ===
