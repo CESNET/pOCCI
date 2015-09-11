@@ -245,6 +245,13 @@ class TestResource(unittest.TestCase):
             assert(original == rendering)
 
 
+    def testResourceErrorEmpty(self):
+        with self.assertRaises(occi.RenderError):
+            self.renderer.render_resource(None, None, None)
+        with self.assertRaises(occi.RenderError):
+            self.renderer.render_resource([], None, None)
+
+
 def suite():
         return unittest.TestSuite([
                 unittest.TestLoader().loadTestsFromTestCase(TestHeaderValues),

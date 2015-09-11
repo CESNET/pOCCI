@@ -1,5 +1,7 @@
 import urlparse
 
+import occi
+
 
 def check_url(body, scheme = False, host = False, path = False):
     """Check validity of URL.
@@ -47,7 +49,6 @@ class Renderer:
         :return: render result
         :rtype: [string, string[]]
         """
-        pass
 
 
     def render_resource(self, categories, links = None, attributes = None):
@@ -71,7 +72,6 @@ class Renderer:
         :return: Array of OCCI Categories
         :rtype: occi.Category[]
         """
-        pass
 
 
     def parse_locations(self, body, headers):
@@ -82,7 +82,6 @@ class Renderer:
         :return: array of renderer-specific strings
         :rtype: string[]
         """
-        pass
 
 
     def parse_resource(self, body, header):
@@ -93,4 +92,3 @@ class Renderer:
         :return: categories, links, and attributes
         :rtype: [occi.Category categories[], occi.Link links[], occi.Attribute attributes[]]
         """
-        pass

@@ -193,6 +193,13 @@ class TestResource(unittest.TestCase):
             self.renderer.parse_resource(self.data[5], None)
 
 
+    def testResourceErrorEmpty(self):
+        with self.assertRaises(occi.RenderError):
+            self.renderer.render_resource(None, None, None)
+        with self.assertRaises(occi.RenderError):
+            self.renderer.render_resource([], None, None)
+
+
 def suite():
         return unittest.TestSuite([
                 unittest.TestLoader().loadTestsFromTestCase(TestCategories),
