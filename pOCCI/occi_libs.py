@@ -49,6 +49,15 @@ def occi_format(results):
     return out
 
 
+def html_escape(s):
+    s = str(s)
+    s = s.replace("&", "&amp;")
+    s = s.replace("<", "&lt;")
+    s = s.replace(">", "&gt;")
+    s = s.replace("\n", "<br>")
+    return s
+
+
 def occi_print(results, outputformat):
     if outputformat == 'plain':
         for r in results['tests']:
@@ -57,6 +66,50 @@ def occi_print(results, outputformat):
                 print >> sys.stderr, r['reason']
     elif outputformat == 'json':
         print json.dumps(results, indent=4, sort_keys=True)
+    elif outputformat in ['html', 'htmltable']:
+        if outputformat == 'html':
+            print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">\n\
+<html>\n\
+\n\
+<head>\n\
+    <title>OCCI Compliance Tests Results</title>\n\
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">\n\
+    <style type="text/css">\n\
+        th {text-align:left}\n\
+        td.ok {color:green}\n\
+        td.fail {color:red}\n\
+        td.skipped {color:orange}\n\
+    </style>\n\
+</head>\n\
+\n\
+<body>\n\
+\n\
+<table>\n\
+    <tr>\n\
+        <th>Test</th>\n\
+        <th>Running Time</th>\n\
+        <th>Status</th>\n\
+        <th>Reason</th>\n\
+    </tr>'
+        for r in results['tests']:
+            css = 'skipped'
+            if r['status'] == 'OK':
+                css = 'ok'
+            elif r['status'] == 'FAIL':
+                css = 'fail'
+            print '    <tr class="%s">' % css
+            print '        <td class="name">%s</td>' % html_escape(r['name'])
+            print '        <td class="time">%s</td>' % html_escape(r['running_time'])
+            print '        <td class="%s">%s</td>' % (css, html_escape(r['status']))
+            if 'reason' in r:
+                print '        <td class="reason">%s</td>' % html_escape('\n'.join(r['reason']))
+            print '    </tr>'
+        if outputformat == 'html':
+            print '</table>\n\
+\n\
+</body>\n\
+\n\
+</html>'
     else:
         print 'Only "plain", "json" output types are possible'
 
