@@ -230,21 +230,24 @@ def CORE_CREATE001():
        pOCCI -t 'CORE/CREATE/001'
     """
     err_msg = []
-    has_kind = True
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+
+    if not check_pretest:
+        return [False, err_msg]
 
     #kind = search_category({'class': 'kind'})
     kind = search_category({'class': 'kind', 'term': 'compute'})
     #print kind
 
-    if not kind:
-        has_kind = False
+    if kind:
+        for item in ['location', 'term', 'scheme']:
+            if not item in kind.keys():
+                err_msg.append('No %s in OCCI Kind' % item)
+                return [False, err_msg]
+    else:
         err_msg.append('No OCCI Kind found')
-    for item in ['location', 'term', 'scheme']:
-        if not item in kind.keys():
-            has_kind = False
-            err_msg.append('No %s in OCCI Kind' % item)
+        return [False, err_msg]
 
     new_cat_s, new_cat_h = renderer.render_resource(
         categories = [
@@ -282,7 +285,7 @@ def CORE_CREATE001():
     if not check_create:
         print body
 
-    return [has_kind and check_create, err_msg]
+    return [check_create, err_msg]
 
 
 def CORE_CREATE006():
@@ -318,8 +321,16 @@ def CORE_READ_URL(filter):
     check_ct, tmp_err_msg = check_content_type(content_type)
     err_msg += tmp_err_msg
 
+    if not check_pretest:
+        return [False, err_msg, None]
+
     mixin = search_category(filter)
     #kind =  search_category({'class': 'kind'})
+
+    if not mixin:
+        err_msg.append('No required OCCI Category found')
+        return [False, err_msg, None]
+
     for category in [mixin]:
         body, response_headers, http_status, content_type = occi_curl(url = category['location'])
         try:
@@ -604,6 +615,8 @@ def INFRA_CREATE001():
     category = occi.Category({'term': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+    if not check_pretest:
+        return [False, err_msg]
 
     return INFRA_CREATE_COMMON('compute', [category], [], err_msg)
 
@@ -617,6 +630,8 @@ def INFRA_CREATE002():
     ]
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+    if not check_pretest:
+        return [False, err_msg]
 
     return INFRA_CREATE_COMMON('storage', [category], additional_attributes, err_msg)
 
@@ -627,6 +642,8 @@ def INFRA_CREATE003():
     additional_attributes = [occi.AttributeDefinition({"name": "occi.core.title", "required": True})]
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+    if not check_pretest:
+        return [False, err_msg]
 
     return INFRA_CREATE_COMMON('network', [category], additional_attributes, err_msg)
 
@@ -639,6 +656,8 @@ def INFRA_CREATE004():
     ]
 
     body, response_headers, http_status, content_type, check_pretest = pretest_http_status("200 OK", err_msg)
+    if not check_pretest:
+        return [False, err_msg]
 
     os_tpl = search_category({'class': 'mixin', 'rel': 'http://schemas.ogf.org/occi/infrastructure#os_tpl'})
     #print os_tpl

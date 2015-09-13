@@ -8,6 +8,7 @@ import os
 from occi_libs import *
 from CORE import *
 from occi_curl import occi_curl
+import occi
 import version
 
 
@@ -135,7 +136,14 @@ def main(argv=sys.argv[1:]):
             test = 'OCCI/' + test
         if test in tests_definitions.keys():
             start_time = time.time()
-            result, err_msg = tests_definitions[test]()
+            try:
+               result, err_msg = tests_definitions[test]()
+            except occi.Error as oe:
+                if occi_config['curlverbose']:
+                    raise oe
+                else:
+                    print '%s error: %s' % (test, str(oe))
+                    sys.exit(2)
             running_time = time.time() - start_time
             results.append(occi_test(test, result, err_msg, running_time))
 

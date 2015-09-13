@@ -1,4 +1,5 @@
 from occi_libs import occi_config
+import occi
 
 import pycurl
 import re
@@ -121,8 +122,11 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
 
     # DO IT!
     header = []
-    curl.perform()
-    curl.close()
+    try:
+        curl.perform()
+        curl.close()
+    except pycurl.error as pe:
+        raise occi.Error(pe)
 
     ## 'Server: Apache/2.2.22 (Debian)\r\n'
     h = {}
