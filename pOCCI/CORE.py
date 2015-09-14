@@ -312,7 +312,7 @@ class CORE_CREATE001(Test):
         err_msg += tmp_err_msg
 
         if not check_create:
-            print body
+            print >> sys.stderr, body
 
         return [check_create, err_msg]
 
@@ -338,7 +338,7 @@ def CORE_CREATE006():
         err_msg += tmp_err_msg
 
         if not check_create:
-            print body
+            print >> sys.stderr, body
 
         return [check_create, err_msg]
 
@@ -583,7 +583,7 @@ class CORE_UPDATE001(Test):
 
         if not check:
             err_msg.append('HTTP status is neither 200 OK nor 201 Created (%s)' % http_status)
-            print body
+            print >> sys.stderr, body
 
         return [check and check_ct and check_response, err_msg]
 
@@ -646,7 +646,7 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
     err_msg += tmp_err_msg
 
     if not check_create:
-        print body
+        print >> sys.stderr, body
 
     Test.clear_categories()
 
@@ -799,7 +799,7 @@ Link: <%s>; rel="%s"; category="%s"\n\r\
         err_msg += tmp_err_msg
 
         if not check_create:
-            print body
+            print >> sys.stderr, body
 
         Test.clear_categories()
 
@@ -877,7 +877,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
     err_msg += tmp_err_msg
 
     if not check_create:
-        print body
+        print >> sys.stderr, body
 
     Test.clear_categories()
 
@@ -901,7 +901,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
 
     if not check_link:
         err_msg += ["OCCI Compute Resource is NOT linked with OCCI %s Resource!" % (resource_name.capitalize())]
-        print body
+        print >> sys.stderr, body
 
     return [check and check_create and check_link, err_msg]
 

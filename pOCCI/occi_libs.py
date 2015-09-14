@@ -111,7 +111,7 @@ def occi_print(results, outputformat):
 \n\
 </html>'
     else:
-        print 'Only "plain", "json" output types are possible'
+        print >> sys.stderr, 'Only "plain", "json" output types are possible'
 
 
 def occi_test(name, status, err_msg, running_time = None):
@@ -203,7 +203,7 @@ def occi_render_init():
             try:
                 categories = renderers['text/plain'].parse_categories([occi_config[f]], None)
             except occi.ParseError as pe:
-                print ("Can't parse '%s' config option: " % f) + str(pe)
+                print >> sys.stderr, ("Can't parse '%s' config option: " % f) + str(pe)
                 sys.exit(2)
             if categories:
                 occi_config['occi.%s' % f] = categories[0]
