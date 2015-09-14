@@ -137,7 +137,7 @@ def main(argv=sys.argv[1:]):
         if test in tests_definitions.keys():
             start_time = time.time()
             try:
-               result, err_msg = tests_definitions[test]()
+               result, err_msg = tests_definitions[test].test()
             except occi.Error as oe:
                 if occi_config['curlverbose']:
                     raise oe
