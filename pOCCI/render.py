@@ -1,6 +1,5 @@
 import re
 
-import occi
 from render_json import *
 from render_http import *
 from render_text import *

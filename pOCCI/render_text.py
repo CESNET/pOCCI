@@ -1,6 +1,5 @@
 import collections
 import re
-import sys
 
 import occi
 from render_base import Renderer, check_url
@@ -9,7 +8,7 @@ from render_base import Renderer, check_url
 eol = '\r\n'
 
 
-def text_attribute_def(ad = None):
+def text_attribute_def(ad=None):
     s = ad['name']
     immutable = ('immutable' in ad) and ad['immutable']
     required = ('required' in ad) and ad['required']
@@ -22,7 +21,7 @@ def text_attribute_def(ad = None):
     return s
 
 
-def text_attribute_defs(ads = None):
+def text_attribute_defs(ads=None):
     text_ads = []
     if ads:
         for ad in ads:
@@ -30,14 +29,14 @@ def text_attribute_defs(ads = None):
     return ' '.join(text_ads)
 
 
-def text_actions(actions = None):
+def text_actions(actions=None):
     if actions:
         return ' '.join(actions)
     else:
         return None
 
 
-def text_category(category = None):
+def text_category(category=None):
     s = '%s;scheme="%s";class="%s"' % (category['term'], category['scheme'], category['class'])
 
     for item in ['title', 'rel', 'location']:
@@ -154,7 +153,7 @@ class TextRenderer(Renderer):
         return [eol.join(res) + eol, []]
 
 
-    def render_resource(self, categories, links = None, attributes = None):
+    def render_resource(self, categories, links=None, attributes=None):
         """Render OCCI Resource instance
 
         :param occi.Category category: OCCI Category object
@@ -167,10 +166,10 @@ class TextRenderer(Renderer):
         Renderer.render_resource(self, categories, links, attributes)
         cat_s, cat_h = self.render_categories(categories)
         res = []
-        if links != None:
+        if links is not None:
             for link in links:
                 res.append(self.render_link(link))
-        if attributes != None:
+        if attributes is not None:
             for attr in attributes:
                 res.append(self.render_attribute(attr))
         if res:
@@ -272,7 +271,7 @@ class TextRenderer(Renderer):
         actions = TextRenderer.reSP.split(body)
         for action in actions:
             # let's require scheme and hostname in scheme URI
-            if not check_url(action, scheme = True, host = True):
+            if not check_url(action, scheme=True, host=True):
                 raise occi.ParseError('URI expected as an action', action)
         return actions
 
@@ -306,11 +305,11 @@ class TextRenderer(Renderer):
             key = keyvalue[0]
             value = keyvalue[1]
             keymatch = TextRenderer.reKeyCheck.match(key)
-            if keymatch == None:
+            if keymatch is None:
                 raise occi.ParseError('Invalid characters in category property', chunk)
             # every value quoted, only class has quoting optional
             valuematch = TextRenderer.reQuoted.match(value)
-            if valuematch == None and key != 'class':
+            if valuematch is None and key != 'class':
                 raise occi.ParseError('Category value not properly quoted or unexpected EOF', chunk)
             if valuematch:
                 value = valuematch.group(1)
@@ -374,15 +373,15 @@ class TextRenderer(Renderer):
             key = keyvalue[0]
             value = keyvalue[1]
             keymatch = TextRenderer.reKeyCheck.match(key)
-            if keymatch == None:
+            if keymatch is None:
                 raise occi.ParseError('Invalid characters in link property', chunk)
             valuematch = TextRenderer.reQuoted.match(value)
             # mandatory quoting
             if key in ['rel', 'self', 'category']:
-                if valuematch == None:
+                if valuematch is None:
                     raise occi.ParseError('Link value not properly quoted or unexpected EOF', chunk)
             # quoting of the other attributes optional
-            if valuematch != None:
+            if valuematch is not None:
                 value = valuematch.group(1)
             # sanity check: there should not be any quotes now
             if value[0] == '"' or (len(value) >= 2 and value[-1] == '"'):
@@ -420,7 +419,7 @@ class TextRenderer(Renderer):
             raise occi.ParseError('OCCI Attribute value expected')
 
         matched = TextRenderer.reQuoted.match(body)
-        if matched != None:
+        if matched is not None:
             t = 'string'
             value = matched.group(1)
             value = TextRenderer.reStringUnescape.sub(r'\1', value)
@@ -429,16 +428,16 @@ class TextRenderer(Renderer):
             return [t, value]
 
         matched = TextRenderer.reNumber.match(body)
-        if matched != None:
+        if matched is not None:
             t = 'number'
-            if TextRenderer.reIntNumber.match(body) != None:
+            if TextRenderer.reIntNumber.match(body) is not None:
                 value = int(matched.group(1))
             else:
                 value = float(matched.group(1))
             return [t, value]
 
         matched = TextRenderer.reBool.match(body)
-        if matched != None:
+        if matched is not None:
             t = 'boolean'
             if matched.group(1) == 'false':
                 value = False
@@ -457,13 +456,12 @@ class TextRenderer(Renderer):
         :rtype: occi.Attribute
         """
 
-        attribute = occi.Attribute()
         keyvalue = TextRenderer.reKeyValue.split(body, 1)
         key = keyvalue[0]
         value = keyvalue[1]
         keymatch = TextRenderer.reKeyCheck.match(key)
-        if keymatch == None:
-            raise occi.ParseError('Invalid characters in attribute name', chunk)
+        if keymatch is None:
+            raise occi.ParseError('Invalid characters in attribute name', key)
         t, v = self.parse_attribute_value(value)
 
         return occi.Attribute({'name': key, 'type': t, 'value': v})
@@ -512,7 +510,7 @@ class TextRenderer(Renderer):
             if not matched:
                 raise occi.ParseError('OCCI Location expected in OCCI Entity collection', line)
             uri = matched.group(2)
-            if not check_url(uri, scheme = True, host = True):
+            if not check_url(uri, scheme=True, host=True):
                 raise occi.ParseError('Invalid URI in OCCI Entity collection', line)
             locations.append(uri)
 
@@ -534,17 +532,17 @@ class TextRenderer(Renderer):
         for line in body:
             line = line.rstrip('\r\n')
             matched = TextRenderer.reCategory.match(line)
-            if matched != None:
+            if matched is not None:
                 s = line[matched.end():]
                 categories.append(self.parse_category_body(s))
                 continue
             matched = TextRenderer.reLink.match(line)
-            if matched != None:
+            if matched is not None:
                 s = line[matched.end():]
                 links.append(self.parse_link_body(s))
                 continue
             matched = TextRenderer.reAttribute.match(line)
-            if matched != None:
+            if matched is not None:
                 s = line[matched.end():]
                 attributes.append(self.parse_attribute_body(s))
                 continue

@@ -84,7 +84,7 @@ class HTTPHeadersRenderer(TextRenderer):
         return ['', ['X-OCCI-Location: ' + ','.join(location)]]
 
 
-    def render_resource(self, categories, links = None, attributes = None):
+    def render_resource(self, categories, links=None, attributes=None):
         """Render OCCI Resource instance
 
         :param occi.Category category: OCCI Category object
@@ -97,9 +97,9 @@ class HTTPHeadersRenderer(TextRenderer):
         res = []
         cat_s, cat_h = self.render_categories(categories)
         res += cat_h
-        if links != None:
+        if links is not None:
             res += self.render_links(links)
-        if attributes != None:
+        if attributes is not None:
             res += self.render_attributes(attributes)
         return ['', res]
 
@@ -119,7 +119,7 @@ class HTTPHeadersRenderer(TextRenderer):
             #    print m.groupdict()
             #    print m.end()
             # error on empty match
-            if m == None or m.group('chunk') == None or m.end() == 0:
+            if m is None or m.group('chunk') is None or m.end() == 0:
                 raise occi.ParseError('Bad quoting in HTTP Headers', body)
                 m = None
                 break
@@ -193,7 +193,7 @@ class HTTPHeadersRenderer(TextRenderer):
             uris_str = matched.group(2)
             uris = self.parse_header_values(uris_str)
             for uri in uris:
-                if not check_url(uri, scheme = True, host = True):
+                if not check_url(uri, scheme=True, host=True):
                     raise occi.ParseError('Invalid URI in OCCI Entity collection', line)
                 locations.append(uri)
 
@@ -216,21 +216,21 @@ class HTTPHeadersRenderer(TextRenderer):
             line = line.rstrip('\r\n')
 
             matched = TextRenderer.reCategory.match(line)
-            if matched != None:
+            if matched is not None:
                 cats_str = line[matched.end():]
                 for s in self.parse_header_values(cats_str):
                     categories.append(self.parse_category_body(s))
                 continue
 
             matched = TextRenderer.reLink.match(line)
-            if matched != None:
+            if matched is not None:
                 links_str = line[matched.end():]
                 for s in self.parse_header_values(links_str):
                     links.append(self.parse_link_body(s))
                 continue
 
             matched = TextRenderer.reAttribute.match(line)
-            if matched != None:
+            if matched is not None:
                 attrs_str = line[matched.end():]
                 for s in self.parse_header_values(attrs_str):
                     attributes.append(self.parse_attribute_body(s))

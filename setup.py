@@ -54,12 +54,14 @@ setup(
 
     install_requires=['pycurl'],
 
+    setup_requires=['flake8'],
+
     package_data={
         'pOCCI': [
             'pOCCI.cfg',
             'pOCCI.1',
             'pOCCI-parse.1',
-         ],
+        ],
         'tests': ['*/*.txt'],
     },
 

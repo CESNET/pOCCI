@@ -1,6 +1,3 @@
-import json
-
-import occi
 from render_base import Renderer
 
 

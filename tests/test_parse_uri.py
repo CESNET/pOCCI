@@ -35,13 +35,13 @@ class TestURIList(unittest.TestCase):
     def testOK(self):
         uris = self.renderer.parse_locations(self.data[0], None)
         assert(len(uris) == 5)
-        for i in range(0,4):
+        for i in range(0, 4):
             assert(uris[i] == 'https://example.com:11443/compute/%d' % (i + 88))
 
 
     def testInvalidURI(self):
         with self.assertRaises(occi.ParseError):
-            uris = self.renderer.parse_locations(self.data[1], None)
+            self.renderer.parse_locations(self.data[1], None)
 
 
     def testInvalidMethods(self):
@@ -57,7 +57,7 @@ class TestURIList(unittest.TestCase):
 
 def suite():
         return unittest.TestSuite([
-                unittest.TestLoader().loadTestsFromTestCase(TestURIList),
+            unittest.TestLoader().loadTestsFromTestCase(TestURIList),
         ])
 
 

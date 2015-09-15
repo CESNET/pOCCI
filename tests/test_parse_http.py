@@ -31,8 +31,8 @@ class TestHeaderValues(unittest.TestCase):
         '"aaa", "bbb"': ['"aaa"', '"bbb"'],
         'aaa, "bbb"': ['aaa', '"bbb"'],
         '"aaa", bbb': ['"aaa"', 'bbb'],
-        'aaa, bbb, "ccc, ccc", "d,d,d\\"d\\"dd", "eee\\"eee"' : ['aaa', 'bbb', '"ccc, ccc"', '"d,d,d\\"d\\"dd"', '"eee\\"eee"'],
-        ',' : ['', ''],
+        'aaa, bbb, "ccc, ccc", "d,d,d\\"d\\"dd", "eee\\"eee"': ['aaa', 'bbb', '"ccc, ccc"', '"d,d,d\\"d\\"dd"', '"eee\\"eee"'],
+        ',': ['', ''],
         'a,': ['a', ''],
         '""': ['""'],
         '': [],
@@ -85,7 +85,7 @@ class TestHeaderValues(unittest.TestCase):
                     if chunk != result[i]:
                         check = False
                     i = i + 1
-            except occi.ParseError as pe:
+            except occi.ParseError:
                 print 'BODY: #%s#' % body
                 print chunks
                 print result
@@ -130,7 +130,7 @@ class TestCategories(unittest.TestCase):
     def testCategoriesOK(self):
         """Parse headers with category collection.
         """
-        for i in range(0,2):
+        for i in range(0, 2):
             categories = self.renderer.parse_categories(None, self.fulldata[i])
 
             assert(categories)
@@ -176,12 +176,12 @@ class TestEntities(unittest.TestCase):
     def testEntitiesErrorFormat(self):
         # invalid format can't be detected, foreign HTTP Headers must be skipped
         #with self.assertRaises(occi.ParseError):
-            entities = self.renderer.parse_locations(None, self.data[1])
+            self.renderer.parse_locations(None, self.data[1])
 
 
     def testEntitiesErrorURI(self):
         with self.assertRaises(occi.ParseError):
-            entities = self.renderer.parse_locations(None, self.data[2])
+            self.renderer.parse_locations(None, self.data[2])
 
 
 class TestResource(unittest.TestCase):
@@ -199,7 +199,7 @@ class TestResource(unittest.TestCase):
 
 
     def testResourceOK(self):
-        for i in range(0,2):
+        for i in range(0, 2):
             categories, links, attributes = self.renderer.parse_resource(None, self.data[i])
 
             assert(categories)
@@ -221,13 +221,13 @@ class TestResource(unittest.TestCase):
                 assert(attributes[0]['value'] == '103')
                 assert(attributes[1]['value'] == 'one-103')
                 assert(attributes[3]['value'] == 1)
-                assert(re.match(r'/storage/0', links[0]['uri']) != None)
+                assert(re.match(r'/storage/0', links[0]['uri']) is not None)
             elif i == 1:
                 assert(categories[0]['term'] == 'compute')
                 assert(attributes[0]['value'] == 'i-375ab99b')
                 assert(attributes[1]['value'] == 'x64')
                 assert(attributes[3]['value'] == 0.613)
-                assert(re.match(r'/storage/vol-2cc1133a', links[0]['uri']) != None)
+                assert(re.match(r'/storage/vol-2cc1133a', links[0]['uri']) is not None)
 
             # rendering
             body, headers = self.renderer.render_resource(categories, links, attributes)
@@ -254,10 +254,10 @@ class TestResource(unittest.TestCase):
 
 def suite():
         return unittest.TestSuite([
-                unittest.TestLoader().loadTestsFromTestCase(TestHeaderValues),
-                unittest.TestLoader().loadTestsFromTestCase(TestCategories),
-                unittest.TestLoader().loadTestsFromTestCase(TestEntities),
-                unittest.TestLoader().loadTestsFromTestCase(TestResource),
+            unittest.TestLoader().loadTestsFromTestCase(TestHeaderValues),
+            unittest.TestLoader().loadTestsFromTestCase(TestCategories),
+            unittest.TestLoader().loadTestsFromTestCase(TestEntities),
+            unittest.TestLoader().loadTestsFromTestCase(TestResource),
         ])
 
 

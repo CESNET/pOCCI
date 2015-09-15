@@ -17,7 +17,7 @@ messagetype = 'categories'
 messagetypes = ['categories', 'entities', 'resource']
 
 
-def usage(name = __file__):
+def usage(name=__file__):
     print '%s [OPTIONS]\n\
 \n\
 OPTIONS:\n\
@@ -31,7 +31,7 @@ OCCI-TYPE: %s\n\
 ' % (os.path.basename(name), ', '.join(messagetypes))
 
 
-def read_input(strip = False):
+def read_input(strip=False):
     for line in sys.stdin:
         if strip:
             yield line.rstrip('\n\r')
@@ -77,9 +77,9 @@ def main(argv=sys.argv[1:]):
 
     if re.match(r'text/occi(;.*)?$', inputmime):
         body = None
-        headers = list(read_input(strip = False))
+        headers = list(read_input(strip=False))
     else:
-        body = list(read_input(strip = True))
+        body = list(read_input(strip=True))
         headers = None
 
     try:

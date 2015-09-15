@@ -1,11 +1,11 @@
-import json, re
-import sys, time
+import re
+import sys
+import time
 import urlparse
 
 from occi_libs import *
 from occi_curl import occi_curl
 import occi
-import render
 
 
 renderer = None
@@ -34,7 +34,7 @@ class Test:
 
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         return [False, ['Not implemented']]
 
 
@@ -42,7 +42,7 @@ class Test:
     def get_categories(self, err_msg):
         check_parse = True
 
-        body, response_headers, http_status, content_type = occi_curl(mimetype = occi_config['mimetype.big'])
+        body, response_headers, http_status, content_type = occi_curl(mimetype=occi_config['mimetype.big'])
 
         try:
             categories = renderer_big.parse_categories(body, response_headers)
@@ -78,7 +78,7 @@ class Test:
 
 
     @classmethod
-    def pretest_http_status(self, http_ok_status, err_msg, force = False):
+    def pretest_http_status(self, http_ok_status, err_msg, force=False):
         check_pretest = True
         check_categories = True
         body = None
@@ -120,7 +120,7 @@ def check_content_type(content_type):
         return [False, ['Wrong Content-Type in response']]
 
 
-def check_requested_content_type(content_type, big = False, headers = False):
+def check_requested_content_type(content_type, big=False, headers=False):
     if big:
         requested = occi_config['mimetype.big']
     elif headers:
@@ -148,7 +148,7 @@ def match_category(category, filter):
     return True
 
 
-def check_body_entities(body, headers, err_msg = []):
+def check_body_entities(body, headers, err_msg=[]):
     try:
         entities = renderer.parse_locations(body, headers)
     except occi.ParseError as pe:
@@ -167,22 +167,22 @@ class CORE_DISCOVERY001(Test):
     objective = 'Retrieving all OCCI Categories supported by the OCCI Server'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         check_cat = False
 
         err_msg = []
 
-        body, response_headers, http_status, content_type, check_pretest = Test.pretest_http_status("200 OK", err_msg, force = True)
+        body, response_headers, http_status, content_type, check_pretest = Test.pretest_http_status("200 OK", err_msg, force=True)
 
         check_ct, tmp_err_msg = check_content_type(content_type)
         err_msg += tmp_err_msg
 
-        check_rct, tmp_err_msg = check_requested_content_type(content_type, big = True)
+        check_rct, tmp_err_msg = check_requested_content_type(content_type, big=True)
         err_msg += tmp_err_msg
 
         count = 0
         for category in required_categories:
-            if Test.search_category(category) != None:
+            if Test.search_category(category) is not None:
                 count += 1
 
         if count == len(required_categories):
@@ -197,7 +197,7 @@ class CORE_DISCOVERY002(Test):
     objective = 'Retrieving the OCCI Categories with an OCCI Category filter from the OCCI Server'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
         filtered_categories = []
 
@@ -217,7 +217,7 @@ class CORE_DISCOVERY002(Test):
         cat_in.append('Content-Type: text/occi')
         cat_in += renderer_httpheaders.render_category(filter)[1]
 
-        body, response_headers, http_status, content_type = occi_curl(headers = cat_in)
+        body, response_headers, http_status, content_type = occi_curl(headers=cat_in)
 
         check_ct, err_msg = check_content_type(content_type)
 
@@ -257,7 +257,7 @@ class CORE_CREATE001(Test):
     objective = 'Create an OCCI Resource'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
 
         body, response_headers, http_status, content_type, check_pretest = Test.pretest_http_status("200 OK", err_msg)
@@ -271,7 +271,7 @@ class CORE_CREATE001(Test):
 
         if kind:
             for item in ['location', 'term', 'scheme']:
-                if not item in kind.keys():
+                if item not in kind.keys():
                     err_msg.append('No %s in OCCI Kind' % item)
                     return [False, err_msg]
         else:
@@ -279,7 +279,7 @@ class CORE_CREATE001(Test):
             return [False, err_msg]
 
         new_cat_s, new_cat_h = renderer.render_resource(
-            categories = [
+            categories=[
                 occi.Category({
                     'term': 'compute',
                     'scheme': 'http://schemas.ogf.org/occi/infrastructure#',
@@ -287,7 +287,7 @@ class CORE_CREATE001(Test):
                     'title': 'titulek',
                 }),
             ],
-            attributes = [
+            attributes=[
                 occi.Attribute({
                     'name': 'occi.core.id',
                     'value': gen_id('Compute'),
@@ -307,7 +307,7 @@ class CORE_CREATE001(Test):
             ]
         )
 
-        body, response_headers, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, post=new_cat_s, custom_request = 'POST')
+        body, response_headers, http_status, content_type = occi_curl(url=kind['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, post=new_cat_s, custom_request='POST')
         Test.clear_categories()
         check_create, tmp_err_msg = check_http_status("201 Created", http_status)
         err_msg += tmp_err_msg
@@ -318,7 +318,7 @@ class CORE_CREATE001(Test):
         return [check_create, err_msg]
 
 
-def CORE_CREATE006():
+class CORE_CREATE006(Test):
     """Add an OCCI Mixin definition
 
     Unsupported test: Not implemented.
@@ -330,11 +330,11 @@ def CORE_CREATE006():
     objective = 'Add an OCCI mixin definition'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
         new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; location: "/mixin/resource_tpl/extra_large/", rel: "http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
         #new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http:/example.com/occi/something_else#mixin"; location="/my_stuff/"'
-        body, response_headers, http_status, content_type = occi_curl(url = '/-/', headers = ['Content-Type: text/plain'], post = new_mixin)
+        body, response_headers, http_status, content_type = occi_curl(url='/-/', headers=['Content-Type: text/plain'], post=new_mixin)
         check_create, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
 
@@ -346,7 +346,6 @@ def CORE_CREATE006():
 
 def CORE_READ_URL(filter):
     err_msg = []
-    url = None
     check_200ok = False
     check = True
 
@@ -367,7 +366,7 @@ def CORE_READ_URL(filter):
         return [False, err_msg, None]
 
     for category in [mixin]:
-        body, response_headers, http_status, content_type = occi_curl(url = category['location'])
+        body, response_headers, http_status, content_type = occi_curl(url=category['location'])
         try:
             locations = renderer.parse_locations(body, response_headers)
         except occi.ParseError as pe:
@@ -387,12 +386,12 @@ class CORE_READ001(Test):
     objective = 'Retrieve the URLs of all OCCI Entities belonging to an OCCI Kind or OCCI Mixin'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         check, err_msg, urls = CORE_READ_URL(occi_config['occi.tests.category'])
         return [check, err_msg]
 
 
-def CORE_READ002_COMMON(category, links = []):
+def CORE_READ002_COMMON(category, links=[]):
     check_url = True
     check_200ok = False
     err_msg = []
@@ -401,7 +400,7 @@ def CORE_READ002_COMMON(category, links = []):
     headers.append('Content-Type: text/occi')
     headers += renderer_httpheaders.render_category(occi.Category({'term': category['term'], 'scheme': category['scheme'], 'class': category['class']}))[1]
 
-    body, response_headers, http_status, content_type = occi_curl(url = category['location'], headers = headers)
+    body, response_headers, http_status, content_type = occi_curl(url=category['location'], headers=headers)
     try:
         locations = renderer.parse_locations(body, response_headers)
     except occi.ParseError as pe:
@@ -425,7 +424,7 @@ class CORE_READ002(Test):
     objective = 'Retrieve the URLs of the OCCI Entities belonging to an OCCI Kind or OCCI Mixin and related to an OCCI Category filter'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
         check = True
 
@@ -442,7 +441,7 @@ class CORE_READ002(Test):
         #kind = Test.search_category({'class': 'kind'})
         for category in [mixin]:
             filter = Test.search_category({'rel': '%s%s' % (category['scheme'], category['term'])})
-            check_read, tmp_err_msg = CORE_READ002_COMMON(category = filter)
+            check_read, tmp_err_msg = CORE_READ002_COMMON(category=filter)
             err_msg += tmp_err_msg
 
         return [check and check_read, err_msg]
@@ -477,7 +476,7 @@ class CORE_DELETE001(Test):
     objective = 'Delete an OCCI Entity'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
 
         check, err_msg, tmp_urls = CORE_READ_URL(occi_config['occi.tests.category'])
@@ -488,19 +487,19 @@ class CORE_DELETE001(Test):
 
         url = urlparse.urlparse(tmp_urls[0]).path
 
-        body, response_headers, http_status, content_type = occi_curl(url = url)
+        body, response_headers, http_status, content_type = occi_curl(url=url)
         check_exist1, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
 
-        body, response_headers, http_status, content_type = occi_curl(url = url, custom_request = 'DELETE')
+        body, response_headers, http_status, content_type = occi_curl(url=url, custom_request='DELETE')
         check_delete1, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
 
         # It takes some time to delete machine, second delete action force it
         # Not testing result of the operation (various backends have different behaviour)
-        body, response_headers, http_status, content_type = occi_curl(url = url, custom_request = 'DELETE')
+        body, response_headers, http_status, content_type = occi_curl(url=url, custom_request='DELETE')
 
-        body, response_headers, http_status, content_type = occi_curl(url = url)
+        body, response_headers, http_status, content_type = occi_curl(url=url)
         check_exist2, tmp_err_msg = check_http_status("404 Not Found", http_status)
         err_msg += tmp_err_msg
 
@@ -524,7 +523,7 @@ class CORE_UPDATE001(Test):
     objective = 'Full update of a specific OCCI Entity'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
         check_response = True
 
@@ -535,7 +534,7 @@ class CORE_UPDATE001(Test):
         #print urls
         url = urls[0]
 
-        body, response_headers, http_status, content_type = occi_curl(base_url = url, url = '')
+        body, response_headers, http_status, content_type = occi_curl(base_url=url, url='')
 
         categories, links, attributes = renderer.parse_resource(body, response_headers)
 
@@ -545,7 +544,7 @@ class CORE_UPDATE001(Test):
         for a in attributes:
             if a['name'] == 'occi.core.title':
                 break
-        if a == None or a['name'] != 'occi.core.title':
+        if a is None or a['name'] != 'occi.core.title':
             a = occi.Attribute({'name': 'occi.core.title', 'value': gen_id('c_pOCCI')})
             attributes.append(a)
         else:
@@ -553,7 +552,7 @@ class CORE_UPDATE001(Test):
         body, headers = renderer.render_resource(categories, links, attributes)
 
         # update
-        body, response_headers, http_status, content_type = occi_curl(base_url = url, url = '', headers = ['Content-Type: %s' % occi_config['mimetype']] + headers, post = body, custom_request = 'PUT')
+        body, response_headers, http_status, content_type = occi_curl(base_url=url, url='', headers=['Content-Type: %s' % occi_config['mimetype']] + headers, post=body, custom_request='PUT')
         #print body
         #print http_status
         Test.clear_categories()
@@ -619,14 +618,14 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
         return [False, err_msg]
 
     for item in ['location', 'term', 'scheme']:
-        if not item in kind.keys():
+        if item not in kind.keys():
             has_kind = False
             err_msg.append('No %s in OCCI Kind' % item)
 
     if 'attributes' in kind:
         all_attributes += kind['attributes']
 
-    if additional_attributes != None:
+    if additional_attributes is not None:
         all_attributes += additional_attributes
 
     #print 'list of attributes: %s' % repr(all_attributes)
@@ -636,7 +635,7 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
 
     new_cat_s, new_cat_h = renderer.render_resource(categories, None, attributes.values())
 
-    body, response_request, http_status, content_type = occi_curl(url = kind['location'], headers = ['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, post=new_cat_s, custom_request = 'POST')
+    body, response_request, http_status, content_type = occi_curl(url=kind['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, post=new_cat_s, custom_request='POST')
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 
@@ -644,7 +643,7 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
     err_msg += tmp_err_msg
 
     entities = check_body_entities(body, response_request, err_msg)
-    check_br = (entities != None and entities)
+    check_br = (entities is not None and entities)
 
     check_rct, tmp_err_msg = check_requested_content_type(content_type)
     err_msg += tmp_err_msg
@@ -654,7 +653,7 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
 
     Test.clear_categories()
 
-    body, response_headers, http_status, content_type = occi_curl(url = kind['location'])
+    body, response_headers, http_status, content_type = occi_curl(url=kind['location'])
     entities2 = check_body_entities(body, response_headers, err_msg)
     # check if the entity is really created (just check the first: entities[0])
     check_created = False
@@ -673,7 +672,7 @@ class INFRA_CREATE001(Test):
     objective = 'Create an OCCI Compute Resource'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
         category = occi.Category({'term': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
 
@@ -688,7 +687,7 @@ class INFRA_CREATE002(Test):
     objective = 'Create an OCCI Storage Resource'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
         category = occi.Category({'term': 'storage', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
         additional_attributes = [
@@ -707,7 +706,7 @@ class INFRA_CREATE003(Test):
     objective = 'Create an OCCI Network Resource'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
         category = occi.Category({'term': 'network', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
         additional_attributes = [occi.AttributeDefinition({"name": "occi.core.title", "required": True})]
@@ -723,9 +722,8 @@ class INFRA_CREATE004(Test):
     objective = 'Create an OCCI Compute Resource using an OS and resource template'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         err_msg = []
-        has_tpl = True
         categories = [
             occi.Category({'term': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
         ]
@@ -737,7 +735,6 @@ class INFRA_CREATE004(Test):
         os_tpl = Test.search_category({'class': 'mixin', 'rel': 'http://schemas.ogf.org/occi/infrastructure#os_tpl'})
         #print os_tpl
         if not os_tpl:
-            has_tpl = False
             err_msg.append('No OS template found')
             return [False, err_msg]
 
@@ -761,7 +758,7 @@ class INFRA_CREATE005(Test):
     objective = 'Create an OCCI Compute Resource with an OCCI Storagelink and an OCCI Networkinterface'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         network_links = []
         storage_links = []
         err_msg = []
@@ -776,8 +773,8 @@ class INFRA_CREATE005(Test):
         if not check_pretest:
             return [False, err_msg]
 
-        storage = Test.search_category({'term': 'storage', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
-        network = Test.search_category({'term': 'network', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+        storage = Test.search_category({'term': 'storage', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
+        network = Test.search_category({'term': 'network', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
         check_read, tmp_err_msg = CORE_READ002_COMMON(category=storage, links=storage_links)
         if not check_read:
             check = False
@@ -797,14 +794,14 @@ class INFRA_CREATE005(Test):
                 err_msg.append('No network found')
             return [False, err_msg]
 
-        compute = Test.search_category({'term': 'compute', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+        compute = Test.search_category({'term': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
 
         new_compute = 'Category: %s; scheme="%s"; class="%s"\n\r\
 Link: <%s>; rel="%s"; category="%s"\n\r\
 Link: <%s>; rel="%s"; category="%s"\n\r\
 ' % (compute['term'], compute['scheme'], compute['class'], storage_links[0], storage['scheme'] + storage['term'], 'http://schemas.ogf.org/occi/infrastructure#storagelink', network_links[0], network['scheme'] + network['term'], 'http://schemas.ogf.org/occi/infrastructure#networkinterface')
 
-        body, response_headers, http_status, content_type = occi_curl(url = compute['location'], headers = ['Content-Type: text/plain'], post = new_compute)
+        body, response_headers, http_status, content_type = occi_curl(url=compute['location'], headers=['Content-Type: text/plain'], post=new_compute)
         check_create, tmp_err_msg = check_http_status("201 Created", http_status)
         err_msg += tmp_err_msg
 
@@ -834,8 +831,8 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
     if not check_pretest:
         return [False, err_msg]
 
-    compute = Test.search_category({'term':'compute', 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
-    resource = Test.search_category({'term':resource_name, 'scheme':'http://schemas.ogf.org/occi/infrastructure#'})
+    compute = Test.search_category({'term': 'compute', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
+    resource = Test.search_category({'term': resource_name, 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'})
 
     check_read, tmp_err_msg = CORE_READ002_COMMON(category=compute, links=compute_links)
     if not check_read:
@@ -857,7 +854,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
             err_msg.append('No compute found')
         return [False, err_msg]
 
-    resourcelink = Test.search_category({'term':'%s%s' % (resource_name, resource_type), 'scheme':'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
+    resourcelink = Test.search_category({'term': '%s%s' % (resource_name, resource_type), 'scheme': 'http://schemas.ogf.org/occi/infrastructure#', 'class': 'kind'})
     if not resourcelink:
         err_msg.append('No %slink kind found' % resource_name)
         return [False, err_msg]
@@ -874,14 +871,14 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
     #print attributes
 
     new_resourcelink_s, new_resourcelink_h = renderer.render_resource(
-        categories = [
-            occi.Category({'term':  resourcelink['term'], 'scheme': resourcelink['scheme'], 'class': resourcelink['class']}),
+        categories=[
+            occi.Category({'term': resourcelink['term'], 'scheme': resourcelink['scheme'], 'class': resourcelink['class']}),
         ],
-        links = None,
-        attributes = attributes.values()
+        links=None,
+        attributes=attributes.values()
     )
 
-    body, response_headers, http_status, content_type = occi_curl(url = resourcelink['location'], headers = ['Content-Type: %s' % occi_config['mimetype']] + new_resourcelink_h, post = new_resourcelink_s, custom_request = 'POST')
+    body, response_headers, http_status, content_type = occi_curl(url=resourcelink['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_resourcelink_h, post=new_resourcelink_s, custom_request='POST')
 
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
@@ -894,7 +891,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
     resource_link = resource_links[0]
     resource_link_rel = urlparse.urlparse(resource_link).path
 
-    body, response_headers, http_status, content_type = occi_curl(base_url = compute_links[0], url = '')
+    body, response_headers, http_status, content_type = occi_curl(base_url=compute_links[0], url='')
 
     try:
         result_categories, result_links, result_attributes = renderer.parse_resource(body, response_headers)
@@ -924,7 +921,7 @@ class INFRA_CREATE006(Test):
     objective = 'Create an OCCI Storagelink between an existing OCCI Compute and OCCI Storage Resource'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         return INFRA_CREATE_LINK('storage', 'link')
 
 
@@ -936,5 +933,5 @@ class INFRA_CREATE007(Test):
     objective = 'Create an OCCI Networkinterface between an existing OCCI Compute and OCCI Network Resource'
 
     @classmethod
-    def test(self = None):
+    def test(self=None):
         return INFRA_CREATE_LINK('network', 'interface')

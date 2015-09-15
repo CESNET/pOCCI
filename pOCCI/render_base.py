@@ -3,7 +3,7 @@ import urlparse
 import occi
 
 
-def check_url(body, scheme = False, host = False, path = False):
+def check_url(body, scheme=False, host=False, path=False):
     """Check validity of URL.
 
     :param string body: validated URL
@@ -51,7 +51,7 @@ class Renderer:
         """
 
 
-    def render_resource(self, categories, links = None, attributes = None):
+    def render_resource(self, categories, links=None, attributes=None):
         """Render OCCI Resource instance
 
         :param occi.Category categories[]: OCCI Category array
@@ -60,7 +60,7 @@ class Renderer:
         :return: render result
         :rtype: [string, string[]]
         """
-        if categories == None or not categories:
+        if categories is None or not categories:
             raise occi.RenderError('Category required')
 
 

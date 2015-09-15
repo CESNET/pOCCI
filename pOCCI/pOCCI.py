@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
 import getopt
-import json, re
-import sys, time
+import re
+import sys
+import time
 import os
 
 from occi_libs import *
 from CORE import *
-from occi_curl import occi_curl
 import occi
 import version
 
@@ -39,7 +39,7 @@ tests_skipped = set([
 ])
 
 
-def usage(name = __file__):
+def usage(name=__file__):
     print "%s [OPTIONS]\n\
 \n\
 OPTIONS:\n\
@@ -73,7 +73,7 @@ def main(argv=sys.argv[1:]):
         sys.exit(2)
 
     try:
-        opts, args = getopt.getopt(argv,"ha:c:e:f:k:lm:p:P:St:u:vV",["help", "auth-type=", "cert=", "endpoint=", "format=", "ignore-ssl", "key=", "list", "mime-type=", "passphrase=", "password=", "tests=", "url=", "user=", "verbose", "version"])
+        opts, args = getopt.getopt(argv, "ha:c:e:f:k:lm:p:P:St:u:vV", ["help", "auth-type=", "cert=", "endpoint=", "format=", "ignore-ssl", "key=", "list", "mime-type=", "passphrase=", "password=", "tests=", "url=", "user=", "verbose", "version"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -92,8 +92,8 @@ def main(argv=sys.argv[1:]):
         elif opt in ["-k", "--key"]:
             occi_config["key"] = arg
         elif opt in ["-l", "--list"]:
-            print '\n'.join(sorted(tests_definitions.keys()));
-            sys.exit();
+            print '\n'.join(sorted(tests_definitions.keys()))
+            sys.exit()
         elif opt in ["-m", "--mime-type"]:
             occi_config['mimetype'] = arg
         elif opt in ["-P", "--passphrase"]:
@@ -137,7 +137,7 @@ def main(argv=sys.argv[1:]):
         if test in tests_definitions.keys():
             start_time = time.time()
             try:
-               result, err_msg = tests_definitions[test].test()
+                result, err_msg = tests_definitions[test].test()
             except occi.Error as oe:
                 if occi_config['curlverbose']:
                     raise oe

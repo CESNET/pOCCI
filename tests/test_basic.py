@@ -93,7 +93,7 @@ class TestRender(unittest.TestCase):
         assert(self.plain)
         assert(self.http)
         assert(self.json)
-        assert(self.err == None)
+        assert(self.err is None)
 
 
     def testRender(self):

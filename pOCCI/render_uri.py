@@ -2,7 +2,7 @@ import occi
 from render_base import Renderer, check_url
 
 
-class URIListRenderer:
+class URIListRenderer(Renderer):
     """URI list OCCI Renderer
 
     Empty array is always returned as headers during rendering.
@@ -20,7 +20,7 @@ class URIListRenderer:
         raise occi.RenderError('This method can\'t be used with URI list rendering.')
 
 
-    def render_resource(self, categories, links = None, attributes = None):
+    def render_resource(self, categories, links=None, attributes=None):
         """Render OCCI Resource instance
 
         This method can't be used in URI list rendering.
@@ -67,7 +67,7 @@ class URIListRenderer:
         """
         locations = []
         for uri in body:
-            if not check_url(uri, scheme = True, host = True):
+            if not check_url(uri, scheme=True, host=True):
                 raise occi.ParseError('Invalid URI in OCCI Entity collection', uri)
             locations.append(uri)
 

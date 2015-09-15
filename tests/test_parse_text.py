@@ -42,7 +42,7 @@ class TestCategories(unittest.TestCase):
     def testCategoriesOK(self):
         """Parse text body with category collection, then render the parsed result and compare with the original text.
         """
-        for i in range(0,2):
+        for i in range(0, 2):
             categories = self.renderer.parse_categories(self.categories[i], None)
 
             assert(categories)
@@ -60,25 +60,25 @@ class TestCategories(unittest.TestCase):
 
     def testCategoriesDuplicity(self):
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[3], None)
+            self.renderer.parse_categories(self.categories[3], None)
 
 
     def testCategoriesMissingFields(self):
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[4], None)
+            self.renderer.parse_categories(self.categories[4], None)
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[5], None)
+            self.renderer.parse_categories(self.categories[5], None)
 
 
     def testCategoriesError(self):
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[6], None)
+            self.renderer.parse_categories(self.categories[6], None)
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[7], None)
+            self.renderer.parse_categories(self.categories[7], None)
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[8], None)
+            self.renderer.parse_categories(self.categories[8], None)
         with self.assertRaises(occi.ParseError):
-            categories = self.renderer.parse_categories(self.categories[9], None)
+            self.renderer.parse_categories(self.categories[9], None)
 
 
 class TestEntities(unittest.TestCase):
@@ -113,12 +113,12 @@ class TestEntities(unittest.TestCase):
 
     def testEntitiesErrorFormat(self):
         with self.assertRaises(occi.ParseError):
-            entities = self.renderer.parse_locations(self.entities[1], None)
+            self.renderer.parse_locations(self.entities[1], None)
 
 
     def testEntitiesErrorURI(self):
         with self.assertRaises(occi.ParseError):
-            entities = self.renderer.parse_locations(self.entities[2], None)
+            self.renderer.parse_locations(self.entities[2], None)
 
 
 class TestResource(unittest.TestCase):
@@ -139,7 +139,7 @@ class TestResource(unittest.TestCase):
 
 
     def testResourceOK(self):
-        for i in range(0,1):
+        for i in range(0, 1):
             categories, links, attributes = self.renderer.parse_resource(self.data[i], None)
 
             assert(categories)
@@ -160,13 +160,13 @@ class TestResource(unittest.TestCase):
                 assert(attributes[0]['value'] == '103')
                 assert(attributes[1]['value'] == 'one-103')
                 assert(attributes[3]['value'] == 1)
-                assert(re.match(r'/compute/103', links[0]['uri']) != None)
+                assert(re.match(r'/compute/103', links[0]['uri']) is not None)
             elif i == 1:
                 assert(categories[0]['term'] == 'compute')
                 assert(attributes[0]['value'] == 'i-375ab99b')
                 assert(attributes[1]['value'] == 'x64')
                 assert(attributes[3]['value'] == 0.613)
-                assert(re.match(r'/compute/i-375ab99b', links[0]['uri']) != None)
+                assert(re.match(r'/compute/i-375ab99b', links[0]['uri']) is not None)
 
             # rendering
             body, headers = self.renderer.render_resource(categories, links, attributes)
@@ -202,9 +202,9 @@ class TestResource(unittest.TestCase):
 
 def suite():
         return unittest.TestSuite([
-                unittest.TestLoader().loadTestsFromTestCase(TestCategories),
-                unittest.TestLoader().loadTestsFromTestCase(TestEntities),
-                unittest.TestLoader().loadTestsFromTestCase(TestResource),
+            unittest.TestLoader().loadTestsFromTestCase(TestCategories),
+            unittest.TestLoader().loadTestsFromTestCase(TestEntities),
+            unittest.TestLoader().loadTestsFromTestCase(TestResource),
         ])
 
 

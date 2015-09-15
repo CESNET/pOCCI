@@ -6,12 +6,12 @@ class Error(Exception):
 class ParseError(Error):
     """Parse exception."""
 
-    def __init__(self, value, body = None):
+    def __init__(self, value, body=None):
         self.value = value
         self.body = body
 
     def __str__(self):
-        if self.body != None:
+        if self.body is not None:
             return str(self.value) + ' (%s)' % str(self.body)
         else:
             return str(self.value)
@@ -52,7 +52,7 @@ class Attribute(Generic):
 
 
     def validate(self):
-        return 'name' in self and 'value' in self;
+        return 'name' in self and 'value' in self
 
 
 class AttributeDefinition(Generic):
@@ -87,7 +87,7 @@ class Category(Generic):
 
 
     def validate(self):
-        return 'term' in self and 'scheme' in self and 'class' in self;
+        return 'term' in self and 'scheme' in self and 'class' in self
 
 
 class Link(Category):

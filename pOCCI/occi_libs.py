@@ -39,7 +39,7 @@ def occi_format(results):
                 count_f += 1
 
             r['status'] = result2str(r['status'])
-        
+
         if 'running_time' in r:
             r['running_time'] = round(r['running_time'], 3)
 
@@ -117,7 +117,7 @@ def occi_print(results, outputformat):
         print >> sys.stderr, 'Only "plain", "json" output types are possible'
 
 
-def occi_test(name, objective, status, err_msg, running_time = None):
+def occi_test(name, objective, status, err_msg, running_time=None):
     test = collections.OrderedDict()
     test['name'] = name
     if objective is not None:
@@ -163,7 +163,7 @@ def occi_config_init():
             occi_config[key] = eval(value)
 
     for key, value in occi_defaults.iteritems():
-        if not key in occi_config:
+        if key not in occi_config:
             occi_config[key] = value
 
     return True

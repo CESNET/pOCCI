@@ -4,7 +4,6 @@ import occi
 import pycurl
 import re
 import sys
-import urllib
 if sys.version_info >= (3,):
     from StringIO import BytesIO
 else:
@@ -12,15 +11,19 @@ else:
 
 # Helper callback function
 header = []
+
+
 def get_header2(buff):
-	global header
-	header.append(buff)
+    global header
+    header.append(buff)
+
+
 def get_header3(buff):
-	global header
-	header.append(buff.decode('iso-8859-1'))
+    global header
+    header.append(buff.decode('iso-8859-1'))
 
 
-def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, user = None, passwd = None, mimetype = None, headers = [], post = '', custom_request = ''):
+def occi_curl(base_url=None, url='/-/', authtype=None, ignoressl=None, user=None, passwd=None, mimetype=None, headers=[], post='', custom_request=''):
     """Send HTTP request
 
     :param string base_url: OCCI server URL (default: from config)
@@ -29,7 +32,7 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
     :param bool ignoressl: ignore SSL problems (default: from config)
     :param string user: user name for 'basic' auth (default: from config)
     :param string passwd: password for 'basic' auth (default: from config)
-    :param string mimetype: accepted mimetype (empty string = '\*/\*')
+    :param string mimetype: accepted mimetype (empty string='\*/\*')
     :param string headers[]: HTTP Headers
     :param string post: HTTP Body
     :param string custom_request: HTTP Request type (default: 'GET' or 'POST')
@@ -39,17 +42,17 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
     """
     global header
 
-    if base_url == None:
+    if base_url is None:
         base_url = occi_config['url']
-    if authtype == None:
+    if authtype is None:
         authtype = occi_config['authtype']
-    if ignoressl == None:
+    if ignoressl is None:
         ignoressl = occi_config['ignoressl']
-    if user == None:
+    if user is None:
         user = occi_config['user']
-    if passwd == None:
+    if passwd is None:
         passwd = occi_config['passwd']
-    if mimetype == None:
+    if mimetype is None:
         mimetype = occi_config['mimetype']
     curlverbose = occi_config['curlverbose']
 
@@ -60,15 +63,15 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, str(base_url + url))
     curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
-    
+
     # Disable check of SSL certificate
     if ignoressl:
-        curl.setopt(pycurl.SSL_VERIFYPEER, 0)   
+        curl.setopt(pycurl.SSL_VERIFYPEER, 0)
         curl.setopt(pycurl.SSL_VERIFYHOST, 0)
 
     if 'capath' in occi_config and occi_config['capath']:
         curl.setopt(pycurl.CAPATH, occi_config['capath'])
-    
+
     if 'cachain' in occi_config and occi_config['cachain']:
         curl.setopt(pycurl.CAINFO, occi_config['cachain'])
 
@@ -83,7 +86,7 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
             curl.setopt(pycurl.SSLKEY, occi_config['key'])
         if 'passphrase' in occi_config and occi_config['passphrase']:
             curl.setopt(pycurl.SSLCERTPASSWD, occi_config['passphrase'])
-    
+
     # Verbose mode
     curl.setopt(pycurl.VERBOSE, curlverbose)
 
@@ -132,8 +135,8 @@ def occi_curl(base_url = None, url = '/-/', authtype = None, ignoressl = None, u
     h = {}
     for item in header:
         if re.match(r'.*:.*', item):
-            key=re.sub(r':.*', r'', item.rstrip())
-            value=re.sub(r'([^:]*):\s*(.*)', r'\2', item.rstrip())
+            key = re.sub(r':.*', r'', item.rstrip())
+            value = re.sub(r'([^:]*):\s*(.*)', r'\2', item.rstrip())
 
             h[key] = value
         else:
