@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import ConfigParser
+import collections
 
 import occi
 import render
@@ -65,7 +66,7 @@ def occi_print(results, outputformat):
             if 'reason' in r:
                 print >> sys.stderr, r['reason']
     elif outputformat == 'json':
-        print json.dumps(results, indent=4, sort_keys=True)
+        print json.dumps(results, indent=4)
     elif outputformat in ['html', 'htmltable']:
         if outputformat == 'html':
             print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">\n\
@@ -114,9 +115,11 @@ def occi_print(results, outputformat):
         print >> sys.stderr, 'Only "plain", "json" output types are possible'
 
 
-def occi_test(name, status, err_msg, running_time = None):
-    test = {}
+def occi_test(name, objective, status, err_msg, running_time = None):
+    test = collections.OrderedDict()
     test['name'] = name
+    if objective is not None:
+        test['objective'] = objective
     test['status'] = status
     if running_time is not None:
         test['running_time'] = running_time

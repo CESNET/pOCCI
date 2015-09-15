@@ -144,8 +144,9 @@ def main(argv=sys.argv[1:]):
                 else:
                     print '%s error: %s' % (test, str(oe))
                     sys.exit(2)
+            objective = tests_definitions[test].objective
             running_time = time.time() - start_time
-            results.append(occi_test(test, result, err_msg, running_time))
+            results.append(occi_test(test, objective, result, err_msg, running_time))
 
     results = occi_format(results)
     occi_print(results, occi_config['outputformat'])

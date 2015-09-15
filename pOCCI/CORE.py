@@ -29,7 +29,7 @@ example_attributes = {
 class Test:
     """Base class for OCCI compliance tests"""
 
-    description = None
+    objective = None
     categories = []
 
 
@@ -164,7 +164,7 @@ def gen_id(prefix):
 
 
 class CORE_DISCOVERY001(Test):
-    description = 'Checks MIME type, Content-Type and required categories.'
+    objective = 'Checks MIME type, Content-Type and required categories.'
 
     @classmethod
     def test(self = None):
@@ -253,7 +253,7 @@ class CORE_CREATE001(Test):
        pOCCI -t 'CORE/CREATE/001'
     """
 
-    description = 'Create an OCCI resource'
+    objective = 'Create an OCCI resource'
 
     @classmethod
     def test(self = None):
@@ -326,7 +326,7 @@ def CORE_CREATE006():
        pOCCI -t 'CORE/CREATE/006'
     """
 
-    description = 'Add an OCCI mixin definition'
+    objective = 'Add an OCCI mixin definition'
 
     @classmethod
     def test(self = None):
@@ -517,7 +517,7 @@ class CORE_UPDATE001(Test):
     * https://github.com/EGI-FCTF/rOCCI-server/issues/128: parse error
     """
 
-    description = 'Full update of a specific OCCI Entity'
+    objective = 'Full update of a specific OCCI Entity'
 
     @classmethod
     def test(self = None):
