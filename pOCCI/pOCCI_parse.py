@@ -25,6 +25,7 @@ OPTIONS:\n\
   -i, --input-mime MIME-TYPE .... input mime-type [text/plain]\n\
   -o, --output-mime MIME-TYPE ... output mime-type [text/plain]\n\
   -t, --type OCCI-TYPE .......... OCCI message type [categories]\n\
+  -V, --version ................. print version information\n\
 \n\
 MIME-TYPE: text/plain, text/occi, text/uri-list\n\
 OCCI-TYPE: %s\n\
@@ -46,7 +47,7 @@ def main(argv=sys.argv[1:]):
     occi_renderer = None
 
     try:
-        opts, args = getopt.getopt(argv, 'hi:o:t:', ['--help', '--input-mime=', '--output-mime=', 'type='])
+        opts, args = getopt.getopt(argv, 'hi:o:t:V', ['--help', '--input-mime=', '--output-mime=', 'type=', 'version'])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -60,6 +61,9 @@ def main(argv=sys.argv[1:]):
             outputmime = arg
         elif opt in ['-t', '--type']:
             messagetype = arg
+        elif opt in ["-V", "--version"]:
+            print version.__version__
+            sys.exit()
 
     if messagetype not in messagetypes:
         print >> sys.stderr, 'OCCI message type expected: %s' % ', '.join(messagetypes)
