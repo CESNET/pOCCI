@@ -164,7 +164,7 @@ def gen_id(prefix):
 
 
 class CORE_DISCOVERY001(Test):
-    objective = 'Checks MIME type, Content-Type and required categories.'
+    objective = 'Retrieving all OCCI Categories supported by the OCCI Server'
 
     @classmethod
     def test(self = None):
@@ -194,6 +194,7 @@ class CORE_DISCOVERY001(Test):
 
 
 class CORE_DISCOVERY002(Test):
+    objective = 'Retrieving the OCCI Categories with an OCCI Category filter from the OCCI Server'
 
     @classmethod
     def test(self = None):
@@ -253,7 +254,7 @@ class CORE_CREATE001(Test):
        pOCCI -t 'CORE/CREATE/001'
     """
 
-    objective = 'Create an OCCI resource'
+    objective = 'Create an OCCI Resource'
 
     @classmethod
     def test(self = None):
@@ -383,6 +384,7 @@ def CORE_READ_URL(filter):
 
 
 class CORE_READ001(Test):
+    objective = 'Retrieve the URLs of all OCCI Entities belonging to an OCCI Kind or OCCI Mixin'
 
     @classmethod
     def test(self = None):
@@ -420,6 +422,7 @@ def CORE_READ002_COMMON(category, links = []):
 
 
 class CORE_READ002(Test):
+    objective = 'Retrieve the URLs of the OCCI Entities belonging to an OCCI Kind or OCCI Mixin and related to an OCCI Category filter'
 
     @classmethod
     def test(self = None):
@@ -471,6 +474,7 @@ def get_attributes(attribute_definitions, attributes, err_msg):
 
 
 class CORE_DELETE001(Test):
+    objective = 'Delete an OCCI Entity'
 
     @classmethod
     def test(self = None):
@@ -666,6 +670,7 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
 
 
 class INFRA_CREATE001(Test):
+    objective = 'Create an OCCI Compute Resource'
 
     @classmethod
     def test(self = None):
@@ -680,6 +685,7 @@ class INFRA_CREATE001(Test):
 
 
 class INFRA_CREATE002(Test):
+    objective = 'Create an OCCI Storage Resource'
 
     @classmethod
     def test(self = None):
@@ -698,6 +704,7 @@ class INFRA_CREATE002(Test):
 
 
 class INFRA_CREATE003(Test):
+    objective = 'Create an OCCI Network Resource'
 
     @classmethod
     def test(self = None):
@@ -713,6 +720,7 @@ class INFRA_CREATE003(Test):
 
 
 class INFRA_CREATE004(Test):
+    objective = 'Create an OCCI Compute Resource using an OS and resource template'
 
     @classmethod
     def test(self = None):
@@ -749,6 +757,8 @@ class INFRA_CREATE005(Test):
 
     It can be called by pOCCI -t 'INFRA/CREATE/005'
     """
+
+    objective = 'Create an OCCI Compute Resource with an OCCI Storagelink and an OCCI Networkinterface'
 
     @classmethod
     def test(self = None):
@@ -911,6 +921,8 @@ class INFRA_CREATE006(Test):
     Opennebula requires running compute instance.
     """
 
+    objective = 'Create an OCCI Storagelink between an existing OCCI Compute and OCCI Storage Resource'
+
     @classmethod
     def test(self = None):
         return INFRA_CREATE_LINK('storage', 'link')
@@ -920,6 +932,8 @@ class INFRA_CREATE007(Test):
     """
     Opennebula requires running compute instance.
     """
+
+    objective = 'Create an OCCI Networkinterface between an existing OCCI Compute and OCCI Network Resource'
 
     @classmethod
     def test(self = None):
