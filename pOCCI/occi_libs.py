@@ -98,14 +98,18 @@ def occi_print(results, outputformat):
                 css = 'ok'
             elif r['status'] == 'FAIL':
                 css = 'fail'
+            objective = ''
+            if 'objective' in r:
+                objective = html_escape(r['objective'])
+            reason = ''
+            if reason in r:
+                reason = '\n'.join(r['reason'])
             print '    <tr class="%s">' % css
             print '        <td class="name">%s</td>' % html_escape(r['name'])
-            if 'objective' in r:
-                print '        <td class="objective">%s</td>' % html_escape(r['objective'])
+            print '        <td class="objective">%s</td>' % html_escape(objective)
             print '        <td class="time">%s</td>' % html_escape(r['running_time'])
             print '        <td class="%s">%s</td>' % (css, html_escape(r['status']))
-            if 'reason' in r:
-                print '        <td class="reason">%s</td>' % html_escape('\n'.join(r['reason']))
+            print '        <td class="reason">%s</td>' % html_escape(reason)
             print '    </tr>'
         if outputformat == 'html':
             print '</table>\n\
