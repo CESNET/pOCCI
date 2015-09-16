@@ -22,7 +22,7 @@ Example config file::
  url = 'https://example.com:11443'
  authtype = 'basic'
  ignoressl = True
- user = 'rocci'
+ user = 'oneadmin'
  passwd = 'good-password'
  mimetype = 'text/plain'
  curlverbose = False
@@ -30,8 +30,13 @@ Example config file::
  outputformat = 'json'
  connectiontimeout = 60
  timeout = 120
+ occi.tests.entity = {'occi.core.title': 'My Machine'}
 
-Run pOCCI
+Launch tests::
+
+ pOCCI
+
+See manual page for all options.
 
 OCCI Messages parser
 ====================
@@ -41,3 +46,4 @@ Example::
  echo 'Category: entity;scheme="http://schemas.ogf.org/occi/core#";class="kind"' | pOCCI-parse
 
  curl -u $user:$password -H 'Accept: text/plain' https://occi.example.com:11443/-/ | pOCCI-parse
+ curl -u $user:$password -H 'Accept: text/plain' https://occi.example.com:11443/compute/ | pOCCI-parse -t entities -o text/occi
