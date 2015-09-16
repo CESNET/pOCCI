@@ -102,7 +102,7 @@ def occi_print(results, outputformat):
             if 'objective' in r:
                 objective = html_escape(r['objective'])
             reason = ''
-            if reason in r:
+            if 'reason' in r:
                 reason = '\n'.join(r['reason'])
             print '    <tr class="%s">' % css
             print '        <td class="name">%s</td>' % html_escape(r['name'])
