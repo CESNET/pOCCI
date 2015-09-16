@@ -4,6 +4,7 @@ import occi
 import pycurl
 import re
 import sys
+import urlparse
 if sys.version_info >= (3,):
     from StringIO import BytesIO
 else:
@@ -21,6 +22,21 @@ def get_header2(buff):
 def get_header3(buff):
     global header
     header.append(buff.decode('iso-8859-1'))
+
+
+def parse_url(s):
+    """Parse OCCI Entity URL
+
+    Parse the string with OCCI Entity URL. Distinguish between relative and absolute URL.
+    """
+    url_info = urlparse.urlparse(s)
+    if url_info.netloc:
+        base_url = s
+        url = ''
+    else:
+        base_url = None
+        url = s
+    return [base_url, url]
 
 
 def occi_curl(base_url=None, url='/-/', authtype=None, ignoressl=None, user=None, passwd=None, mimetype=None, headers=[], post='', custom_request=''):

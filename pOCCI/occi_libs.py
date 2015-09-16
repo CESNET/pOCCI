@@ -4,7 +4,6 @@ import sys
 import ConfigParser
 import collections
 
-import occi
 import render
 
 
@@ -18,7 +17,8 @@ occi_defaults = {
     'connectiontimeout': 60,
     'timeout': 120,
 
-    'tests.category': 'Category:compute;class=kind;scheme="http://schemas.ogf.org/occi/infrastructure#"',
+    'occi.tests.category': {'term': 'compute', 'class': 'kind', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'},
+    'occi.tests.entity': {},
 }
 
 occi_config = {}
@@ -205,19 +205,6 @@ def occi_render_init():
     renderer_httpheaders = renderer
     if occi_config['mimetype'] != 'text/occi':
         renderer_httpheaders = renderers['text/occi']
-
-    # configurable filters
-    for f in ['tests.category', 'tests.entity']:
-        if f in occi_config:
-            try:
-                categories = renderers['text/plain'].parse_categories([occi_config[f]], None)
-            except occi.ParseError as pe:
-                print >> sys.stderr, ("Can't parse '%s' config option: " % f) + str(pe)
-                sys.exit(2)
-            if categories:
-                occi_config['occi.%s' % f] = categories[0]
-            if occi_config['curlverbose']:
-                print ("[config] '%s'=" % f) + str(categories[0])
 
     self.renderer = renderer
     self.renderer_big = renderer_big

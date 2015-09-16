@@ -11,6 +11,51 @@ from pOCCI import occi
 from pOCCI import render
 
 
+attributes = [
+    occi.Attribute({
+        'name': 'occi.core.id',
+        'type': 'number',
+        'value': 1,
+    }),
+    occi.Attribute({
+        'name': 'occi.core.title',
+        'value': 'Title 1',
+    }),
+    occi.Attribute({
+        'name': 'pocci.test.enabled',
+        'type': 'bool',
+        'value': True,
+    }),
+    occi.Attribute({
+        'name': 'pocci.test.fs',
+        'type': 'enum',
+        'value': 'ext3',
+    }),
+]
+attributes2 = [
+    occi.Attribute({
+        'name': 'occi.core.id',
+        'type': 'number',
+        'value': 1,
+    }),
+    occi.Attribute({
+        'name': 'occi.core.title',
+        'type': 'enum',
+        'value': 'Title 1',
+    }),
+    occi.Attribute({
+        'name': 'pocci.test.enabled',
+        'type': 'bool',
+        'value': True,
+    }),
+    occi.Attribute({
+        'name': 'pocci.test.fs',
+        'type': 'string',
+        'value': 'ext3',
+    }),
+]
+
+
 def readLines(fname):
     with open(fname, 'r') as f:
         for line in f.readlines():
@@ -65,28 +110,7 @@ class TestRender(unittest.TestCase):
                 'rel': ['/relA', '/relB'],
             }),
         ]
-        self.attr_values = [
-            occi.Attribute({
-                'name': 'occi.core.id',
-                'type': 'number',
-                'value': 1,
-            }),
-            occi.Attribute({
-                'name': 'occi.core.title',
-                'value': 'Title 1',
-            }),
-            occi.Attribute({
-                'name': 'pocci.test.enabled',
-                'type': 'bool',
-                'value': True,
-            }),
-            occi.Attribute({
-                'name': 'pocci.test.fs',
-                'type': 'enum',
-                'value': 'ext3',
-            }),
-        ]
-
+        self.attr_values = attributes
 
 
     def testInit(self):
@@ -132,9 +156,30 @@ class TestRender(unittest.TestCase):
         assert(self.data[5] == headers)
 
 
+class TestTypes(unittest.TestCase):
+    """Base OCCI Types"""
+
+
+    def testAttributeEquals(self):
+        for a in attributes:
+            assert(occi.Attribute.equals(a, a) is True)
+        assert(occi.Attribute.equals(attributes[1], occi.Attribute({'value': 'Title 1'})) is True)
+
+
+    def testAttributeEqualDifferentType(self):
+        for a1, a2 in zip(attributes, attributes2):
+            assert(occi.Attribute.equals(a1, a2) is True)
+
+
+    def testAttributeNotEqual(self):
+        assert(occi.Attribute.equals(attributes[0], occi.Attribute({'value': 2})) is False)
+        assert(occi.Attribute.equals(attributes[1], occi.Attribute({'value': 'Title 2'})) is False)
+
+
 def suite():
     return unittest.TestSuite([
         unittest.TestLoader().loadTestsFromTestCase(TestRender),
+        unittest.TestLoader().loadTestsFromTestCase(TestTypes),
     ])
 
 

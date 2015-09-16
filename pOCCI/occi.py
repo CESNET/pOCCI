@@ -55,6 +55,21 @@ class Attribute(Generic):
         return 'name' in self and 'value' in self
 
 
+    @classmethod
+    def equals(self, a1, a2):
+        """Compare two OCCI Attribute Values
+
+        :param occi.Attribute self
+        :param {} a1: attribute value
+        :param {} a2: attribute value
+        :return: attributes equals
+        :rtype: bool
+        """
+        if a1 is None or a2 is None:
+            return False
+        return 'value' in a1 and 'value' in a2 and a1['value'] == a2['value']
+
+
 class AttributeDefinition(Generic):
     """OCCI Attribute Definition
 

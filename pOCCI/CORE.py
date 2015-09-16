@@ -4,7 +4,7 @@ import time
 import urlparse
 
 from occi_libs import *
-from occi_curl import occi_curl
+from occi_curl import occi_curl, parse_url
 import occi
 
 
@@ -145,6 +145,19 @@ def match_category(category, filter):
     for key, value in filter.items():
         if not (key in category and category[key] == value):
             return False
+    return True
+
+
+def match_entity(attributes, filter):
+    adict = {}
+    for a in attributes:
+        adict[a['name']] = a
+    for key, value in filter.items():
+        a2 = occi.Attribute({'value': value})
+        if key not in adict or not occi.Attribute.equals(adict[key], a2):
+            #print '[match_entity] bad key %s' % key
+            return False
+
     return True
 
 
@@ -445,6 +458,63 @@ class CORE_READ002(Test):
             err_msg += tmp_err_msg
 
         return [check and check_read, err_msg]
+
+
+def CORE_READ_DESCRIPTION(filter=None):
+    """Read OCCI Entity Description
+
+    :return: status, err_msg and description
+    :rtype: [bool, string[], occi.Category[], occi.Link[], occi.Attribute[]]
+    """
+    categories = []
+    links = []
+    attributes = []
+    found = False
+
+    check, err_msg, urls = CORE_READ_URL(occi_config['occi.tests.category'])
+    if not check:
+        return [False, err_msg, None, None, None]
+
+    #print urls
+    for entity_url in urls:
+        [base_url, url] = parse_url(entity_url)
+        #print base_url, url
+        body, headers, http_status, content_type = occi_curl(base_url=base_url, url=url)
+        check1, tmp_err_msg = check_http_status("200 OK", http_status)
+        err_msg += tmp_err_msg
+        if content_type:
+            check2, tmp_err_msg = check_requested_content_type(content_type)
+            err_msg += tmp_err_msg
+        if not check1 or not check2:
+            return [False, err_msg, None, None, None]
+
+        try:
+            categories, links, attributes = renderer.parse_resource(body, headers)
+        except occi.ParseError as pe:
+            err_msg += [str(pe)]
+            return [False, err_msg, None, None, None]
+        if not categories:
+            err_msg += ['HTTP Response doesn\'t contain categories']
+            return [False, err_msg]
+        #print 'Got OCCI Entity: ' + str(categories[0])
+
+        if match_entity(attributes, filter):
+            #print 'Hit!'
+            found = True
+            break
+
+    if not found:
+        err_msg.append('No required OCCI Entity instance found')
+    return [found, err_msg, categories, links, attributes]
+
+
+class CORE_READ007(Test):
+    objective = 'Retrieve the description of an OCCI Entity'
+
+    @classmethod
+    def test(self=None):
+        check, err_msg, categories, links, attributes = CORE_READ_DESCRIPTION({})
+        return [check, err_msg]
 
 
 def get_attributes(attribute_definitions, attributes, err_msg):

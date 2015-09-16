@@ -118,7 +118,8 @@ Available options and default values:
  * \fBtimeout\fR = 120
  * \fBmimetype\fR = 'text/plain'
  * \fBoutputformat\fR = 'json'
- * \fBtests.category\fR = 'Category:compute;class=kind;scheme="http://schemas.ogf.org/occi/infrastructure#"'
+ * \fBocci.tests.category\fR = {'term': 'compute', 'class': 'kind', 'scheme': 'http://schemas.ogf.org/occi/infrastructure#'}
+ * \fBocci.tests.entity\fR = {}
 
 
 .SH EXAMPLES
@@ -138,6 +139,7 @@ outputformat = 'json'
 curlverbose = False
 connectiontimeout = 60
 timeout = 120
+occi.tests.entity = {'occi.core.title': 'one-172'}
 .fi
 
 
