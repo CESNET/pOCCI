@@ -661,6 +661,19 @@ class CORE_UPDATE001(Test):
         return [check and check_ct and check_response, err_msg]
 
 
+class CORE_MISC001(Test):
+    objective = 'Trigger OCCI Action on existing OCCI Entity'
+
+    @classmethod
+    def test(self=None):
+        err_msg = []
+
+        check, err_msg, categories, links, attributes = CORE_READ_DESCRIPTION(filter=occi_config['occi.tests.entity'])
+
+        print categories
+        return [check, err_msg]
+
+
 def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
     """Generic help function to create OCCI Infrastructure resources.
 
