@@ -39,7 +39,7 @@ class Test:
 
 
     @classmethod
-    def get_categories(self, err_msg):
+    def fetch_categories(self, err_msg):
         check_parse = True
 
         body, response_headers, http_status, content_type = occi_curl(mimetype=occi_config['mimetype.big'])
@@ -65,6 +65,14 @@ class Test:
 
 
     @classmethod
+    def get_category(self, uri):
+        for cat in Test.categories:
+            if cat['scheme'] + cat['term'] == uri:
+                return cat
+        return None
+
+
+    @classmethod
     def clear_categories(self):
         Test.categories = []
 
@@ -87,7 +95,7 @@ class Test:
         content_type = None
 
         if not Test.categories or force:
-            check_categories, body, response_headers, http_status, content_type = Test.get_categories(err_msg)
+            check_categories, body, response_headers, http_status, content_type = Test.fetch_categories(err_msg)
             check_pretest, tmp_err_msg = check_http_status(http_ok_status, http_status)
             err_msg += tmp_err_msg
         return [body, response_headers, http_status, content_type, check_pretest and check_categories]
@@ -463,13 +471,14 @@ class CORE_READ002(Test):
 def CORE_READ_DESCRIPTION(filter=None):
     """Read OCCI Entity Description
 
-    :return: status, err_msg and description
-    :rtype: [bool, string[], occi.Category[], occi.Link[], occi.Attribute[]]
+    :return: status, err_msg, url, entity description
+    :rtype: [bool, string[], string, occi.Category[], occi.Link[], occi.Attribute[]]
     """
     categories = []
     links = []
     attributes = []
     found = False
+    entity_url = None
 
     check, err_msg, urls = CORE_READ_URL(occi_config['occi.tests.category'])
     if not check:
@@ -505,7 +514,7 @@ def CORE_READ_DESCRIPTION(filter=None):
 
     if not found:
         err_msg.append('No required OCCI Entity instance found')
-    return [found, err_msg, categories, links, attributes]
+    return [found, err_msg, entity_url, categories, links, attributes]
 
 
 class CORE_READ007(Test):
@@ -513,7 +522,7 @@ class CORE_READ007(Test):
 
     @classmethod
     def test(self=None):
-        check, err_msg, categories, links, attributes = CORE_READ_DESCRIPTION({})
+        check, err_msg, url, categories, links, attributes = CORE_READ_DESCRIPTION({})
         return [check, err_msg]
 
 
@@ -667,10 +676,60 @@ class CORE_MISC001(Test):
     @classmethod
     def test(self=None):
         err_msg = []
+        actions = set()
 
-        check, err_msg, categories, links, attributes = CORE_READ_DESCRIPTION(filter=occi_config['occi.tests.entity'])
+        check, err_msg, entity_url, categories, links, attributes = CORE_READ_DESCRIPTION(filter=occi_config['occi.tests.entity'])
+        if not check:
+            return [False, err_msg]
 
-        print categories
+        for cat in categories:
+            model_cat = Test.get_category(cat['scheme'] + cat['term'])
+            #print model_cat['term']
+            if 'actions' in model_cat:
+                #print model_cat['actions']
+                actions |= set(model_cat['actions'])
+        if occi_config['curlverbose']:
+            print '[OCCI/CORE/MISC/001] actions: ' + str(list(actions))
+
+        # select appropriate action, fallback to the first one
+        action = list(actions)[0]
+        action_start = action
+        action_stop = action
+        for act in actions:
+            if re.search('#start$', act):
+                action_start = act
+            if re.search('#suspend$', act):
+                action_stop = act
+        for a in attributes:
+            if a['name'] == 'occi.compute.state':
+                break
+        if a['name'] == 'occi.compute.state':
+            if occi_config['curlverbose']:
+                print '[OCCI/CORE/MISC/001] state: %s' % a['value']
+            if a['value'] == 'active':
+                action = action_stop
+            else:
+                action = action_start
+        if occi_config['curlverbose']:
+            print '[OCCI/CORE/MISC/001] selected action: %s' % action
+
+        action_cat = Test.get_category(action)
+        if not action_cat:
+            return [False, 'Action "%s" not found in OCCI Model' % action]
+        #print action_cat
+
+        base_url, url = parse_url(entity_url)
+        url += '?action=' + action_cat['term']
+        if occi_config['curlverbose']:
+            print '[OCCI/CORE/MISC/001] calling action: %s' % base_url + url
+
+        body, headers = renderer.render_category(action_cat)
+
+        body, response_request, http_status, content_type = occi_curl(base_url, url, headers=['Content-Type: %s' % occi_config['mimetype']] + headers, post=body)
+
+        check, tmp_err_msg = check_http_status("200 OK", http_status)
+        err_msg += tmp_err_msg
+
         return [check, err_msg]
 
 
