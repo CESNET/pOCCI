@@ -158,6 +158,7 @@ class TestEntities(unittest.TestCase):
         self.data = []
         for fname in [
             'http-ok-entities.txt',
+            'http-ok-entities2.txt',
             'invalid-format.txt',
             'invalid-uri.txt',
         ]:
@@ -165,23 +166,31 @@ class TestEntities(unittest.TestCase):
 
 
     def testEntitiesOK(self):
-        entities = self.renderer.parse_locations(None, self.data[0])
+        entities = self.renderer.parse_locations(None, self.data[1])
 
         assert(entities)
         assert(len(entities) == 5)
         for entity in entities:
             assert(re.match(r'https://', entity))
 
+        entities = self.renderer.parse_locations(None, self.data[0])
+        body, headers = self.renderer.render_locations(entities)
+
+        # full compare
+        original = ''.join(self.data[0])
+        rendering = '\r\n'.join(headers) + '\r\n'
+        assert(original == rendering)
+
 
     def testEntitiesErrorFormat(self):
         # invalid format can't be detected, foreign HTTP Headers must be skipped
         #with self.assertRaises(occi.ParseError):
-            self.renderer.parse_locations(None, self.data[1])
+            self.renderer.parse_locations(None, self.data[2])
 
 
     def testEntitiesErrorURI(self):
         with self.assertRaises(occi.ParseError):
-            self.renderer.parse_locations(None, self.data[2])
+            self.renderer.parse_locations(None, self.data[3])
 
 
 class TestResource(unittest.TestCase):
