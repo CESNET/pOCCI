@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import ConfigParser
-import collections
+from collections import OrderedDict
 
 import render
 
@@ -43,7 +43,7 @@ def occi_format(results):
         if 'running_time' in r:
             r['running_time'] = round(r['running_time'], 3)
 
-    out = {}
+    out = OrderedDict()
     out['tests'] = results
     out['passed'] = count_o
     out['failed'] = count_f
@@ -122,7 +122,7 @@ def occi_print(results, outputformat):
 
 
 def occi_test(name, objective, status, err_msg, running_time=None):
-    test = collections.OrderedDict()
+    test = OrderedDict()
     test['name'] = name
     if objective is not None:
         test['objective'] = objective
