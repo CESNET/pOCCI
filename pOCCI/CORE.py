@@ -482,7 +482,7 @@ def CORE_READ_DESCRIPTION(filter=None):
 
     check, err_msg, urls = CORE_READ_URL(occi_config['occi.tests.category'])
     if not check:
-        return [False, err_msg, None, None, None]
+        return [False, err_msg, entity_url, None, None, None]
 
     #print urls
     for entity_url in urls:
@@ -495,16 +495,16 @@ def CORE_READ_DESCRIPTION(filter=None):
             check2, tmp_err_msg = check_requested_content_type(content_type)
             err_msg += tmp_err_msg
         if not check1 or not check2:
-            return [False, err_msg, None, None, None]
+            return [False, err_msg, entity_url, None, None, None]
 
         try:
             categories, links, attributes = renderer.parse_resource(body, headers)
         except occi.ParseError as pe:
             err_msg += [str(pe)]
-            return [False, err_msg, None, None, None]
+            return [False, err_msg, entity_url, None, None, None]
         if not categories:
             err_msg += ['HTTP Response doesn\'t contain categories']
-            return [False, err_msg]
+            return [False, err_msg, entity_url, None, None, None]
         #print 'Got OCCI Entity: ' + str(categories[0])
 
         if match_entity(attributes, filter):
