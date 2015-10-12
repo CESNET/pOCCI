@@ -471,6 +471,7 @@ class CORE_READ002(Test):
 def CORE_READ_DESCRIPTION(filter=None):
     """Read OCCI Entity Description
 
+    :param string filter{}: required attribute names and values
     :return: status, err_msg, url, entity description
     :rtype: [bool, string[], string, occi.Category[], occi.Link[], occi.Attribute[]]
     """
@@ -958,6 +959,11 @@ Link: <%s>; rel="%s"; category="%s"\n\r\
 def INFRA_CREATE_LINK(resource_name, resource_type):
     """
     Opennebula requires running compute instance.
+
+    :param string resource_name: Resource Name (storage, network)
+    :param string resource_type: Resource Type (link, interface)
+    :return: status, err_msg
+    :rtype: [bool, string[]]
     """
 
     err_msg = []
