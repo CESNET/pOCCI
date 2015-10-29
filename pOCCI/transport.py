@@ -25,7 +25,7 @@ def get_header3(buff):
 
 
 class Transport:
-    """Transport base class. Curl is used.
+    """Transport base class. Curl is used, keystone authentication supported.
 
     Available methods: delete(), get(), post(), put().
     """
@@ -40,8 +40,10 @@ class Transport:
 
 
     def __init__(self, config):
+        self.auth = {}
         self.authtype = config['authtype']
         self.config = config
+        self.retry = False
         self.verbose = False
         if 'curlverbose' in config:
             self.verbose = config['curlverbose']
@@ -98,6 +100,8 @@ class Transport:
 
 
     def clean(self):
+        self.retry = False
+
         curl = self.curl
         curl.unsetopt(pycurl.CUSTOMREQUEST)
         curl.setopt(pycurl.HTTPHEADER, [])
@@ -150,6 +154,85 @@ class Transport:
         return [body, header, http_status, content_type, h]
 
 
+    def auth_keystone(self, url, tenants=True):
+        if not url.endswith('/'):
+            url += '/'
+        self.auth['url'] = url
+        self.dprint('Keystone URL: %s' % self.auth['url'])
+
+        version = 'v2.0'
+        url += version
+
+        if self.authtype == 'basic':
+            user = self.config['user']
+            password = ''
+            if 'passwd' in self.config:
+                password = self.config['passwd']
+            body = {
+                'auth': {
+                    'passwordCredentials': {
+                        'username': user,
+                        'password': password,
+                    },
+                },
+            }
+        elif self.authtype == 'x509':
+            body = {
+                'auth': {
+                    'voms': True,
+                },
+            }
+            if 'keystone' in self.config:
+                body['auth']['tenantName'] = self.config['keystone']
+
+        curl = self.curl
+
+        self.clean()
+        self.retry = True
+        curl.setopt(pycurl.HTTPHEADER, ['Content-Type: application/json'])
+        curl.setopt(pycurl.URL, url + '/tokens')
+        curl.setopt(pycurl.POST, 1)
+        body = json.dumps(body, indent=4)
+        curl.setopt(pycurl.POSTFIELDS, body)
+        self.dprint('Keystone sending: %s' % body)
+
+        body, header_list, http_status, content_type, header = self.perform()
+        if self.verbose:
+            self.dprint('Keystone result: %s' % http_status)
+            #self.dprint('  headers: ' + str(header))
+            #self.dprint('  body: ' + body)
+        if re.match(r'200 OK', http_status) is not None:
+            raise occi.TransportError('Keystone failed: %s' % http_status)
+
+        keystone = json.loads(body)
+        if 'access' not in keystone or 'token' not in keystone['access'] or 'id' not in keystone['access']['token']:
+            raise occi.TransportError("Can't get keystone token from: %s" % body)
+        self.auth['token'] = keystone['access']['token']['id']
+
+        if tenants and 'tenants' not in self.auth:
+            # request tenants, if not already in the response
+            if 'tenant' not in keystone['access']['token']:
+                self.clean()
+                self.retry = True
+                curl.setopt(pycurl.HTTPHEADER, ['Content-Type: application/json', 'X-Auth-Token: %s' % self.auth['token']])
+                curl.setopt(pycurl.URL, url + '/tenants')
+
+                self.dprint('Keystone exploring tenants')
+                body, header_list, http_status, content_type, header = self.perform()
+                #self.dprint('  ==> body: %s' % body)
+                tenants = json.loads(body)
+                #self.dprint('  ==> json: %s' % tenants['tenants'])
+                self.auth['tenants'] = tenants['tenants']
+            else:
+                self.auth['tenants'] = [keystone['access']['token']['tenant']]
+
+            self.auth['tenants_list'] = []
+            for t in self.auth['tenants']:
+                if 'enabled' not in t or t['enabled']:
+                    self.auth['tenants_list'] += [t['name']]
+            self.dprint('  ==> tenants: %s' % ','.join(self.auth['tenants_list']))
+
+
     def request(self, url=None, mimetype=None, headers=[]):
         if url is None:
             url = self.config['url']
@@ -164,6 +247,10 @@ class Transport:
 
         curl.setopt(pycurl.URL, url)
 
+        # Keystone
+        if 'token' in self.auth:
+            headers = ['X-Auth-Token: %s' % self.auth['token']] + headers
+
         # Set appropriate mime type
         if mimetype:
             headers = ['Accept: %s' % mimetype] + headers
@@ -175,8 +262,17 @@ class Transport:
             curl.setopt(pycurl.HTTPHEADER, headers)
 
         body, header_list, http_status, content_type, header = self.perform()
+        self.dprint('First request status: %s' % http_status)
 
-        return [body.splitlines(), header_list, http_status, content_type]
+        if re.match(r'HTTP/.* 401 .*', http_status) and 'www-authenticate' in header:
+            self.dprint('WWW-Authenticate extension detected')
+            m = re.match(r'Keystone uri=\'([^\']*)\'', header['www-authenticate'])
+            if m and m.group(1):
+                self.dprint('Keystone detected')
+                self.auth_keystone(url=m.group(1))
+            return [None, None, http_status, content_type]
+        else:
+            return [body.splitlines(), header_list, http_status, content_type]
 
 
     def delete(self, url=None, mimetype=None, headers=[]):
@@ -194,7 +290,15 @@ class Transport:
 
         curl = self.curl
         curl.setopt(pycurl.CUSTOMREQUEST, 'DELETE')
-        return self.request(url=url, mimetype=mimetype, headers=headers)
+        l = self.request(url=url, mimetype=mimetype, headers=headers)
+
+        if self.retry:
+            self.dprint('repeating the DELETE request...')
+            self.clean()
+            curl.setopt(pycurl.CUSTOMREQUEST, 'DELETE')
+            l = self.request(url=url, mimetype=mimetype, headers=headers)
+
+        return l
 
 
     def get(self, url=None, mimetype=None, headers=[]):
@@ -209,7 +313,14 @@ class Transport:
         :rtype: [string[], string[], string, string]
         """
         self.clean()
-        return self.request(url=url, mimetype=mimetype, headers=headers)
+        l = self.request(url=url, mimetype=mimetype, headers=headers)
+
+        if self.retry:
+            self.dprint('repeating the GET request...')
+            self.clean()
+            l = self.request(url=url, mimetype=mimetype, headers=headers)
+
+        return l
 
 
     def post(self, url=None, mimetype=None, headers=[], body='OK'):
@@ -233,7 +344,16 @@ class Transport:
             print "[pOCCI.curl] ==== POST ===="
             print body
             print "[pOCCI.curl] =============="
-        return self.request(url=url, mimetype=mimetype, headers=headers)
+        l = self.request(url=url, mimetype=mimetype, headers=headers)
+
+        if self.retry:
+            self.dprint('repeating the POST request...')
+            self.clean()
+            curl.setopt(pycurl.POST, 1)
+            curl.setopt(pycurl.POSTFIELDS, body)
+            l = self.request(url=url, mimetype=mimetype, headers=headers)
+
+        return l
 
 
     def put(self, url=None, mimetype=None, headers=[], body='OK'):
@@ -259,4 +379,14 @@ class Transport:
             print "[pOCCI.curl] ==== PUT ===="
             print body
             print "[pOCCI.curl] ============="
-        return self.request(url=url, mimetype=mimetype, headers=headers)
+        l = self.request(url=url, mimetype=mimetype, headers=headers)
+
+        if self.retry:
+            self.dprint('repeating the PUT request...')
+            self.clean()
+            curl.setopt(pycurl.CUSTOMREQUEST, 'PUT')
+            curl.setopt(pycurl.POST, 1)
+            curl.setopt(pycurl.POSTFIELDS, body)
+            l = self.request(url=url, mimetype=mimetype, headers=headers)
+
+        return l

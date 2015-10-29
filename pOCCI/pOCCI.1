@@ -63,6 +63,10 @@ User password, if \fBbasic\fR autentization is used.
 Passphrase for SSL user key, if \fBx509\fR autentization is used. Default is no passphrase.
 
 .TP
+\fB-s\fR, \fP--keystone\fR
+Keystone tenant for authentication.
+
+.TP
 \fB-S\fR, \fP--ignore-ssl\fR
 Ignore SSL errors. Default is false.
 
@@ -96,6 +100,17 @@ Some OCCI compliance tests \fBFAILED\fR.
 Error from OCCI testsuite framework.
 
 
+.SH ENVIRONMENT
+
+.TP
+\fBX509_CERT_DIR\fR
+CA path to use.
+
+.TP
+\fBX509_USER_PROXY\fR
+User proxy certificate file to use, if \fB\-\-cert\fR option is not specified.
+
+
 .SH FILES
 
 .TP
@@ -105,7 +120,7 @@ pOCCI configuration file.
 Available options and default values:
  * \fBurl\fR
  * \fBauthtype\fR = 'basic'
- * \fBcapath\fR
+ * \fBcapath\fR = '/etc/grid-security/certificates'
  * \fBcachain\fR
  * \fBignoressl\fR = False
  * \fBuser\fR
@@ -113,6 +128,7 @@ Available options and default values:
  * \fBcert\fR
  * \fBkey\fR
  * \fBpassphrase\fR
+ * \fBkeystone\fR
  * \fBcurlverbose\fR = False
  * \fBconnectiontimeout\fR = 60
  * \fBtimeout\fR = 120

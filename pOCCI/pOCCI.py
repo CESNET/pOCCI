@@ -54,7 +54,8 @@ OPTIONS:\n\
   -l, --list ................ list all test\n\
   -m, --mime-type MIME-TYPE . render format\n\
   -p, --password PWD ........ password for basic auth-type\n\
-  -P, --passphrase PASS ...... SSL key passphrase\n\
+  -P, --passphrase PASS ..... SSL key passphrase\n\
+  -s, --keystone TENANT ..... tenant used for keystone auth\n\
   -S, --ignore-ssl .......... ignore SSL errors\n\
   -t, --tests <TEST1,...> ... list of tests\n\
   -u, --user USER ........... user name for basic auth-type\n\
@@ -75,7 +76,7 @@ def main(argv=sys.argv[1:]):
         sys.exit(2)
 
     try:
-        opts, args = getopt.getopt(argv, "ha:c:e:f:k:lm:p:P:St:u:vV", ["help", "auth-type=", "cert=", "endpoint=", "format=", "ignore-ssl", "key=", "list", "mime-type=", "passphrase=", "password=", "tests=", "url=", "user=", "verbose", "version"])
+        opts, args = getopt.getopt(argv, "ha:c:e:f:k:lm:p:Ps::St:u:vV", ["help", "auth-type=", "cert=", "endpoint=", "format=", "ignore-ssl", "keystone=", "key=", "list", "mime-type=", "passphrase=", "password=", "tests=", "url=", "user=", "verbose", "version"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -102,6 +103,8 @@ def main(argv=sys.argv[1:]):
             occi_config["passphrase"] = arg
         elif opt in ["-p", "--password"]:
             occi_config["passwd"] = arg
+        elif opt in ["-s", "--keystone"]:
+            occi_config["keystone"] = True
         elif opt in ["-S", "--ignore-ssl"]:
             occi_config["ignoressl"] = True
         elif opt in ["-t", "--tests"]:
@@ -126,9 +129,20 @@ def main(argv=sys.argv[1:]):
             print 'User and password is required for "basic" authentization type.'
             sys.exit(2)
     elif occi_config['authtype'] == 'x509':
+        if 'X509_USER_PROXY' in os.environ:
+            if 'cert' not in occi_config or not occi_config['cert']:
+                occi_config['cert'] = os.environ['X509_USER_PROXY']
+            if 'cachain' not in occi_config or not occi_config['cachain']:
+                occi_config['cachain'] = os.environ['X509_USER_PROXY']
         if 'cert' not in occi_config or not occi_config['cert']:
             print 'SSL certificate and key is required for "x509" authentization type.'
             sys.exit(2)
+        if 'capath' not in occi_config or not occi_config['capath']:
+            if 'X509_CERT_DIR' in os.environ:
+                occi_config['capath'] = os.environ['X509_CERT_DIR']
+            elif os.path.isdir('/etc/grid-security/certificates'):
+                occi_config['capath'] = '/etc/grid-security/certificates'
+
 
     occi_init()
     testsuite_init()
