@@ -21,6 +21,10 @@ class RenderError(Error):
     """Render exception."""
 
 
+class TransportError(Error):
+    """Transport exception."""
+
+
 class Generic(dict):
     """ Generic OCCI object in python. """
 

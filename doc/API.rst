@@ -12,13 +12,6 @@ occi
    :members:
    :undoc-members:
 
-occi_curl
----------
-
-.. automodule:: pOCCI.occi_curl
-   :members:
-   :undoc-members:
-
 occi_libs
 ---------
 
@@ -65,6 +58,13 @@ render_uri
 ----------
 
 .. automodule:: pOCCI.render_uri
+   :members:
+   :undoc-members:
+
+transport
+---------
+
+.. automodule:: pOCCI.transport
    :members:
    :undoc-members:
 

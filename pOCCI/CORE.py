@@ -4,13 +4,14 @@ import time
 import urlparse
 
 from occi_libs import *
-from occi_curl import occi_curl, parse_url
+import transport
 import occi
 
 
 renderer = None
 renderer_big = None
 renderer_httpheaders = None
+connection = None
 
 #'Category: offline;scheme="http://schemas.ogf.org/occi/infrastructure/storagelink/action#";class="action";title="deactivate storagelink"'
 required_categories = [
@@ -42,7 +43,7 @@ class Test:
     def fetch_categories(self, err_msg):
         check_parse = True
 
-        body, response_headers, http_status, content_type = occi_curl(mimetype=occi_config['mimetype.big'])
+        body, response_headers, http_status, content_type = connection.get(mimetype=occi_config['mimetype.big'])
 
         try:
             categories = renderer_big.parse_categories(body, response_headers)
@@ -119,6 +120,8 @@ def testsuite_init():
     if not self.renderer:
         print >> sys.stderr, 'No renderer (invalid mimetype?)'
         sys.exit(2)
+
+    self.connection = transport.Transport(occi_config)
 
 
 def check_content_type(content_type):
@@ -238,7 +241,7 @@ class CORE_DISCOVERY002(Test):
         cat_in.append('Content-Type: text/occi')
         cat_in += renderer_httpheaders.render_category(filter)[1]
 
-        body, response_headers, http_status, content_type = occi_curl(headers=cat_in)
+        body, response_headers, http_status, content_type = connection.get(headers=cat_in)
 
         check_ct, err_msg = check_content_type(content_type)
 
@@ -328,7 +331,7 @@ class CORE_CREATE001(Test):
             ]
         )
 
-        body, response_headers, http_status, content_type = occi_curl(url=kind['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, post=new_cat_s, custom_request='POST')
+        body, response_headers, http_status, content_type = connection.post(url=occi_config['url'] + kind['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, body=new_cat_s)
         Test.clear_categories()
         check_create, tmp_err_msg = check_http_status("201 Created", http_status)
         err_msg += tmp_err_msg
@@ -355,7 +358,7 @@ class CORE_CREATE006(Test):
         err_msg = []
         new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; location: "/mixin/resource_tpl/extra_large/", rel: "http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
         #new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http:/example.com/occi/something_else#mixin"; location="/my_stuff/"'
-        body, response_headers, http_status, content_type = occi_curl(url='/-/', headers=['Content-Type: text/plain'], post=new_mixin)
+        body, response_headers, http_status, content_type = connection.post(url=occi_config['url'] + '/-/', headers=['Content-Type: text/plain'], body=new_mixin)
         check_create, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
 
@@ -387,7 +390,7 @@ def CORE_READ_URL(filter):
         return [False, err_msg, None]
 
     for category in [mixin]:
-        body, response_headers, http_status, content_type = occi_curl(url=category['location'])
+        body, response_headers, http_status, content_type = connection.get(url=occi_config['url'] + category['location'])
         try:
             locations = renderer.parse_locations(body, response_headers)
         except occi.ParseError as pe:
@@ -421,7 +424,7 @@ def CORE_READ002_COMMON(category, links=[]):
     headers.append('Content-Type: text/occi')
     headers += renderer_httpheaders.render_category(occi.Category({'term': category['term'], 'scheme': category['scheme'], 'class': category['class']}))[1]
 
-    body, response_headers, http_status, content_type = occi_curl(url=category['location'], headers=headers)
+    body, response_headers, http_status, content_type = connection.get(url=occi_config['url'] + category['location'], headers=headers)
     try:
         locations = renderer.parse_locations(body, response_headers)
     except occi.ParseError as pe:
@@ -487,9 +490,8 @@ def CORE_READ_DESCRIPTION(filter=None):
 
     #print urls
     for entity_url in urls:
-        [base_url, url] = parse_url(entity_url)
         #print base_url, url
-        body, headers, http_status, content_type = occi_curl(base_url=base_url, url=url)
+        body, headers, http_status, content_type = connection.get(url=entity_url)
         check1, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
         if content_type:
@@ -567,19 +569,19 @@ class CORE_DELETE001(Test):
 
         url = urlparse.urlparse(tmp_urls[0]).path
 
-        body, response_headers, http_status, content_type = occi_curl(url=url)
+        body, response_headers, http_status, content_type = connection.get(url=occi_config['url'] + url)
         check_exist1, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
 
-        body, response_headers, http_status, content_type = occi_curl(url=url, custom_request='DELETE')
+        body, response_headers, http_status, content_type = connection.delete(url=occi_config['url'] + url)
         check_delete1, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
 
         # It takes some time to delete machine, second delete action force it
         # Not testing result of the operation (various backends have different behaviour)
-        body, response_headers, http_status, content_type = occi_curl(url=url, custom_request='DELETE')
+        body, response_headers, http_status, content_type = connection.delete(url=occi_config['url'] + url)
 
-        body, response_headers, http_status, content_type = occi_curl(url=url)
+        body, response_headers, http_status, content_type = connection.get(url=occi_config['url'] + url)
         check_exist2, tmp_err_msg = check_http_status("404 Not Found", http_status)
         err_msg += tmp_err_msg
 
@@ -614,7 +616,7 @@ class CORE_UPDATE001(Test):
         #print urls
         url = urls[0]
 
-        body, response_headers, http_status, content_type = occi_curl(base_url=url, url='')
+        body, response_headers, http_status, content_type = connection.get(url=url)
 
         categories, links, attributes = renderer.parse_resource(body, response_headers)
 
@@ -632,7 +634,7 @@ class CORE_UPDATE001(Test):
         body, headers = renderer.render_resource(categories, links, attributes)
 
         # update
-        body, response_headers, http_status, content_type = occi_curl(base_url=url, url='', headers=['Content-Type: %s' % occi_config['mimetype']] + headers, post=body, custom_request='PUT')
+        body, response_headers, http_status, content_type = connection.put(url=url, headers=['Content-Type: %s' % occi_config['mimetype']] + headers, body=body)
         #print body
         #print http_status
         Test.clear_categories()
@@ -719,14 +721,14 @@ class CORE_MISC001(Test):
             return [False, 'Action "%s" not found in OCCI Model' % action]
         #print action_cat
 
-        base_url, url = parse_url(entity_url)
+        url = entity_url
         url += '?action=' + action_cat['term']
         if occi_config['curlverbose']:
-            print '[OCCI/CORE/MISC/001] calling action: %s' % base_url + url
+            print '[OCCI/CORE/MISC/001] calling action: %s' % url
 
         body, headers = renderer.render_category(action_cat)
 
-        body, response_request, http_status, content_type = occi_curl(base_url, url, headers=['Content-Type: %s' % occi_config['mimetype']] + headers, post=body)
+        body, response_request, http_status, content_type = connection.post(url=url, headers=['Content-Type: %s' % occi_config['mimetype']] + headers, body=body)
 
         check, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
@@ -778,7 +780,7 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
 
     new_cat_s, new_cat_h = renderer.render_resource(categories, None, attributes.values())
 
-    body, response_request, http_status, content_type = occi_curl(url=kind['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, post=new_cat_s, custom_request='POST')
+    body, response_request, http_status, content_type = connection.post(url=occi_config['url'] + kind['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, body=new_cat_s)
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
 
@@ -796,7 +798,7 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
 
     Test.clear_categories()
 
-    body, response_headers, http_status, content_type = occi_curl(url=kind['location'])
+    body, response_headers, http_status, content_type = connection.get(url=occi_config['url'] + kind['location'])
     entities2 = check_body_entities(body, response_headers, err_msg)
     # check if the entity is really created (just check the first: entities[0])
     check_created = False
@@ -944,7 +946,7 @@ Link: <%s>; rel="%s"; category="%s"\n\r\
 Link: <%s>; rel="%s"; category="%s"\n\r\
 ' % (compute['term'], compute['scheme'], compute['class'], storage_links[0], storage['scheme'] + storage['term'], 'http://schemas.ogf.org/occi/infrastructure#storagelink', network_links[0], network['scheme'] + network['term'], 'http://schemas.ogf.org/occi/infrastructure#networkinterface')
 
-        body, response_headers, http_status, content_type = occi_curl(url=compute['location'], headers=['Content-Type: text/plain'], post=new_compute)
+        body, response_headers, http_status, content_type = connection.post(url=occi_config['url'] + compute['location'], headers=['Content-Type: text/plain'], body=new_compute)
         check_create, tmp_err_msg = check_http_status("201 Created", http_status)
         err_msg += tmp_err_msg
 
@@ -1026,7 +1028,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
         attributes=attributes.values()
     )
 
-    body, response_headers, http_status, content_type = occi_curl(url=resourcelink['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_resourcelink_h, post=new_resourcelink_s, custom_request='POST')
+    body, response_headers, http_status, content_type = connection.post(url=occi_config['url'] + resourcelink['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_resourcelink_h, body=new_resourcelink_s)
 
     check_create, tmp_err_msg = check_http_status("201 Created", http_status)
     err_msg += tmp_err_msg
@@ -1039,7 +1041,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
     resource_link = resource_links[0]
     resource_link_rel = urlparse.urlparse(resource_link).path
 
-    body, response_headers, http_status, content_type = occi_curl(base_url=compute_links[0], url='')
+    body, response_headers, http_status, content_type = connection.get(url=compute_links[0])
 
     try:
         result_categories, result_links, result_attributes = renderer.parse_resource(body, response_headers)

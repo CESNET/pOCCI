@@ -122,11 +122,11 @@ def main(argv=sys.argv[1:]):
         sys.exit(2)
 
     if occi_config['authtype'] == 'basic':
-        if 'user' not in occi_config or not occi_config['user'] or 'passwd' not in occi_config or not occi_config['passwd']:
+        if 'user' not in occi_config or not occi_config['user']:
             print 'User and password is required for "basic" authentization type.'
             sys.exit(2)
     elif occi_config['authtype'] == 'x509':
-        if 'cert' not in occi_config or not occi_config['cert'] or 'key' not in occi_config or not occi_config['key']:
+        if 'cert' not in occi_config or not occi_config['cert']:
             print 'SSL certificate and key is required for "x509" authentization type.'
             sys.exit(2)
 
