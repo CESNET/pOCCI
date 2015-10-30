@@ -62,6 +62,12 @@ class Test:
                 print 'ERROR: %s' % err_msg[-1]
             print '===================='
 
+        # for OpenStack
+        # TODO: needed?
+        for category in categories:
+            if 'location' not in category:
+                category['location'] = '/' + category['term'] + '/'
+
         Test.categories = categories
         return [check_parse, body, response_headers, http_status, content_type]
 
