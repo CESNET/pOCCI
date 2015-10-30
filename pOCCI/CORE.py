@@ -41,16 +41,17 @@ class Test:
 
     @classmethod
     def fetch_categories(self, err_msg):
+        categories = []
         check_parse = True
 
         body, response_headers, http_status, content_type = connection.get(mimetype=occi_config['mimetype.big'])
 
-        try:
-            categories = renderer_big.parse_categories(body, response_headers)
-        except occi.ParseError as pe:
-            categories = []
-            check_parse = False
-            err_msg.append(str(pe))
+        if body is not None:
+            try:
+                categories = renderer_big.parse_categories(body, response_headers)
+            except occi.ParseError as pe:
+                check_parse = False
+                err_msg.append(str(pe))
 
         if occi_config['curlverbose']:
             print '==== CATEGORIES ===='
