@@ -468,11 +468,15 @@ class CORE_READ002(Test):
         if not check_pretest:
             return [False, err_msg]
 
-        mixin = Test.search_category({'class': 'mixin'})
+        mixin = Test.search_category({'term': 'resource_tpl', 'class': 'mixin'})
         #kind = Test.search_category({'class': 'kind'})
         for category in [mixin]:
             filter = Test.search_category({'rel': '%s%s' % (category['scheme'], category['term'])})
-            check_read, tmp_err_msg = CORE_READ002_COMMON(category=filter)
+            if filter is None:
+                check_read = False
+                tmp_err_msg = ['No desired OCCI Mixin found']
+            else:
+                check_read, tmp_err_msg = CORE_READ002_COMMON(category=filter)
             err_msg += tmp_err_msg
 
         return [check and check_read, err_msg]
@@ -885,7 +889,8 @@ class INFRA_CREATE004(Test):
             return [False, err_msg]
 
         os_tpl = Test.search_category({'class': 'mixin', 'rel': 'http://schemas.ogf.org/occi/infrastructure#os_tpl'})
-        #print os_tpl
+        if occi_config['curlverbose']:
+            print '[OCCI/INFRA/CREATE/004] os_tpl: %s' % str(os_tpl)
         if not os_tpl:
             err_msg.append('No OS template found')
             return [False, err_msg]
