@@ -26,7 +26,7 @@ OCCI Compliance Tests Matrix
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
 | OCCI/CORE/READ/001                  |   :ok:`OK`   |       :ok:`OK`      |              :ok:`OK`              |         :ok:`OK`                  |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
-| OCCI/CORE/READ/002                  |   :ok:`OK`   |       :ok:`OK`      |              :ok:`OK`              |           --                      |
+| OCCI/CORE/READ/002                  |   :ok:`OK`   |       :ok:`OK`      |              :ok:`OK`              |      :fail:`FAIL` [404]_          |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
 | OCCI/CORE/READ/007                  |   :ok:`OK`   |       :ok:`OK`      |              :ok:`OK`              |         :ok:`OK`                  |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
@@ -34,33 +34,39 @@ OCCI Compliance Tests Matrix
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
 | OCCI/CORE/CREATE/006 [nip]_         |      --      |          --         |                 --                 |           --                      |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
-| OCCI/CORE/DELETE/001 [comp]_ [del]_ | :good:`GOOD` |     :good:`GOOD`    |        :good:`GOOD` [del2]_        |           --                      |
+| OCCI/CORE/DELETE/001 [comp]_ [del]_ | :good:`GOOD` |     :good:`GOOD`    |        :good:`GOOD` [del2]_        |      :fail:`FAIL` [404]_          |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
-| OCCI/CORE/UPDATE/001 [comp]_        |   :ok:`OK`   | :fail:`FAIL` [upd]_ |         :fail:`FAIL` [nip]_        |           --                      |
+| OCCI/CORE/UPDATE/001 [comp]_        |   :ok:`OK`   | :fail:`FAIL` [upd]_ |         :fail:`FAIL` [nip]_        |      :fail:`FAIL` [404]_          |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
 | OCCI/CORE/MISC/001                  |   :ok:`OK`   |       :ok:`OK`      |         :fail:`FAIL` [nip]_        |   :fail:`FAIL` [noact]_           |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
 | OCCI/INFRA/CREATE/001               |   :ok:`OK`   | :fail:`FAIL` [tpl]_ |         :fail:`FAIL` [tpl]_        |   :fail:`FAIL` [tpl]_             |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
-| OCCI/INFRA/CREATE/002               |   :ok:`OK`   |       :ok:`OK`      | :good:`GOOD` [volsiz]_  [volsiz2]_ | :fail:`FAIL` [volsiz2]_ [vol201]_ |
+| OCCI/INFRA/CREATE/002               |   :ok:`OK`   |       :ok:`OK`      | :good:`GOOD` [volsiz]_  [volsiz2]_ |  :good:`GOOD` [201]_ [volsiz2]_   |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
-| OCCI/INFRA/CREATE/003               |   :ok:`OK`   | :fail:`FAIL` [net]_ |        :fail:`FAIL` [net2]_        |    :fail:`FAIL` [net4]_           |
+| OCCI/INFRA/CREATE/003               |   :ok:`OK`   | :fail:`FAIL` [net]_ |        :fail:`FAIL` [net2]_        |      :fail:`FAIL` [404]_          |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
-| OCCI/INFRA/CREATE/004               |   :ok:`OK`   |       :ok:`OK`      |              :ok:`OK`              |    :fail:`FAIL` [creat]_          |
+| OCCI/INFRA/CREATE/004               |   :ok:`OK`   |       :ok:`OK`      |              :ok:`OK`              |   :good:`GOOD` [201]_ [attrs]_    |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
 | OCCI/INFRA/CREATE/005 [tpl]_        |      --      |          --         |                 --                 |           --                      |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
-| OCCI/INFRA/CREATE/006               |   :ok:`OK`   | :good:`GOOD` [run]_ |              :ok:`OK`              |   :fail:`FAIL` [creat]_           |
+| OCCI/INFRA/CREATE/006               |   :ok:`OK`   | :good:`GOOD` [run]_ |              :ok:`OK`              |      :fail:`FAIL` [500]_          |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
-| OCCI/INFRA/CREATE/007               |   :ok:`OK`   | :good:`GOOD` [run]_ |        :fail:`FAIL` [net3]_        |   :fail:`FAIL` [net4]_            |
+| OCCI/INFRA/CREATE/007               |   :ok:`OK`   | :good:`GOOD` [run]_ |        :fail:`FAIL` [net3]_        |      :fail:`FAIL` [404]_          |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
 
 Notes
 -----
 
-.. [comp] existing compute instance required [**all**]
+.. [201] HTTP 200 OK intead of HTTP 201 Created [**OpenStack**]
 
-.. [creat] HTTP/1.1 500 Internal Server Error [**OpenStack**]
+.. [404] HTTP/1.1 404 Not Found [**OpenStack**]
+
+.. [500] HTTP/1.1 500 Internal Server Error [**OpenStack**]
+
+.. [attrs] Required attributes not in the model [**OpenStack**]
+
+.. [comp] existing compute instance required [**all**]
 
 .. [del] different behaviour on not existing instances [**OpenNebula**, **dummy**]
 
@@ -74,8 +80,6 @@ Notes
 
 .. [net3] VPC networks cannot be attached to existing instances! [**EC2**]
 
-.. [net4] HTTP/1.1 404 Not Found [**OpenStack**]
-
 .. [nip] not implemented [**all**]
 
 .. [noact] no actions available (not implemented?) [**OpenStack**]
@@ -85,8 +89,6 @@ Notes
 .. [tpl] os_tpl mixin required [**all**]
 
 .. [upd] partial implementation in rOCCI [**OpenNebula**]
-
-.. [vol201] HTTP 200 OK instead of HTTP 201 CREATED
 
 .. [volsiz] volume size limit (too small in compliance tests) [**EC2**]
 
