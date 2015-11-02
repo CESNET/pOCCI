@@ -589,7 +589,7 @@ class CORE_DELETE001(Test):
             print '[OCCI/CORE/DELETE/001] entity body: %s' % str(body)
 
         body, response_headers, http_status, content_type = connection.delete(url=url)
-        check_delete1, tmp_err_msg = check_http_status("200 OK", http_status)
+        check_delete1, tmp_err_msg = check_http_status('2\d\d ', http_status)
         err_msg += tmp_err_msg
 
         # It takes some time to delete machine, second delete action force it
