@@ -888,21 +888,38 @@ class INFRA_CREATE004(Test):
         if not check_pretest:
             return [False, err_msg]
 
+        # OS template
         os_tpl = Test.search_category({'class': 'mixin', 'rel': 'http://schemas.ogf.org/occi/infrastructure#os_tpl'})
         if occi_config['curlverbose']:
             print '[OCCI/INFRA/CREATE/004] os_tpl: %s' % str(os_tpl)
         if not os_tpl:
-            err_msg.append('No OS template found')
+            err_msg.append('No OCCI OS Template found')
             return [False, err_msg]
 
         # 'term': 'uuid_ttylinux_0', 'scheme': 'http://occi.myriad5.zcu.cz/occi/infrastructure/os_tpl#', 'class': 'mixin'
         categories.append(occi.Category({'term': os_tpl['term'], 'scheme': os_tpl['scheme'], 'class': 'mixin'}))
 
         if 'attributes' in os_tpl:
-            os_tpl_attributes = os_tpl['attributes']
+            tpl_attributes = os_tpl['attributes']
         else:
-            os_tpl_attributes = []
-        return INFRA_CREATE_COMMON('compute', categories, os_tpl_attributes, err_msg)
+            tpl_attributes = []
+
+        # resource template
+        resource_tpl = Test.search_category({'class': 'mixin', 'rel': 'http://schemas.ogf.org/occi/infrastructure#resource_tpl'})
+        if occi_config['curlverbose']:
+            print '[OCCI/INFRA/CREATE/004] resource_tpl: %s' % str(resource_tpl)
+        if not resource_tpl:
+            err_msg.append('No OCCI Resource Template found')
+            return [False, err_msg]
+        if resource_tpl:
+            categories.append(occi.Category({'term': resource_tpl['term'], 'scheme': resource_tpl['scheme'], 'class': 'mixin'}))
+            if 'attributes' in resource_tpl:
+                tpl_attributes += resource_tpl['attributes']
+
+        if occi_config['curlverbose']:
+            print '[OCCI/INFRA/CREATE/004] attributes: %s' % str(tpl_attributes)
+
+        return INFRA_CREATE_COMMON('compute', categories, tpl_attributes, err_msg)
 
 
 class INFRA_CREATE005(Test):
