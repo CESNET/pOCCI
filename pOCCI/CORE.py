@@ -578,21 +578,25 @@ class CORE_DELETE001(Test):
             err_msg += ["OCCI entity URL not found!"]
             return [False, err_msg]
 
-        url = urlparse.urlparse(tmp_urls[0]).path
+        url = tmp_urls[0]
+        if occi_config['curlverbose']:
+            print '[OCCI/CORE/DELETE/001] entity URL: %s' % str(url)
 
-        body, response_headers, http_status, content_type = connection.get(url=occi_config['url'] + url)
+        body, response_headers, http_status, content_type = connection.get(url=url)
         check_exist1, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
+        if occi_config['curlverbose']:
+            print '[OCCI/CORE/DELETE/001] entity body: %s' % str(body)
 
-        body, response_headers, http_status, content_type = connection.delete(url=occi_config['url'] + url)
+        body, response_headers, http_status, content_type = connection.delete(url=url)
         check_delete1, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
 
         # It takes some time to delete machine, second delete action force it
         # Not testing result of the operation (various backends have different behaviour)
-        body, response_headers, http_status, content_type = connection.delete(url=occi_config['url'] + url)
+        body, response_headers, http_status, content_type = connection.delete(url=url)
 
-        body, response_headers, http_status, content_type = connection.get(url=occi_config['url'] + url)
+        body, response_headers, http_status, content_type = connection.get(url=url)
         check_exist2, tmp_err_msg = check_http_status("404 Not Found", http_status)
         err_msg += tmp_err_msg
 

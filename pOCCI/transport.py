@@ -275,7 +275,7 @@ class Transport:
             return [body.splitlines(), header_list, http_status, content_type]
 
 
-    def delete(self, url=None, mimetype=None, headers=[]):
+    def delete(self, url=None, mimetype=None, headers=[], body=None):
         """Send HTTP DELETE request
 
         :param string base_url: OCCI server URL (default: from config)
@@ -289,6 +289,13 @@ class Transport:
         self.clean()
 
         curl = self.curl
+        if body:
+            curl.setopt(pycurl.POST, 1)
+            curl.setopt(pycurl.POSTFIELDS, body)
+            if self.verbose:
+                print "[pOCCI.curl] === DELETE ==="
+                print body
+                print "[pOCCI.curl] =============="
         curl.setopt(pycurl.CUSTOMREQUEST, 'DELETE')
         l = self.request(url=url, mimetype=mimetype, headers=headers)
 
