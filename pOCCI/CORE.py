@@ -624,15 +624,20 @@ class CORE_UPDATE001(Test):
         if not urls:
             err_msg.append('No OCCI Entity instance found')
             return [False, err_msg]
-        #print urls
         url = urls[0]
+        if occi_config['curlverbose']:
+          print '[OCCI/CORE/UPDATE/001] all entities: %s' % str(urls)
+          print '[OCCI/CORE/UPDATE/001] selected entity: %s' % str(url)
 
         body, response_headers, http_status, content_type = connection.get(url=url)
 
         categories, links, attributes = renderer.parse_resource(body, response_headers)
+        if occi_config['curlverbose']:
+            print '[OCCI/CORE/UPDATE/001] resource categories: %s' % str(categories)
+            print '[OCCI/CORE/UPDATE/001] resource links: %s' % str(links)
+            print '[OCCI/CORE/UPDATE/001] resource attributes: %s' % str(attributes)
 
         # change one attribute
-        #print attributes
         a = None
         for a in attributes:
             if a['name'] == 'occi.core.title':
