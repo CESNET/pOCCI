@@ -34,7 +34,7 @@ OCCI Compliance Tests Matrix
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
 | OCCI/CORE/CREATE/006 [nip]_         |      --      |          --         |                 --                 |           --                      |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
-| OCCI/CORE/DELETE/001 [comp]_ [del]_ | :good:`GOOD` |     :good:`GOOD`    |        :good:`GOOD` [del2]_        |      :fail:`FAIL` [404]_          |
+| OCCI/CORE/DELETE/001 [comp]_ [del]_ | :good:`GOOD` |     :good:`GOOD`    |        :good:`GOOD` [del2]_        |    :good:`GOOD` [204]_ [del2]_    |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
 | OCCI/CORE/UPDATE/001 [comp]_        |   :ok:`OK`   | :fail:`FAIL` [upd]_ |         :fail:`FAIL` [nip]_        |      :fail:`FAIL` [404]_          |
 +-------------------------------------+--------------+---------------------+------------------------------------+-----------------------------------+
@@ -60,6 +60,8 @@ Notes
 
 .. [201] HTTP 200 OK intead of HTTP 201 Created [**OpenStack**]
 
+.. [204] HTTP/1.1 204 No Content [**OpenStack**]
+
 .. [404] HTTP/1.1 404 Not Found [**OpenStack**]
 
 .. [500] HTTP/1.1 500 Internal Server Error [**OpenStack**]
@@ -70,7 +72,7 @@ Notes
 
 .. [del] different behaviour on not existing instances [**OpenNebula**, **dummy**]
 
-.. [del2] deletion delayed [**EC2**]
+.. [del2] deletion delayed [**EC2**, **OpenStack**]
 
 .. [filt] filtering not supported [**OpenStack**]
 
