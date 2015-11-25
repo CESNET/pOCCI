@@ -113,15 +113,15 @@ class TextRenderer(Renderer):
     """
 
     reChunks = re.compile(r';\s*')
-    reCategory = re.compile(r'^Category:\s*')
-    reLink = re.compile(r'^Link:\s*')
-    reAttribute = re.compile(r'^X-OCCI-Attribute:\s*')
+    reCategory = re.compile(r'^(?i)category:\s*')
+    reLink = re.compile(r'^(?i)link:\s*')
+    reAttribute = re.compile(r'^(?i)x-occi-attribute:\s*')
     reKeyValue = re.compile(r'\s*?=\s*')
     reKeyCheck = re.compile(r'[A-Za-z0-9_\.-]*$')
     reQuoted = re.compile(r'^"(.*)"$')
     reSP = re.compile(r'\s+')
     reAttributes = re.compile(r'([^\{ ]+)(\{[^\}]*\})?\s*')
-    reLocation = re.compile(r'^(X-OCCI-Location|Location):\s*(.*)')
+    reLocation = re.compile(r'^((?i)x-occi-location|location):\s*(.*)')
     reQuotedLink = re.compile(r'^<(.*)>$')
     reStringUnescape = re.compile(r'\\(.)')
     reNumber = re.compile(r'^([0-9\.+-]+)$')
@@ -481,7 +481,7 @@ class TextRenderer(Renderer):
         for line in body:
             matched = TextRenderer.reCategory.match(line)
             if not matched:
-                raise occi.ParseError('"Category" expected', line)
+                raise occi.ParseError('"category" expected', line)
 
             category = self.parse_category_body(line[matched.end():])
 
