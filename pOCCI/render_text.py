@@ -479,6 +479,9 @@ class TextRenderer(Renderer):
         category_ids = set()
 
         for line in body:
+            if not line.strip():
+                continue
+
             matched = TextRenderer.reCategory.match(line)
             if not matched:
                 raise occi.ParseError('"category" expected', line)
@@ -506,6 +509,9 @@ class TextRenderer(Renderer):
         """
         locations = []
         for line in body:
+            if not line.strip():
+                continue
+
             matched = TextRenderer.reLocation.match(line)
             if not matched:
                 raise occi.ParseError('OCCI Location expected in OCCI Entity collection', line)
