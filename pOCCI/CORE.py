@@ -1081,6 +1081,7 @@ def INFRA_CREATE_LINK(resource_name, resource_type):
 
     body, response_headers, http_status, content_type = connection.get(url=compute_links[0])
 
+    result_links = []
     try:
         result_categories, result_links, result_attributes = renderer.parse_resource(body, response_headers)
     except occi.ParseError as pe:
