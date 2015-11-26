@@ -536,6 +536,9 @@ class TextRenderer(Renderer):
         attributes = []
 
         for line in body:
+            if not line.strip():
+                continue
+
             line = line.rstrip('\r\n')
             matched = TextRenderer.reCategory.match(line)
             if matched is not None:
