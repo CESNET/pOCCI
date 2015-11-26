@@ -118,11 +118,15 @@ class TestCategories(unittest.TestCase):
             'http-ok-dummy.txt',
             'http-ok-ec2.txt',
             'http-ok-opennebula.txt',
+            'http-test-capitalization1.txt',
+            'http-test-capitalization2.txt',
+            'http-test-capitalization3.txt',
+            'http-test-capitalization4.txt',
         ]:
             headers = list(readCollection(os.path.join(os.path.dirname(__file__), 'category-collection', fname)))
             self.fulldata.append(headers)
             for h in headers:
-                if re.match(r'Category:', h):
+                if re.match(r'(?i)category:', h):
                     self.data.append(h)
                     break
 
@@ -151,6 +155,29 @@ class TestCategories(unittest.TestCase):
             assert(headers[0] + '\r\n' == self.data[i])
 
 
+    def testCategoriesCap(self):
+        """Parse headers with category collection (case insensitive).
+        """
+        for i in range(3, 6):
+            categories = self.renderer.parse_categories(None, self.fulldata[i])
+
+            assert(categories)
+            assert(len(categories))
+
+            #for cat in categories:
+            #    print cat
+            #    print
+
+            #print 'ORIGINAL:'
+            #print self.data[i]
+            body, headers = self.renderer.render_categories(categories)
+            #print 'RENDERING:'
+            #print headers[0]
+            #print
+
+            assert((headers[0] + '\r\n').upper() == self.data[i].upper())
+
+
 class TestEntities(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -161,6 +188,8 @@ class TestEntities(unittest.TestCase):
             'http-ok-entities2.txt',
             'invalid-format.txt',
             'invalid-uri.txt',
+            'http-test-capitalization1.txt',
+            'http-test-capitalization2.txt',
         ]:
             self.data.append(list(readCollection(os.path.join(os.path.dirname(__file__), 'entity-collection', fname))))
 
@@ -180,6 +209,24 @@ class TestEntities(unittest.TestCase):
         original = ''.join(self.data[0])
         rendering = '\r\n'.join(headers) + '\r\n'
         assert(original == rendering)
+
+
+    def testEntitiesCap(self):
+        for i in range(4, 5):
+            entities = self.renderer.parse_locations(None, self.data[i])
+
+            assert(entities)
+            assert(len(entities) == 5)
+            for entity in entities:
+                assert(re.match(r'https://', entity))
+
+            entities = self.renderer.parse_locations(None, self.data[0])
+            body, headers = self.renderer.render_locations(entities)
+
+            # full compare (ignore capitalization)
+            original = ''.join(self.data[0])
+            rendering = '\r\n'.join(headers) + '\r\n'
+            assert(original.upper() == rendering.upper())
 
 
     def testEntitiesErrorFormat(self):
@@ -203,12 +250,14 @@ class TestResource(unittest.TestCase):
             'http-ok-opennebula-compute.txt',
             'http-ok-ec2-compute.txt',
             'http-ok-ignore-unknown.txt',
+            'http-test-capitalization1.txt',
+            'http-test-capitalization2.txt',
         ]:
             self.data.append(list(readCollection(os.path.join(os.path.dirname(__file__), 'resource', fname))))
 
 
-    def testResourceOK(self):
-        for i in range(0, 2):
+    def testResourceOKAndCap(self):
+        for i in range(0, 4):
             categories, links, attributes = self.renderer.parse_resource(None, self.data[i])
 
             assert(categories)
@@ -251,7 +300,10 @@ class TestResource(unittest.TestCase):
             #print 'INDEX: %d\n' % i
             #print 'ORIGINAL:\n'; print original
             #print 'RENDERING:\n'; print rendering
-            assert(original == rendering)
+            if i < 3:
+                assert(original == rendering)
+            else:
+                assert(original.upper() == rendering.upper())
 
 
     def testResourceErrorEmpty(self):
