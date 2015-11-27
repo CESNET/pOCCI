@@ -457,6 +457,9 @@ class TextRenderer(Renderer):
         """
 
         keyvalue = TextRenderer.reKeyValue.split(body, 1)
+        if len(keyvalue) != 2:
+            raise occi.ParseError('Attribute invalid syntax', body)
+
         key = keyvalue[0]
         value = keyvalue[1]
         keymatch = TextRenderer.reKeyCheck.match(key)
