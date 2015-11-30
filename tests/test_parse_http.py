@@ -252,6 +252,7 @@ class TestResource(unittest.TestCase):
             'http-ok-ignore-unknown.txt',
             'http-test-capitalization1.txt',
             'http-test-capitalization2.txt',
+            'http-bad-attr.txt',
         ]:
             self.data.append(list(readCollection(os.path.join(os.path.dirname(__file__), 'resource', fname))))
 
@@ -304,6 +305,12 @@ class TestResource(unittest.TestCase):
                 assert(original == rendering)
             else:
                 assert(original.upper() == rendering.upper())
+
+
+    def testResourceBadAttribute(self):
+        with self.assertRaises(occi.ParseError) as context:
+            self.renderer.parse_resource(None, self.data[5])
+        assert(str(context.exception) == 'Attribute invalid syntax (occi.core.title)')
 
 
     def testResourceErrorEmpty(self):

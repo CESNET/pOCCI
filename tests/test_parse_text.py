@@ -134,6 +134,7 @@ class TestResource(unittest.TestCase):
             'text-bad-quote-category.txt',
             'text-bad-quote-link.txt',
             'text-invalid-format.txt',
+            'text-bad-attr.txt',
         ]:
             self.data.append(list(readCollection(os.path.join(os.path.dirname(__file__), 'resource', fname))))
 
@@ -191,6 +192,12 @@ class TestResource(unittest.TestCase):
     def testResourceErrorFormat(self):
         with self.assertRaises(occi.ParseError):
             self.renderer.parse_resource(self.data[5], None)
+
+
+    def testResourceBadAttribute(self):
+        with self.assertRaises(occi.ParseError) as context:
+            self.renderer.parse_resource(self.data[6], None)
+        assert(str(context.exception) == 'Attribute invalid syntax (occi.core.title)')
 
 
     def testResourceErrorEmpty(self):

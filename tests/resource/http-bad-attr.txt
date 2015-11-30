@@ -1,0 +1,6 @@
+Category: kind;scheme="myScheme";class="myClass";title="myTitle";attributes="occi.core.id{immutable required} occi.core.title"
+Link: <http://localhost/myresource1>;rel="/rel"
+Link: <http://localhost/myresource2>;rel="/relA /relB"
+X-OCCI-Attribute: occi.core.id=1,occi.core.title
+X-OCCI-Attribute: pocci.test.enabled=true
+X-OCCI-Attribute: pocci.test.fs="ext3"
