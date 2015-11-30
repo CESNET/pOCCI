@@ -182,12 +182,20 @@ def match_entity(attributes, filter):
 
 
 def check_body_entities(body, headers, err_msg=[]):
+    entities = []
     try:
-        entities = renderer.parse_locations(body, headers)
+        entities = renderer_httpheaders.parse_locations(body, headers)
     except occi.ParseError as pe:
         err_msg.append(str(pe))
-        err_msg.append('HTTP Body doesn\'t contain the OCCI Compute Resource description')
         return None
+
+    if not entities:
+        try:
+            entities = renderer.parse_locations(body, headers)
+        except occi.ParseError as pe:
+            err_msg.append(str(pe))
+            err_msg.append('HTTP Body doesn\'t contain the OCCI Compute Resource description')
+            return None
 
     return entities
 
@@ -803,7 +811,7 @@ def INFRA_CREATE_COMMON(resource, categories, additional_attributes, err_msg):
     new_cat_s, new_cat_h = renderer.render_resource(categories, None, attributes.values())
 
     body, response_request, http_status, content_type = connection.post(url=occi_config['url'] + kind['location'], headers=['Content-Type: %s' % occi_config['mimetype']] + new_cat_h, body=new_cat_s)
-    check_create, tmp_err_msg = check_http_status("201 Created", http_status)
+    check_create, tmp_err_msg = check_http_status("(200 OK|201 Created)", http_status)
     err_msg += tmp_err_msg
 
     check_ct, tmp_err_msg = check_content_type(content_type)
