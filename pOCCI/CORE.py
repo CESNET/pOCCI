@@ -582,6 +582,13 @@ class CORE_DELETE001(Test):
     def test(self=None):
         err_msg = []
 
+        body, response_headers, http_status, content_type, check_pretest = Test.pretest_http_status("200 OK", err_msg)
+
+        category = occi.Category(occi_config['occi.tests.category'])
+        check, err_msg = INFRA_CREATE_COMMON('compute', [category], [], err_msg)
+        if not check:
+            return [False, err_msg]
+
         check, err_msg, tmp_urls = CORE_READ_URL(occi_config['occi.tests.category'])
 
         if not tmp_urls:
