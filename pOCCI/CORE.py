@@ -373,8 +373,7 @@ class CORE_CREATE006(Test):
     @classmethod
     def test(self=None):
         err_msg = []
-        new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; location="/mixin/resource_tpl/extra_large/", rel: "http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
-        #new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http:/example.com/occi/something_else#mixin"; location="/my_stuff/"'
+        new_mixin = 'Category: stufik; scheme="http://example.com/occi/my_stuff#"; class="mixin"; location="/mixin/resource_tpl/extra_large/"; rel="http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
         body, response_headers, http_status, content_type = connection.post(url=occi_config['url'] + '/-/', headers=['Content-Type: text/plain'], body=new_mixin)
         check_create, tmp_err_msg = check_http_status("200 OK", http_status)
         err_msg += tmp_err_msg
