@@ -477,16 +477,20 @@ class CORE_READ002(Test):
         if not check_pretest:
             return [False, err_msg]
 
-        mixin = Test.search_category({'term': 'resource_tpl', 'class': 'mixin'})
-        #kind = Test.search_category({'class': 'kind'})
-        for category in [mixin]:
-            filter = Test.search_category({'rel': '%s%s' % (category['scheme'], category['term'])})
+        kinds = Test.search_category({'class': 'kind'})
+        found = False
+        check_read = False
+        for category in kinds:
+            filter = Test.search_category({'rel': '%s%s' %
+                                           ('http://schemas.ogf.org/occi/core#', 'resource')})
             if filter is None:
-                check_read = False
-                tmp_err_msg = ['No desired OCCI Mixin found']
+                continue
             else:
+                found = True
                 check_read, tmp_err_msg = CORE_READ002_COMMON(category=filter)
-            err_msg += tmp_err_msg
+
+        if not found:
+            err_msg += ['No desired OCCI Mixin found']
 
         return [check and check_read, err_msg]
 
