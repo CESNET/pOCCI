@@ -125,7 +125,7 @@ class Transport:
         except pycurl.error as pe:
             raise occi.TransportError(pe)
 
-        ## 'Server: Apache/2.2.22 (Debian)\r\n'
+        # 'Server: Apache/2.2.22 (Debian)\r\n'
         h = {}
         http_status = None
         for item in header:
