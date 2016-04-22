@@ -648,12 +648,12 @@ class CORE_UPDATE001(Test):
         if not urls:
             err_msg.append('No OCCI Entity instance found')
             return [False, err_msg]
-        url = urls[0]
+        entity_url = urls[0]
         if occi_config['curlverbose']:
             print '[OCCI/CORE/UPDATE/001] all entities: %s' % str(urls)
-            print '[OCCI/CORE/UPDATE/001] selected entity: %s' % str(url)
+            print '[OCCI/CORE/UPDATE/001] selected entity: %s' % str(entity_url)
 
-        body, response_headers, http_status, content_type = connection.get(url=url)
+        body, response_headers, http_status, content_type = connection.get(url=entity_url)
 
         categories, links, attributes = renderer.parse_resource(body, response_headers)
         if occi_config['curlverbose']:
@@ -674,7 +674,7 @@ class CORE_UPDATE001(Test):
         body, headers = renderer.render_resource(categories, links, attributes)
 
         # update
-        body, response_headers, http_status, content_type = connection.put(url=url, headers=['Content-Type: %s' % occi_config['mimetype']] + headers, body=body)
+        body, response_headers, http_status, content_type = connection.put(url=entity_url, headers=['Content-Type: %s' % occi_config['mimetype']] + headers, body=body)
         #print body
         #print http_status
         Test.clear_categories()
@@ -696,15 +696,15 @@ class CORE_UPDATE001(Test):
             check, tmp_err_msg = check_http_status("201 Created", http_status)
             if check:
                 response_urls = renderer_httpheaders.parse_locations(None, response_headers)
-                #print 'Entity URL'
-                #print 'Response URLs:\n  '
+                #print 'Entity URL: %s\n' % entity_url
+                #print 'Response URLs:\n'
                 #print response_urls
                 check_response = False
                 for url in response_urls:
-                    if response_url == url:
+                    if url == entity_url:
                         check_response = True
                 if not check_response:
-                    err_msg += ['HTTP Location headers is not OCCI Entity URL (%s)' % response_url]
+                    err_msg += ['HTTP Location headers has not OCCI Entity URL (%s)' % entity_url]
 
         if not check:
             err_msg.append('HTTP status is neither 200 OK nor 201 Created (%s)' % http_status)
