@@ -36,7 +36,7 @@ class Generic(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-    def validate():
+    def validate(self):
         """ Validate OCCI object.
 
         :return: OCCI object is valid

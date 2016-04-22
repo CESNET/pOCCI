@@ -332,7 +332,7 @@ class TextRenderer(Renderer):
             elif key in ['class', 'title', 'rel']:
                 category[key] = value
             else:
-                raise occi.parseerror('unknown key "%s" in category' % key, chunk)
+                raise occi.ParseError('Unknown key "%s" in category' % key, chunk)
 
         if not category.validate():
             raise occi.ParseError('Missing fields in OCCI Category', body)
