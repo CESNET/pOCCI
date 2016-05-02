@@ -10,9 +10,46 @@
 OCCI Compliance tests
 =======================
 
-Install::
+pOCCI is OCCI standard compliance testing tool. Tests are described `here <http://www.etsi.org/deliver/etsi_ts/103100_103199/103142/01.01.01_60/ts_103142v010101p.pdf>`_.
 
+Features
+--------
+
+Basic features:
+
+- OCCI testing
+- OCCI messages parsing
+- partial OCCI client library for python
+
+Authentization:
+
+- basic auth
+- X509
+- keystone
+
+Cloud providers:
+
+- dummy (rOCCI server)
+- OpenNebula
+- Amazon EC2
+- OpenStack
+
+Installation
+------------
+
+From sources::
+
+ git clone https://github.com/CESNET/pOCCI/ && cd pOCCI
  python setup.py install
+
+From pypi::
+
+ pip install pOCCI
+
+Usage
+-----
+
+**OCCI compliance tests**:
 
 Set parameters in ~/.pOCCI.cfg.
 
@@ -38,8 +75,7 @@ Launch tests::
 
 See manual page for all options.
 
-OCCI Messages parser
-====================
+**OCCI message parser**
 
 Example::
 
