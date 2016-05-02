@@ -19,7 +19,7 @@ Development packages:
 
 - https://emian.zcu.cz:8443/jenkins/job/pOCCI-build-devel/lastSuccessfulBuild/
   (Debian 8/jessie, SL6, SL7, Ubuntu 14/trusty)
-- https://copr-fe.cloud.fedoraproject.org/coprs/valtri/indigo/
+- https://copr.fedorainfracloud.org/coprs/valtri/indigo/
   (EL6, EL7, Fedora)
 
 
