@@ -130,7 +130,7 @@ class Transport:
         http_status = None
         for item in header:
             m = Transport.reHeader.match(item.rstrip())
-            if m and m.groups >= 2:
+            if m and len(m.groups()) >= 2:
                 key = m.group(1)
                 value = m.group(2)
                 h[key.lower()] = value
