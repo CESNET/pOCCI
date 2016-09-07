@@ -7,10 +7,17 @@
    :target: https://coveralls.io/r/CESNET/pOCCI
    :alt: Test coverage percentage
 
-OCCI Compliance tests
-=======================
+pOCCI -- OCCI Compliance Test Suite
+===================================
 
-pOCCI is OCCI standard compliance testing tool. Tests are described `here <http://www.etsi.org/deliver/etsi_ts/103100_103199/103142/01.01.01_60/ts_103142v010101p.pdf>`_.
+Introduction
+------------
+
+The European Telecommunication Standards Institute (ETSI) describes a set of tests to verify the compliance of cloud management frameworks with OCCI or CDMI protocols. The title of the document is `CLOUD; Test Descriptions for Cloud Interoperability <http://www.etsi.org/deliver/etsi_ts/103100_103199/103142/01.01.01_60/ts_103142v010101p.pdf>`_.
+
+The pOCCI test suite implements a real-world subset of tests described in the document. In essence, each test that can be carried out with real-world resources (Compute, Storage, Network) is implemented. Tests for abstract OCCI concepts that have no real-world counterpart (such as an OCCI Resource) are omitted because no real-world Cloud Management Framework can be asked to create a "Resource".
+
+The test suite runs agaist an existing, OCCI-enabled cloud service and produces a compliance report, detailing tests passed or failed.
 
 Features
 --------
