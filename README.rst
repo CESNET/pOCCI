@@ -7,10 +7,23 @@
    :target: https://coveralls.io/r/CESNET/pOCCI
    :alt: Test coverage percentage
 
-OCCI Compliance tests
-=======================
+pOCCI—OCCI Compliance Test Suite
+===================================
 
-pOCCI is OCCI standard compliance testing tool. Tests are described `here <http://www.etsi.org/deliver/etsi_ts/103100_103199/103142/01.01.01_60/ts_103142v010101p.pdf>`_.
+Introduction
+------------
+
+The European Telecommunication Standards Institute (ETSI) describes a set of tests to verify the compliance of cloud management frameworks with OCCI or CDMI protocols. The title of the document is `CLOUD; Test Descriptions for Cloud Interoperability <http://www.etsi.org/deliver/etsi_ts/103100_103199/103142/01.01.01_60/ts_103142v010101p.pdf>`_.
+
+The pOCCI test suite implements a real-world subset of tests described in the document. In essence, each test that can be carried out with real-world resources (Compute, Storage, Network) is implemented. Tests for abstract OCCI concepts that have no real-world counterpart (such as an OCCI Resource) are omitted because no real-world Cloud Management Framework can be asked to create a "Resource".
+
+Originally conceived for use by `INDIGO-DataCloud <https://www.indigo-datacloud.eu>`_ service developers, the test suite runs against an existing, OCCI-enabled cloud service and produces a compliance report, detailing tests passed or failed.
+
+The pOCCI test suite is intended for the following user groups, ordered by importance (meaning 1 is the main audience while 3 is a group that might be interested but not primarily targeted):
+
+1. Developers of OCCI-compliant services for compliance testing, ideally to be used as a part of their continuous integration process. For their purpose, pOCCI may be used either as a client against a remote service but it may also be used in a local mode just to validate OCCI messages for compliance with the standard.
+2. Administrators (integrators) of cloud service sites with OCCI interfaces. Note that in this scenario, pOCCI is intended mainly for *preliminary* testing while the site is being set up. It may be potentially destructive to virtual resources already created in the cloud site.
+3. Prospective user groups that use OCCI-compliant clients and wish to verify OCCI compliance of the server side.
 
 Features
 --------
@@ -21,7 +34,7 @@ Basic features:
 - OCCI messages parsing
 - partial OCCI client library for python
 
-Authentization:
+Authentication:
 
 - basic auth
 - X509
@@ -45,6 +58,12 @@ From sources::
 From pypi::
 
  pip install pOCCI
+
+From `INDIGO Repository <http://repo.indigo-datacloud.eu/#one>`_::
+
+ yum install python2-pOCCI
+ # OR
+ apt-get install python-pocci
 
 Usage
 -----
