@@ -7,7 +7,7 @@
    :target: https://coveralls.io/r/CESNET/pOCCI
    :alt: Test coverage percentage
 
-pOCCI -- OCCI Compliance Test Suite
+pOCCI—OCCI Compliance Test Suite
 ===================================
 
 Introduction
