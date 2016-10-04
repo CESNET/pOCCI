@@ -7,10 +7,15 @@ from os import path
 import pOCCI
 
 here = path.abspath(path.dirname(__file__))
+readme = path.join(here, 'README.md')
 
 # Get the long description from the relevant file
-with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
-    long_description = f.read()
+# (convert to rst, if pandoc available)
+try:
+    import pypandoc
+    long_description = pypandoc.convert(readme, 'rst')
+except:
+    long_description = open(readme, encoding='utf-8').read()
 
 setup(
     name='pOCCI',
