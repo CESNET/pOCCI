@@ -88,6 +88,7 @@ def occi_print(results, outputformat):
 <table>\n\
     <tr>\n\
         <th>Test</th>\n\
+        <th>Description</th>\n\
         <th>Running Time</th>\n\
         <th>Status</th>\n\
         <th>Reason</th>\n\
