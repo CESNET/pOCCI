@@ -2,6 +2,7 @@
 version='1.0.3'
 
 echo "__version__ = '${version}'" > pOCCI/version.py
+rm -fv README.rst
 vim LICENSE
 git commit -m "Release ${version}"
 python setup.py sdist
