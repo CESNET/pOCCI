@@ -32,6 +32,8 @@ Available values: \fBbasic\fR, \fBx509\fR.
 \fB-c\fR, \fP--cert\fR \fIFILE\fR
 User SSL certificate file, if \fBx509\fR autentization is used.
 
+For VOMS proxy certificates, it should be used the variable $X509_USER_PROXY instead.
+
 .TP
 \fB-e\fR, \fP--endpoint\fR, \fP--url\fR \fIURL\fR
 OCCI server endpoint. For example: \fIhttps://example.com:11443\fR.
@@ -63,8 +65,8 @@ User password, if \fBbasic\fR autentization is used.
 Passphrase for SSL user key, if \fBx509\fR autentization is used. Default is no passphrase.
 
 .TP
-\fB-s\fR, \fP--keystone\fR
-Keystone tenant for authentication.
+\fB-s\fR, \fP--keystone\fR \fITENANT\fR
+Keystone tenant for authentication. For example: \fIVO:fedcloud.egi.eu\fR.
 
 .TP
 \fB-S\fR, \fP--ignore-ssl\fR

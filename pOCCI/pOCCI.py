@@ -104,7 +104,7 @@ def main(argv=sys.argv[1:]):
         elif opt in ["-p", "--password"]:
             occi_config["passwd"] = arg
         elif opt in ["-s", "--keystone"]:
-            occi_config["keystone"] = True
+            occi_config["keystone"] = arg
         elif opt in ["-S", "--ignore-ssl"]:
             occi_config["ignoressl"] = True
         elif opt in ["-t", "--tests"]:
